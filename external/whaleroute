@@ -1,0 +1,11 @@
+include(FetchContent)
+Set(FETCHCONTENT_QUIET FALSE)
+
+FetchContent_Declare(
+        whaleroute
+        GIT_REPOSITORY https://github.com/kamchatka-volcano/whaleroute.git
+        GIT_TAG        606fb8178784056503d541531464d80a85831a6b
+        GIT_SHALLOW    ON
+        GIT_PROGRESS TRUE
+)
+FetchContent_MakeAvailable(whaleroute)
