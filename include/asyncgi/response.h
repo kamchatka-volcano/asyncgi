@@ -32,9 +32,7 @@ public:
     void send();
     Timer& timer();
 
-private:
     Response(std::shared_ptr<RequestContext> context, Timer& timer);
-    friend class Connection;
 
 private:
     std::optional<http::Response> value_;

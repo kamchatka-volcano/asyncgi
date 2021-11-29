@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.18)
 
 if(NOT DEFINED ASYNCGI_SUBPROJECT)
   if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -49,6 +49,7 @@ set(PUBLIC_HEADERS
     "include/asyncgi/responsevalue.h"
     "include/asyncgi/route.h"
     "include/asyncgi/server.h"
+    "include/asyncgi/testserver.h"
     "include/asyncgi/timer.h"
     "include/asyncgi/types.h")
 

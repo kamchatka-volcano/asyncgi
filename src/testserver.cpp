@@ -1,156 +1,134 @@
-//#include <asyncgi/testserver.h>
-//#include <asyncgi/requestprocessor.h>
-//#include <asyncgi/request.h>
-//#include <asyncgi/response.h>
-//#include <fcgi_responder/request.h>
-//
-//namespace asyncgi{
-//
-//class Request;
-//class MsgStdIn;
-//class MsgParams;
-//
-////class RequestMaker
-////{
-////public:
-////    static Request makeRequest(const std::vector<std::pair<std::string, std::string>>& params,
-////                               const std::string& formData = {})
-////    {
-////        auto request = Request{};
-////        request.addParams(params);
-////        request.stdIn_ = formData;
-////        return request;
-////    }
-////};
-////class ResponseMaker
-////{
-////public:
-////    static Response makeResponse(const std::function<void(std::string&&, std::string&&)> sender)
-////    {
-////        return Response{sender};
-////    }
-////};
-////}
-//
-//TestServer::TestServer(RequestProcessor& requestProcessor)
-//    : requestProcessor_(requestProcessor)
+#include <asyncgi/testserver.h>
+#include <asyncgi/requestprocessor.h>
+#include <asyncgi/request.h>
+#include <asyncgi/response.h>
+#include <asyncgi/timer.h>
+#include "requestcontext.h"
+#include <fcgi_responder/request.h>
+#include <fcgi_responder/response.h>
+#include <asio.hpp>
+#include <fstream>
+#include <iostream>
+
+namespace asyncgi{
+
+namespace {
+const auto formBoundary = std::string{"----WebKitFormBoundaryTEST"};
+
+std::string makeForm(const std::map<std::string, TestFormParam>& formParams)
+{
+    auto result = std::string{};
+    for (const auto& paramPair : formParams) {
+        auto& [paramName, formParam] = paramPair;
+        result += "--" + formBoundary + "\r\n";
+        auto header = http::Header{"Content-Disposition", "form-data"};
+        header.setParam("name", paramName);
+        if (formParam.value)
+            result += header.toString() + "\r\n\r\n" + *formParam.value + "\r\n";
+        else if (formParam.fileInfo){
+            header.setParam("filename", formParam.fileInfo->filePath.filename());
+            auto fileHeader = http::Header{"Content-Type", formParam.fileInfo->mimeType};
+
+            auto fileStream = std::ifstream{formParam.fileInfo->filePath};
+            if (!fileStream.is_open()) {
+                std::cerr << "Can't open form param " + paramName + " file " + formParam.fileInfo->filePath.string() + " for reading";
+                continue;
+            }
+            const auto paramFileContent = std::string{std::istreambuf_iterator<char>{fileStream},
+                                                      std::istreambuf_iterator<char>{}};
+
+            result += header.toString() + "\r\n" +
+                      fileHeader.toString() + "\r\n\r\n" +
+                      paramFileContent + "\r\n";
+        }
+    }
+    result += "--" + formBoundary + "--\r\n";
+    return result;
+}
+}
+
+class Request;
+class MsgStdIn;
+class MsgParams;
+
+TestServer::TestServer(RequestProcessor& requestProcessor)
+    : requestProcessor_(requestProcessor)
+{
+}
+
+std::string TestServer::process(const std::map<std::string, std::string>& fcgiParams,
+                                const std::map<std::string, TestFormParam>& formParams)
+{
+    auto params = std::vector<std::pair<std::string, std::string>>{};
+    std::copy(fcgiParams.begin(), fcgiParams.end(), std::back_inserter(params));
+    if (!formParams.empty())
+        params.emplace_back("CONTENT_TYPE", "multipart/form-data; boundary=" + formBoundary);
+    auto form = makeForm(formParams);
+
+    auto result = std::string{};
+    auto fcgiRequest = fcgi::Request{params, form};
+    auto fcgiResponse = fcgi::Response{
+            [&result](std::string&& data, std::string&&){
+                result = data;
+            }};
+    auto context = std::make_shared<RequestContext>(std::move(fcgiRequest), std::move(fcgiResponse));
+    auto request = Request{context};
+    auto ioContext = asio::io_context{};
+    auto timer = Timer{ioContext};
+    auto response = Response{context, timer};
+    requestProcessor_.process(request, response);
+    return result;
+}
+
+//std::tuple<std::string, std::string> readFileParam(std::string paramValue)
 //{
-//}
-//
-//std::string TestServer::process(const std::map<std::string, std::string>& fcgiParams,
-//                                const std::map<std::string, std::string>& formParams)
-//{
-//    auto params = std::vector<std::pair<std::string, std::string>>{};
-//    for (const auto& paramPair : fcgiParams)
-//        params.push_back(paramPair);
-//    auto fcgiRequest = fcgi::RequestMaker::makeRequest(params, formData_);
-//    auto fcgiResponse = fcgi::ResponseMaker::makeResponse(
-//            [this](std::string&& data, std::string&&){
-//                QFile resultFile{responseResultPath_};
-//                if (!resultFile.open(QIODevice::WriteOnly)){
-//                    errorMsg_ = "Can't open result file " + responseResultPath_ + "for writing";
-//                    return;
-//                }
-//                resultFile.write(data.c_str(), static_cast<int>(data.size()));
-//            });
-//    requestProcessor_.processFcgiRequest(std::move(fcgiRequest), std::move(fcgiResponse));
-//    return errorMsg_.isEmpty();
-//}
-//
-//
-//namespace{
-//std::tuple<std::string, std::string> readFileParam(QString paramValue, bool& ok)
-//{
-//    paramValue.replace("file(", "");
-//    auto paramFileData = paramValue.split(")", QString::SkipEmptyParts)[0];
-//    auto paramFileDataChunks = paramFileData.split("|");
-//    if (paramFileDataChunks.size() < 2){
-//        ok = false;
+//    paramValue = str::replace(paramValue, "file(", "");
+//    auto paramFileData = str::split(paramValue, ")").at(0);
+//    auto paramFileDataChunks = str::split(paramFileData, "|");
+//    if (paramFileDataChunks.size() < 2)
 //        return {};
-//    }
-//    auto paramFileName = paramFileDataChunks[0].trimmed();
-//    auto paramFileMimeType = paramFileDataChunks[1].trimmed();
-//    ok = true;
-//    return std::make_tuple(paramFileName.toStdString(), paramFileMimeType.toStdString());
+//
+//    auto paramFileName = str::trim(paramFileDataChunks.at(0));
+//    auto paramFileMimeType = str::trim(paramFileDataChunks.at(1));
+//    return std::make_tuple(paramFileName, paramFileMimeType);
 //}
-//}
-//
-//bool QCgiTestServer::readRequestConfig(QString configPath)
-//{
-//    QSettings settings{configPath, QSettings::IniFormat};
-//    settings.setIniCodec("UTF-8");
-//
-//    return readFcgiParamsConfig(settings) &&
-//           readFormConfig(settings);
-//}
-//
-//bool QCgiTestServer::readFcgiParamsConfig(QSettings& settings)
-//{
-//    settings.beginGroup("fcgi_params");
-//    {
-//        auto paramNames = settings.allKeys();
-//        if (paramNames.isEmpty()){
-//            errorMsg_ = "Settings fcgi params is empty";
-//            return false;
-//        }
-//
-//        for (const auto& paramName : paramNames)
-//            fcgiParams_[paramName.toStdString()] = settings.value(paramName).toString().toStdString();
-//    }
-//    settings.endGroup();
-//    return true;
-//}
-//
-//bool QCgiTestServer::readFormConfig(QSettings& settings)
-//{
-//    settings.beginGroup("form");
-//    {
-//        auto paramNames = settings.allKeys();
-//        const auto boundary = std::string{"----WebKitFormBoundaryTEST"};
-//        if (!paramNames.isEmpty())
-//            fcgiParams_["CONTENT_TYPE"] = "multipart/form-data; boundary=" + boundary;
-//        for (const auto& paramName : paramNames){
-//            auto paramValue = settings.value(paramName).toString();
-//            formData_ += "--" + boundary + "\r\n";
-//            auto header = fcgiapp::Header{"Content-Disposition", "form-data"};
-//            header.setParam("name", paramName.toStdString());
-//            if (!paramValue.startsWith("file("))
-//                formData_ += header.toString() + "\r\n\r\n" + paramValue.toStdString() + "\r\n";
-//            else{
-//                auto paramFileName = std::string{};
-//                auto paramFileMimeType = std::string{};
-//                auto ok = false;
-//                std::tie(paramFileName, paramFileMimeType) = readFileParam(paramValue, ok);
-//                if (!ok){
-//                    errorMsg_ = "form file parameter is invalid";
-//                    return false;
-//                }
-//                header.setParam("filename", paramFileName);
-//                auto fileHeader = fcgiapp::Header{"Content-Type", paramFileMimeType};
-//                auto filePath = QFileInfo(settings.fileName()).path() + "/" + QString::fromStdString(paramFileName);
-//                QFile paramFile{filePath};
-//                if (!paramFile.open(QIODevice::ReadOnly)){
-//                    errorMsg_ = "Can't open form file " + QString::fromStdString(paramFileName) + " for reading";
-//                    return false;
-//                }
-//                const auto paramFileContent = paramFile.readAll();
-//
-//                formData_ += header.toString() + "\r\n" +
-//                             fileHeader.toString() + "\r\n\r\n" +
-//                             paramFileContent.toStdString() + "\r\n";
-//            }
-//        }
-//        formData_ += "--" + boundary + "--\r\n";
-//    }
-//    settings.endGroup();
-//    return true;
-//}
-//
-//
-//QString QCgiTestServer::errorMsg() const
-//{
-//    return errorMsg_;
-//}
-//
-//}
-//
+
+/*
+    const auto formBoundary = std::string{"----WebKitFormBoundaryTEST"};
+    if (!paramNames.isEmpty())
+        fcgiParams_["CONTENT_TYPE"] = "multipart/form-data; formBoundary=" + formBoundary;
+
+        auto result = std::string{};
+    const auto formBoundary = std::string{"----WebKitFormBoundaryTEST"};
+    for (const auto& paramPair : formParams) {
+        auto& [paramName, paramValue] = paramPair;
+        result += "--" + formBoundary + "\r\n";
+        auto header = http::Header{"Content-Disposition", "form-data"};
+        header.setParam("name", paramName);
+        if (!str::startsWith(paramValue, "file("))
+            result += header.toString() + "\r\n\r\n" + paramValue + "\r\n";
+        else {
+            auto [paramFileName, paramFileMimeType] = readFileParam(paramValue);
+            if (!paramFileName.empty() && paramFileMimeType.empty())
+                return {};
+
+            header.setParam("filename", paramFileName);
+            auto fileHeader = http::Header{"Content-Type", paramFileMimeType};
+            auto filePath = QFileInfo(settings.fileName()).path() + "/" + QString::fromStdString(paramFileName);
+            QFile paramFile{filePath};
+            if (!paramFile.open(QIODevice::ReadOnly)) {
+                errorMsg_ = "Can't open form file " + QString::fromStdString(paramFileName) + " for reading";
+                return false;
+            }
+            const auto paramFileContent = paramFile.readAll();
+
+            formData_ += header.toString() + "\r\n" +
+                         fileHeader.toString() + "\r\n\r\n" +
+                         paramFileContent.toStdString() + "\r\n";
+        }
+    }
+    formData_ += "--" + formBoundary + "--\r\n";
+    return true;
+*/
+
+}

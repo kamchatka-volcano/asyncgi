@@ -47,9 +47,7 @@ public:
     const std::string& fileType(const std::string &name, int index = 0) const;
     bool hasFiles() const;
 
-private:
     Request(std::shared_ptr<RequestContext> context);
-    friend class Connection;
 
 private:
     std::shared_ptr<RequestContext> context_;

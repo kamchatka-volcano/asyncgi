@@ -56,12 +56,3 @@ class RequestRouter : public asyncgi::RequestProcessor,
 };
 }
 
-///
-/// using Router = clean_route::Router<asyncgi::Request, http::RequestMethod, asyncgi::Response, asyncgi::RequestProcessor>;
-/// auto router = Router([](const http::Request& request){ return request.path();},
-///                      [](const http::Request& request){ return request.method();},
-///                      [](http::Response& response){response.set()});
-
-///
-
-
