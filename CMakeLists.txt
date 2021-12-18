@@ -16,7 +16,6 @@ include(external/hot_teacup)
 include(external/sfun)
 include(external/whaleroute)
 
-
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 

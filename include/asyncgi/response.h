@@ -7,37 +7,50 @@ namespace asyncgi{
 class Timer;
 class RequestContext;
 
-class Response{
+class Response {
 public:
-
-    template <typename TVal, std::enable_if_t<std::is_convertible_v<TVal, http::Response>>* = nullptr>
-    void operator=(TVal&& val)
-    {
-        value_ = std::forward<TVal>(val);
-    }
-
-    template <typename TVal, std::enable_if_t<std::is_convertible_v<TVal, http::Response>>* = nullptr>
-    void operator<<(TVal&& val)
-    {
-        value_ = std::forward<TVal>(val);
-        send();
-    }
-
-    template <typename TVal>
-    void set(TVal&& val)
-    {
-        value_ = std::forward<TVal>(val);
-    }
-
-    void send();
+    void send(const http::Response&);
+    bool isSent() const;
     Timer& timer();
 
     Response(std::shared_ptr<RequestContext> context, Timer& timer);
 
 private:
-    std::optional<http::Response> value_;
     std::shared_ptr<RequestContext> context_;
     std::reference_wrapper<Timer> timer_;
 };
+
+template <typename TResponseContext>
+class ContextualResponse{
+public:
+    explicit ContextualResponse(Response response)
+            : response_(std::move(response))
+    {}
+
+    TResponseContext& context()
+    {
+        return responseContext_;
+    }
+
+    void send(const http::Response& response)
+    {
+        response_.send(response);
+    }
+
+    bool isSent() const
+    {
+        return response_.isSent();
+    }
+
+    Timer& timer()
+    {
+        return response_.timer();
+    }
+
+private:
+    Response response_;
+    TResponseContext responseContext_;
+};
+
 
 }

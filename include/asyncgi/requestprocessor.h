@@ -10,4 +10,12 @@ public:
     virtual void process(const Request&, Response&) = 0;
 };
 
+template <typename TResponseContext>
+class ContextualRequestProcessor{
+public:
+    virtual ~ContextualRequestProcessor() = default;
+    virtual void process(const Request&, ContextualResponse<TResponseContext>&) = 0;
+};
+
+
 }

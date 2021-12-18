@@ -4,22 +4,26 @@
 namespace asyncgi{
 
 Response::Response(std::shared_ptr<RequestContext> context, Timer& timer)
-    : context_(std::move(context))
-    , timer_(timer)
+        : context_(std::move(context)), timer_(timer)
 {}
 
-void Response::send()
+void Response::send(const http::Response& response)
 {
-    if (!context_->response() && value_)
+    if (!context_->response().isValid())
         return;
 
-    context_->response().setData(value_->data());
+    context_->response().setData(response.data());
     context_->response().send();
 }
 
 Timer& Response::timer()
 {
     return timer_.get();
+}
+
+bool Response::isSent() const
+{
+    return !context_->response().isValid();
 }
 
 }
