@@ -3,7 +3,7 @@
 #include <asyncgi/errors.h>
 #include <string>
 
-namespace asyncgi{
+namespace asyncgi::detail{
 class Connection;
 class ConnectionFactory;
 
@@ -15,7 +15,7 @@ public:
 
 private:
     void waitForConnection();
-    void onConnected(std::shared_ptr<Connection> connection, const std::error_code& error);
+    void onConnected(Connection& connection, const std::error_code& error);
 
 private:
     std::unique_ptr<unixdomain::acceptor> connectionListener_;

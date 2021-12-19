@@ -2,7 +2,7 @@
 #include <asyncgi/requestprocessor.h>
 #include <asyncgi/request.h>
 #include <asyncgi/response.h>
-#include <asyncgi/timer.h>
+#include "timer.h"
 #include "requestcontext.h"
 #include <fcgi_responder/request.h>
 #include <fcgi_responder/response.h>
@@ -51,7 +51,7 @@ class Request;
 class MsgStdIn;
 class MsgParams;
 
-TestServer::TestServer(RequestProcessor& requestProcessor)
+TestServer::TestServer(detail::IRequestProcessor& requestProcessor)
     : requestProcessor_(requestProcessor)
 {
 }
@@ -71,11 +71,11 @@ std::string TestServer::process(const std::map<std::string, std::string>& fcgiPa
             [&result](std::string&& data, std::string&&){
                 result = data;
             }};
-    auto context = std::make_shared<RequestContext>(std::move(fcgiRequest), std::move(fcgiResponse));
+    auto context = std::make_shared<detail::RequestContext>(std::move(fcgiRequest), std::move(fcgiResponse));
     auto request = Request{context};
     auto ioContext = asio::io_context{};
-    auto timer = Timer{ioContext};
-    auto response = Response{context, timer};
+    auto timer = detail::Timer{ioContext};
+    auto response = detail::Response{context, timer};
     requestProcessor_.process(request, response);
     return result;
 }

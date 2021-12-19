@@ -1,9 +1,9 @@
 #pragma once
-#include <asyncgi/iruntime.h>
+#include "iruntime.h"
 #include <asio/io_context.hpp>
 #include <asio/signal_set.hpp>
 
-namespace asyncgi{
+namespace asyncgi::detail{
 class Runtime : public IRuntime{
 public:
     Runtime();

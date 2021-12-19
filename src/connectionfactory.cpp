@@ -1,10 +1,10 @@
 #include "connectionfactory.h"
 #include "connection.h"
-#include <asyncgi/iruntime.h>
+#include "iruntime.h"
 
-namespace asyncgi{
+namespace asyncgi::detail{
 
-ConnectionFactory::ConnectionFactory(RequestProcessor& requestProcessor, asyncgi::IRuntime& runtime, ErrorHandlerFunc errorHandler)
+ConnectionFactory::ConnectionFactory(IRequestProcessor& requestProcessor, IRuntime& runtime, ErrorHandlerFunc errorHandler)
     : requestProcessor_(requestProcessor)
     , runtime_(runtime)
     , errorHandler_(errorHandler)

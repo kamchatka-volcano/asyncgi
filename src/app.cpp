@@ -1,39 +1,60 @@
 #include <asyncgi/app.h>
-#include <asyncgi/server.h>
-#include <asyncgi/timer.h>
+#include "server.h"
+#include "timer.h"
 #include "runtime.h"
 #include "multithreadedruntime.h"
 #include "connectionfactory.h"
 
-namespace asyncgi{
+namespace asyncgi::detail{
 
-App::App(std::unique_ptr<IRuntime> runtime)
+class App : public IApp
+{
+public:
+    explicit App(std::unique_ptr<detail::IRuntime>);
+    std::unique_ptr<IServer> makeServer(IRequestProcessor&) override;
+    std::unique_ptr<IServer> makeServer(IRequestProcessor&, ErrorHandlerFunc errorHandler) override;
+    std::unique_ptr<ITimer> makeTimer() override;
+    void exec() override;
+
+private:
+    std::unique_ptr<detail::IRuntime> runtime_;
+};
+
+App::App(std::unique_ptr<detail::IRuntime> runtime)
     : runtime_(std::move(runtime))
 {
 }
 
-App makeApp(std::size_t workerThreadCount)
+std::unique_ptr<IServer> App::makeServer(detail::IRequestProcessor& requestProcessor, ErrorHandlerFunc errorHandler)
 {
-    if (workerThreadCount <= 1)
-        return AppFactory{}.createApp<Runtime>();
-    else
-        return AppFactory{}.createApp<MultithreadedRuntime>(workerThreadCount);
+    auto connectionFactory = std::make_unique<detail::ConnectionFactory>(requestProcessor, *runtime_, errorHandler);
+    return std::make_unique<detail::Server>(runtime_->io(), std::move(connectionFactory), errorHandler);
 }
 
-Server App::makeServer(RequestProcessor& requestProcessor, ErrorHandlerFunc errorHandler)
+std::unique_ptr<IServer> App::makeServer(detail::IRequestProcessor& requestProcessor)
 {
-    auto connectionFactory = std::make_unique<ConnectionFactory>(requestProcessor, *runtime_, errorHandler);
-    return Server{runtime_->io(), std::move(connectionFactory), errorHandler};
+    return makeServer(requestProcessor, {});
 }
 
-Timer App::makeTimer()
+
+std::unique_ptr<ITimer> App::makeTimer()
 {
-    return Timer{runtime_->io()};
+    return std::make_unique<Timer>(runtime_->io());
 }
 
 void App::exec()
 {
     runtime_->run();
 }
-
 }
+
+namespace asyncgi {
+std::unique_ptr<IApp> makeApp(std::size_t workerThreadCount)
+{
+    if (workerThreadCount <= 1)
+        return std::make_unique<detail::App>(std::make_unique<detail::Runtime>());
+    else
+        return std::make_unique<detail::App>(std::make_unique<detail::MultithreadedRuntime>(workerThreadCount));
+}
+}
+

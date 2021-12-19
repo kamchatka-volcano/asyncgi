@@ -2,18 +2,18 @@
 #include <asyncgi/errors.h>
 #include <memory>
 
-namespace asyncgi{
+namespace asyncgi::detail{
 class Connection;
 class IRuntime;
-class RequestProcessor;
+class IRequestProcessor;
 
 class ConnectionFactory{
 public:
-    ConnectionFactory(RequestProcessor& requestProcessor, IRuntime& runtime, ErrorHandlerFunc errorHandler);
+    ConnectionFactory(IRequestProcessor& requestProcessor, IRuntime& runtime, ErrorHandlerFunc errorHandler);
     std::shared_ptr<Connection> makeConnection();
 
 private:
-    RequestProcessor& requestProcessor_;
+    IRequestProcessor& requestProcessor_;
     IRuntime& runtime_;
     ErrorHandlerFunc errorHandler_;
 };

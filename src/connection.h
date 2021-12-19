@@ -1,7 +1,7 @@
 #pragma once
 #include "alias_unixdomain.h"
+#include "timer.h"
 #include <asyncgi/requestprocessor.h>
-#include <asyncgi/timer.h>
 #include <asyncgi/errors.h>
 #include <fcgi_responder/responder.h>
 #include <memory>
@@ -11,7 +11,7 @@ namespace asio{
     class io_context;
 }
 
-namespace asyncgi{
+namespace asyncgi::detail{
 struct ConnectionFactoryTag{
 private:
     ConnectionFactoryTag() = default;
@@ -20,7 +20,7 @@ private:
 
 class Connection : public std::enable_shared_from_this<Connection>, public fcgi::Responder {
 public:    
-    Connection(RequestProcessor&, asio::io_context&, ErrorHandlerFunc, ConnectionFactoryTag);
+    Connection(IRequestProcessor&, asio::io_context&, ErrorHandlerFunc, ConnectionFactoryTag);
     unixdomain::socket& socket();
     void process();
     void readData(std::size_t bytesReaded);
@@ -33,7 +33,7 @@ private:
     void close();
 
 private:
-    RequestProcessor& requestProcessor_;
+    IRequestProcessor& requestProcessor_;
     Timer timer_;
     unixdomain::socket socket_;
     std::array<char, 65536> buffer_;

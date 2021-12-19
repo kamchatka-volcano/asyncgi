@@ -30,5 +30,11 @@ constexpr const char* fcgiParamStr(FCGIParam param)
     }
     return nullptr;
 }
+
+namespace detail {
+struct EmptyContext {
+};
+}
+
 }
 

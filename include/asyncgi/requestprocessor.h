@@ -4,17 +4,33 @@
 
 namespace asyncgi{
 
-class RequestProcessor{
-public:
-    virtual ~RequestProcessor() = default;
-    virtual void process(const Request&, Response&) = 0;
-};
+template<class TResponseContext>
+class RequestProcessor;
 
-template <typename TResponseContext>
-class ContextualRequestProcessor{
+namespace detail{
+class IRequestProcessor {
 public:
-    virtual ~ContextualRequestProcessor() = default;
-    virtual void process(const Request&, ContextualResponse<TResponseContext>&) = 0;
+    virtual void process(const Request&, Response&) = 0;
+
+private:
+    virtual ~IRequestProcessor() = default;
+
+    template<class TResponseContext>
+    friend class asyncgi::RequestProcessor;
+};
+}
+
+template <typename TResponseContext = detail::EmptyContext>
+class RequestProcessor : public detail::IRequestProcessor{
+public:
+    virtual void process(const Request&, Response<TResponseContext>&) = 0;
+
+private:
+    virtual void process(const Request& request, detail::Response& response) override
+    {
+        auto contextualResponse = Response<TResponseContext>{std::move(response)};
+        process(request, contextualResponse);
+    };
 };
 
 

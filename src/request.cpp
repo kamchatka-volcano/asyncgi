@@ -6,7 +6,7 @@
 namespace asyncgi{
 namespace str = sfun::string_utils;
 
-Request::Request(std::shared_ptr<RequestContext> context)
+Request::Request(std::shared_ptr<detail::RequestContext> context)
     : context_(std::move(context))
 {
 }

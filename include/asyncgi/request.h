@@ -9,8 +9,9 @@
 #include <functional>
 
 namespace asyncgi{
-
+namespace detail {
 class RequestContext;
+}
 
 class Request{
 public:
@@ -47,10 +48,10 @@ public:
     const std::string& fileType(const std::string &name, int index = 0) const;
     bool hasFiles() const;
 
-    Request(std::shared_ptr<RequestContext> context);
+    Request(std::shared_ptr<detail::RequestContext> context);
 
 private:
-    std::shared_ptr<RequestContext> context_;
+    std::shared_ptr<detail::RequestContext> context_;
 };
 
 }

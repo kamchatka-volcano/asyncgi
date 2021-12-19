@@ -1,6 +1,6 @@
 #include "multithreadedruntime.h"
 
-namespace asyncgi{
+namespace asyncgi::detail{
 
 MultithreadedRuntime::MultithreadedRuntime(std::size_t threadCount)
     : ioGuard_(io_.get_executor())

@@ -1,8 +1,7 @@
 #include "runtime.h"
 #include <asio/signal_set.hpp>
-#include <iostream>
 
-namespace asyncgi{
+namespace asyncgi::detail{
 
 Runtime::Runtime()
     : signals_(io_, SIGINT, SIGTERM)

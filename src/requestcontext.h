@@ -4,7 +4,7 @@
 #include <fcgi_responder/response.h>
 #include <memory>
 
-namespace asyncgi{
+namespace asyncgi::detail{
 
 class RequestContext{
 public:

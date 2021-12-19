@@ -5,7 +5,9 @@
 #include <filesystem>
 
 namespace asyncgi{
-class RequestProcessor;
+namespace detail {
+class IRequestProcessor;
+}
 namespace fs = std::filesystem;
 
 struct TestFormParam{
@@ -25,12 +27,12 @@ struct TestFormParam{
 
 class TestServer{
 public:
-    TestServer(RequestProcessor& requestProcessor);
+    TestServer(detail::IRequestProcessor& requestProcessor);
     std::string process(const std::map<std::string, std::string>& fcgiParams,
                         const std::map<std::string, TestFormParam>& formParams);
 
 private:
-    RequestProcessor& requestProcessor_;
+    detail::IRequestProcessor& requestProcessor_;
 };
 
 }

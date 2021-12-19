@@ -4,7 +4,7 @@ namespace asio{
     class io_context;
 }
 
-namespace asyncgi{
+namespace asyncgi::detail{
 class IRuntime{
 public:
     virtual ~IRuntime() = default;

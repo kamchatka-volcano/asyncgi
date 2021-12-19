@@ -6,9 +6,9 @@
 #include <asio/write.hpp>
 #include <memory>
 
-namespace asyncgi{
+namespace asyncgi::detail{
 
-Connection::Connection(RequestProcessor& requestProcessor, asio::io_context& io, ErrorHandlerFunc errorHandler, ConnectionFactoryTag)
+Connection::Connection(IRequestProcessor& requestProcessor, asio::io_context& io, ErrorHandlerFunc errorHandler, ConnectionFactoryTag)
     : requestProcessor_(requestProcessor)
     , timer_(io)
     , socket_(io)

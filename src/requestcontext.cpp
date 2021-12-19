@@ -1,7 +1,7 @@
 #include "requestcontext.h"
 #include <asyncgi/types.h>
 
-namespace asyncgi {
+namespace asyncgi::detail {
 
 RequestContext::RequestContext(fcgi::Request&& request, fcgi::Response&& response)
     : response_(std::move(response))
@@ -14,12 +14,12 @@ RequestContext::RequestContext(fcgi::Request&& request, fcgi::Response&& respons
 {
 }
 
-const http::Request& asyncgi::RequestContext::request() const
+const http::Request& RequestContext::request() const
 {
     return request_;
 }
 
-fcgi::Response& asyncgi::RequestContext::response()
+fcgi::Response& RequestContext::response()
 {
     return response_;
 }

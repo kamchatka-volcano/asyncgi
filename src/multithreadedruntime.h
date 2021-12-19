@@ -5,7 +5,7 @@
 #include <memory>
 #include <thread>
 
-namespace asyncgi{
+namespace asyncgi::detail{
 using asio_work_guard = asio::executor_work_guard<asio::io_context::executor_type>;
 
 class MultithreadedRuntime : public Runtime

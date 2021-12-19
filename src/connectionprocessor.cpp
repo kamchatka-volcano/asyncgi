@@ -1,9 +1,9 @@
 #include "connectionprocessor.h"
 #include "connectionfactory.h"
 #include "connection.h"
-#include <asyncgi/iruntime.h>
+#include "iruntime.h"
 
-namespace asyncgi{
+namespace asyncgi::detail{
 
 ConnectionProcessor::ConnectionProcessor(std::unique_ptr<unixdomain::acceptor> connectionListener,
                                          ConnectionFactory& connectionFactory,
@@ -21,17 +21,17 @@ void ConnectionProcessor::waitForConnection()
     auto connection = connectionFactory_.makeConnection();
     connectionListener_->async_accept(connection->socket(),
         [this, connection](auto error_code){
-            onConnected(connection, error_code);
+            onConnected(*connection, error_code);
         });
 }
 
-void ConnectionProcessor::onConnected(std::shared_ptr<Connection> connection, const std::error_code& error)
+void ConnectionProcessor::onConnected(Connection& connection, const std::error_code& error)
 {
     if (error){
         errorHandler_(ErrorType::ConnectionError, error);
         return;
     }
-    connection->process();
+    connection.process();
     waitForConnection();
 }
 
