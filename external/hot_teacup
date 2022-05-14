@@ -1,11 +1,12 @@
 include(FetchContent)
 Set(FETCHCONTENT_QUIET FALSE)
-
-FetchContent_Declare(
-        hot_teacup
-        GIT_REPOSITORY https://github.com/kamchatka-volcano/hot_teacup.git
-        GIT_TAG        c6ee1eae27
-        GIT_SHALLOW    ON
-        GIT_PROGRESS TRUE
-)
-FetchContent_MakeAvailable(hot_teacup)
+if (NOT TARGET hot_teacup)
+    FetchContent_Declare(
+            hot_teacup
+            GIT_REPOSITORY https://github.com/kamchatka-volcano/hot_teacup.git
+            GIT_TAG        v1.0.1
+            GIT_SHALLOW    ON
+            GIT_PROGRESS TRUE
+    )
+    FetchContent_MakeAvailable(hot_teacup)
+endif()

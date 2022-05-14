@@ -4,20 +4,22 @@ find_package(Threads REQUIRED)
 include(FetchContent)
 Set(FETCHCONTENT_QUIET FALSE)
 
-FetchContent_Declare(asio
-        GIT_REPOSITORY git@github.com:chriskohlhoff/asio.git
-        GIT_TAG master
-        GIT_SHALLOW    ON
-        GIT_PROGRESS TRUE
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        )
+if (NOT TARGET asio)
+    FetchContent_Declare(asio
+            GIT_REPOSITORY git@github.com:chriskohlhoff/asio.git
+            GIT_TAG master
+            GIT_SHALLOW    ON
+            GIT_PROGRESS TRUE
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND ""
+            )
 
-FetchContent_GetProperties(asio)
-if(NOT asio_POPULATED)
-    FetchContent_Populate(asio)
+    FetchContent_GetProperties(asio)
+    if(NOT asio_POPULATED)
+        FetchContent_Populate(asio)
+    endif()
+
+    add_library(asio INTERFACE)
+    target_include_directories(asio INTERFACE ${asio_SOURCE_DIR}/asio/include)
+    target_link_libraries(asio INTERFACE Threads::Threads)
 endif()
-
-add_library(asio INTERFACE)
-target_include_directories(asio INTERFACE ${asio_SOURCE_DIR}/asio/include)
-target_link_libraries(asio INTERFACE Threads::Threads)

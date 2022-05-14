@@ -10,9 +10,9 @@ namespace asyncgi{
 class IApp{
 public:
     virtual ~IApp() = default;
-    virtual std::unique_ptr<IServer> makeServer(detail::IRequestProcessor&) = 0;
-    virtual std::unique_ptr<IServer> makeServer(detail::IRequestProcessor&, ErrorHandlerFunc errorHandler) = 0;
-    virtual std::unique_ptr<ITimer> makeTimer() = 0;
+    virtual std::unique_ptr<IServer> makeServer(detail::IRequestProcessor&) const = 0;
+    virtual std::unique_ptr<IServer> makeServer(detail::IRequestProcessor&, ErrorHandlerFunc errorHandler) const = 0;
+    virtual std::unique_ptr<ITimer> makeTimer() const = 0;
     virtual void exec() = 0;
 };
 

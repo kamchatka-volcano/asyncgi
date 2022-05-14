@@ -2,6 +2,7 @@
 #include <map>
 #include <string>
 #include <optional>
+#include <variant>
 #include <filesystem>
 
 namespace asyncgi{
@@ -10,19 +11,13 @@ class IRequestProcessor;
 }
 namespace fs = std::filesystem;
 
+struct TestFormFile{
+    fs::path filePath;
+    std::optional<std::string> mimeType;
+};
+
 struct TestFormParam{
-    struct FileInfo{
-        fs::path filePath;
-        std::string mimeType;
-    };
-    TestFormParam(std::string value)
-            : value(std::move(value))
-    {}
-    TestFormParam(std::string fileName, std::string mimeType)
-            : fileInfo{FileInfo{std::move(fileName), std::move(mimeType)}}
-    {}
-    std::optional<std::string> value;
-    std::optional<FileInfo> fileInfo;
+    std::variant<std::string, TestFormFile> value;
 };
 
 class TestServer{

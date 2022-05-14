@@ -6,11 +6,14 @@
 #include "requestcontext.h"
 #include <fcgi_responder/request.h>
 #include <fcgi_responder/response.h>
+#include <sfun/string_utils.h>
 #include <asio.hpp>
 #include <fstream>
 #include <iostream>
 
 namespace asyncgi{
+
+namespace str = sfun::string_utils;
 
 namespace {
 const auto formBoundary = std::string{"----WebKitFormBoundaryTEST"};
@@ -23,23 +26,27 @@ std::string makeForm(const std::map<std::string, TestFormParam>& formParams)
         result += "--" + formBoundary + "\r\n";
         auto header = http::Header{"Content-Disposition", "form-data"};
         header.setParam("name", paramName);
-        if (formParam.value)
-            result += header.toString() + "\r\n\r\n" + *formParam.value + "\r\n";
-        else if (formParam.fileInfo){
-            header.setParam("filename", formParam.fileInfo->filePath.filename());
-            auto fileHeader = http::Header{"Content-Type", formParam.fileInfo->mimeType};
+        if (std::holds_alternative<std::string>(formParam.value))
+            result += header.toString() + "\r\n\r\n" + std::get<std::string>(formParam.value) + "\r\n";
+        else{
+            const auto& formFile = std::get<TestFormFile>(formParam.value);
+            header.setParam("filename", formFile.filePath.filename());
+            auto fileHeader = std::optional<http::Header>{};
+            if (formFile.mimeType)
+                fileHeader = http::Header{"Content-Type", *formFile.mimeType};
 
-            auto fileStream = std::ifstream{formParam.fileInfo->filePath};
+            auto fileStream = std::ifstream{formFile.filePath};
             if (!fileStream.is_open()) {
-                std::cerr << "Can't open form param " + paramName + " file " + formParam.fileInfo->filePath.string() + " for reading";
+                std::cerr << "Can't open form param " + paramName + " file " + formFile.filePath.string() + " for reading";
                 continue;
             }
             const auto paramFileContent = std::string{std::istreambuf_iterator<char>{fileStream},
                                                       std::istreambuf_iterator<char>{}};
 
-            result += header.toString() + "\r\n" +
-                      fileHeader.toString() + "\r\n\r\n" +
-                      paramFileContent + "\r\n";
+            result += header.toString() + "\r\n";
+            if (fileHeader)
+                result += fileHeader->toString() + "\r\n\r\n";
+            result += paramFileContent + "\r\n";
         }
     }
     result += "--" + formBoundary + "--\r\n";

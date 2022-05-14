@@ -1,11 +1,12 @@
 include(FetchContent)
 Set(FETCHCONTENT_QUIET FALSE)
-
-FetchContent_Declare(
-        fcgi_responder
-        GIT_REPOSITORY https://github.com/kamchatka-volcano/fcgi_responder.git
-        GIT_TAG        4169f7b0
-        GIT_SHALLOW    ON
-        GIT_PROGRESS TRUE
-)
-FetchContent_MakeAvailable(fcgi_responder)
+if (NOT TARGET fcgi_responder)
+    FetchContent_Declare(
+            fcgi_responder
+            GIT_REPOSITORY https://github.com/kamchatka-volcano/fcgi_responder.git
+            GIT_TAG        v1.0.0
+            GIT_SHALLOW    ON
+            GIT_PROGRESS TRUE
+    )
+    FetchContent_MakeAvailable(fcgi_responder)
+endif()

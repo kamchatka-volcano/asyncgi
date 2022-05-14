@@ -11,9 +11,9 @@ class App : public IApp
 {
 public:
     explicit App(std::unique_ptr<detail::IRuntime>);
-    std::unique_ptr<IServer> makeServer(IRequestProcessor&) override;
-    std::unique_ptr<IServer> makeServer(IRequestProcessor&, ErrorHandlerFunc errorHandler) override;
-    std::unique_ptr<ITimer> makeTimer() override;
+    std::unique_ptr<IServer> makeServer(IRequestProcessor&) const override;
+    std::unique_ptr<IServer> makeServer(IRequestProcessor&, ErrorHandlerFunc errorHandler) const override;
+    std::unique_ptr<ITimer> makeTimer() const override;
     void exec() override;
 
 private:
@@ -25,19 +25,19 @@ App::App(std::unique_ptr<detail::IRuntime> runtime)
 {
 }
 
-std::unique_ptr<IServer> App::makeServer(detail::IRequestProcessor& requestProcessor, ErrorHandlerFunc errorHandler)
+std::unique_ptr<IServer> App::makeServer(detail::IRequestProcessor& requestProcessor, ErrorHandlerFunc errorHandler) const
 {
     auto connectionFactory = std::make_unique<detail::ConnectionFactory>(requestProcessor, *runtime_, errorHandler);
     return std::make_unique<detail::Server>(runtime_->io(), std::move(connectionFactory), errorHandler);
 }
 
-std::unique_ptr<IServer> App::makeServer(detail::IRequestProcessor& requestProcessor)
+std::unique_ptr<IServer> App::makeServer(detail::IRequestProcessor& requestProcessor) const
 {
     return makeServer(requestProcessor, {});
 }
 
 
-std::unique_ptr<ITimer> App::makeTimer()
+std::unique_ptr<ITimer> App::makeTimer() const
 {
     return std::make_unique<Timer>(runtime_->io());
 }
