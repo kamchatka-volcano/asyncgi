@@ -3,8 +3,10 @@
 
 namespace asyncgi::detail{
 
-Response::Response(std::shared_ptr<RequestContext> context, ITimer& timer)
-        : context_(std::move(context)), timer_(timer)
+Response::Response(std::shared_ptr<RequestContext> context, ITimer& timer, IClient& client)
+        : context_(std::move(context))
+        , timer_(timer)
+        , client_(client)
 {}
 
 void Response::send(const http::Response& response)
@@ -18,7 +20,12 @@ void Response::send(const http::Response& response)
 
 ITimer& Response::timer()
 {
-    return timer_.get();
+    return timer_;
+}
+
+IClient& Response::client()
+{
+    return client_;
 }
 
 bool Response::isSent() const

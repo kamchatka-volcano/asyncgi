@@ -1,4 +1,5 @@
 #pragma once
+#include "alias_unixdomain.h"
 #include <asyncgi/iserver.h>
 #include <asyncgi/types.h>
 #include <asyncgi/errors.h>
@@ -11,8 +12,8 @@ class io_context;
 }
 
 namespace asyncgi::detail{
-class ConnectionProcessor;
 class ConnectionFactory;
+class Connection;
 
 class Server : public IServer{
 public:
@@ -20,11 +21,15 @@ public:
     ~Server() override;
     void listen(const std::filesystem::path& socketPath) override;
 
+private:
+    void waitForConnection();
+    void onConnected(Connection& connection, const std::error_code& error);
+
 private:    
     asio::io_context& io_;
     std::unique_ptr<detail::ConnectionFactory> connectionFactory_;
-    ErrorHandlerFunc errorHandler_;
-    std::unique_ptr<detail::ConnectionProcessor> connectionProcessor_;
+    ErrorHandler errorHandler_;
+    std::unique_ptr<unixdomain::acceptor> connectionListener_;
 };
 
 }

@@ -1,5 +1,5 @@
 #include "server.h"
-#include "connectionprocessor.h"
+#include "connection.h"
 #include "connectionfactory.h"
 #include "iruntime.h"
 #include "alias_unixdomain.h"
@@ -30,8 +30,27 @@ void initUnixDomainSocket(const fs::path& path)
 void Server::listen(const fs::path& socketPath)
 {
     initUnixDomainSocket(socketPath);
-    auto connectionListener = std::make_unique<unixdomain::acceptor>(io_, unixdomain::endpoint{socketPath});
-    connectionProcessor_ = std::make_unique<ConnectionProcessor>(std::move(connectionListener), *connectionFactory_, errorHandler_);
+    connectionListener_ = std::make_unique<unixdomain::acceptor>(io_, unixdomain::endpoint{socketPath});
+    waitForConnection();
+}
+
+void Server::waitForConnection()
+{
+    auto connection = connectionFactory_->makeConnection();
+    connectionListener_->async_accept(connection->socket(),
+        [this, connection](auto error_code){
+            onConnected(*connection, error_code);
+        });
+}
+
+void Server::onConnected(Connection& connection, const std::error_code& error)
+{
+    if (error){
+        errorHandler_(ErrorType::ConnectionError, error);
+        return;
+    }
+    connection.process();
+    waitForConnection();
 }
 
 }

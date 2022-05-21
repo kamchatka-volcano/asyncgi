@@ -4,6 +4,7 @@
 #include <asyncgi/response.h>
 #include "timer.h"
 #include "requestcontext.h"
+#include "client.h"
 #include <fcgi_responder/request.h>
 #include <fcgi_responder/response.h>
 #include <sfun/string_utils.h>
@@ -82,7 +83,8 @@ std::string TestServer::process(const std::map<std::string, std::string>& fcgiPa
     auto request = Request{context};
     auto ioContext = asio::io_context{};
     auto timer = detail::Timer{ioContext};
-    auto response = detail::Response{context, timer};
+    auto client = Client{ioContext, {}};
+    auto response = detail::Response{context, timer, client};
     requestProcessor_.process(request, response);
     return result;
 }

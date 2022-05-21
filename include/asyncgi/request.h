@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include <unordered_map>
+#include <map>
 #include <functional>
 
 namespace asyncgi{
@@ -15,24 +15,17 @@ class RequestContext;
 
 class Request{
 public:
+    //as http::Request
     const std::string& ipAddress() const;
-    std::string domainName() const;
-    std::string path() const;
-    const std::string& param(const std::string& name) const;
-    bool hasParam(const std::string& name) const;
-    std::vector<std::string> paramList() const;
-    std::vector<std::string> missingFCGIParams() const;
-
-    //http::Request
+    const std::string& domainName() const;
+    const std::string& path() const;
     http::RequestMethod method() const;
     const http::Queries& queries() const;
-    std::vector<std::string> queryList() const;
     const std::string& query(const std::string& name) const;
     bool hasQuery(const std::string& name) const;
     const std::string& cookie(const std::string& name) const;
 
     const http::Cookies& cookies() const;
-    std::vector<std::string> cookieList() const;
     bool hasCookie(const std::string& name) const;
     const std::string& formField(const std::string &name, int index = 0) const;
 
@@ -48,7 +41,14 @@ public:
     const std::string& fileType(const std::string &name, int index = 0) const;
     bool hasFiles() const;
 
-    Request(std::shared_ptr<detail::RequestContext> context);
+    //as FCGIRequest
+    const std::string& fcgiParam(const std::string& name) const;
+    bool hasFcgiParam(const std::string& name) const;
+    std::vector<std::string> fcgiParamList() const;
+    const std::string& fcgiStdIn() const;
+    std::map<std::string, std::string> fcgiParamMap() const;
+
+    explicit Request(std::shared_ptr<detail::RequestContext> context);
 
 private:
     std::shared_ptr<detail::RequestContext> context_;

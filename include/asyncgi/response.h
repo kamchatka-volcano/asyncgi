@@ -1,7 +1,9 @@
 #pragma once
 #include "itimer.h"
+#include "iclient.h"
 #include "types.h"
 #include <hot_teacup/response.h>
+#include <hot_teacup/request.h>
 #include <whaleroute/requestprocessorqueue.h>
 #include <memory>
 #include <optional>
@@ -27,14 +29,16 @@ auto make_copyable_function(F&& f)
 namespace detail {
 class Response{
 public:
-    Response(std::shared_ptr<RequestContext> context, ITimer& timer);
+    Response(std::shared_ptr<RequestContext> context, ITimer& timer, IClient& client);
     void send(const http::Response&);
     bool isSent() const;
     ITimer& timer();
+    IClient& client();
 
 private:
     std::shared_ptr<RequestContext> context_;
     std::reference_wrapper<ITimer> timer_;
+    std::reference_wrapper<IClient> client_;
 };
 }
 
@@ -83,6 +87,49 @@ public:
                 waitFuture(std::move(fut), std::move(func), checkPeriod);
         };
         timer.start(checkPeriod, detail::make_copyable_function(std::move(timerCallback)), TimerMode::Once);
+    }
+
+    void makeRequest(const std::filesystem::path& socketPath,
+                     const FCGIRequest& fcgiRequest,
+                     const std::function<void(const std::optional<FCGIResponse>&)>& responseHandler)
+    {
+        if (requestProcessorQueue_)
+            requestProcessorQueue_->stop();
+
+        response_.client().makeRequest(socketPath, fcgiRequest,
+           [this, responseHandler](const std::optional<FCGIResponse>& response){
+               if (response)
+                   responseHandler(response);
+               else
+                   responseHandler(std::nullopt);
+               if (requestProcessorQueue_)
+                   requestProcessorQueue_->launch();
+           });
+    }
+
+    void makeRequest(const std::filesystem::path& socketPath,
+                     const http::Request& request,
+                     const std::function<void(const std::optional<http::Response>&)>& httpResponseHandler)
+    {
+        if (requestProcessorQueue_)
+            requestProcessorQueue_->stop();
+
+        auto fcgiRequestData = request.toFcgiData(http::FormType::Multipart);
+        auto fcgiRequest = FCGIRequest{std::move(fcgiRequestData.params), std::move(fcgiRequestData.stdIn)};
+        response_.client().makeRequest(socketPath, fcgiRequest,
+           [this, httpResponseHandler](const std::optional<FCGIResponse>& response){
+               if (response)
+                   httpResponseHandler(http::responseFromString(response->data));
+               else
+                   httpResponseHandler(std::nullopt);
+               if (requestProcessorQueue_)
+                   requestProcessorQueue_->launch();
+           });
+    }
+
+    void cancelRequest()
+    {
+        response_.client().disconnect();
     }
 
 private:

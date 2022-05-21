@@ -11,51 +11,44 @@ Request::Request(std::shared_ptr<detail::RequestContext> context)
 {
 }
 
-const std::string& Request::ipAddress() const
-{
-    return param(fcgiParamStr(FCGIParam::RemoteAddress));
-}
-
-std::string Request::domainName() const
-{
-    return str::before(param(fcgiParamStr(FCGIParam::HTTPHost)), ":");
-}
-
-std::string Request::path() const
-{
-    return str::before(param(fcgiParamStr(FCGIParam::RequestURI)), "?");
-}
-
-const std::string& Request::param(const std::string &name) const
+const std::string& Request::fcgiParam(const std::string &name) const
 {
     return context_->fcgiRequest().param(name);
 }
 
-bool Request::hasParam(const std::string &name) const
+bool Request::hasFcgiParam(const std::string &name) const
 {
     return context_->fcgiRequest().hasParam(name);
 }
 
-std::vector<std::string> Request::paramList() const
+std::vector<std::string> Request::fcgiParamList() const
 {
     return context_->fcgiRequest().paramList();
 }
 
-std::vector<std::string> Request::missingFCGIParams() const
+const std::string& Request::fcgiStdIn() const
 {
-    auto result = std::vector<std::string>{};
-    auto checkParam = [&](FCGIParam param){
-        auto paramStr = fcgiParamStr(param);
-        if (!hasParam(paramStr))
-            result.push_back(paramStr);
-    };
-    checkParam(FCGIParam::ContentType);
-    checkParam(FCGIParam::RequestURI);
-    checkParam(FCGIParam::QueryString);
-    checkParam(FCGIParam::RemoteAddress);
-    checkParam(FCGIParam::RequestMethod);
-    checkParam(FCGIParam::HTTPHost);
-    return result;
+    return context_->fcgiRequest().stdIn();
+}
+
+std::map<std::string, std::string> Request::fcgiParamMap() const
+{
+    return context_->fcgiRequest().paramMap();
+}
+
+const std::string& Request::ipAddress() const
+{
+    return context_->request().ipAddress();
+}
+
+const std::string& Request::domainName() const
+{
+    return context_->request().domainName();
+}
+
+const std::string& Request::path() const
+{
+    return context_->request().path();
 }
 
 http::RequestMethod Request::method() const
@@ -128,19 +121,9 @@ const http::Queries& Request::queries() const
     return context_->request().queries();
 }
 
-std::vector<std::string> Request::queryList() const
-{
-    return context_->request().queryList();
-}
-
 const http::Cookies& Request::cookies() const
 {
     return context_->request().cookies();
-}
-
-std::vector<std::string> Request::cookieList() const
-{
-    return context_->request().cookieList();
 }
 
 std::vector<std::string> Request::formFieldList() const

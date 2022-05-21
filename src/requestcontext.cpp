@@ -6,17 +6,15 @@ namespace asyncgi::detail {
 RequestContext::RequestContext(fcgi::Request&& request, fcgi::Response&& response)
     : response_(std::move(response))
     , fcgiRequest_(std::move(request))
-    , request_(fcgiRequest_.param(fcgiParamStr(FCGIParam::RequestMethod)),
-               fcgiRequest_.param(fcgiParamStr(FCGIParam::QueryString)),
-               fcgiRequest_.param(fcgiParamStr(FCGIParam::HTTPCookie)),
-               "Content-Type: " + fcgiRequest_.param(fcgiParamStr(FCGIParam::ContentType)),
-               fcgiRequest_.stdIn())
 {
 }
 
-const http::Request& RequestContext::request() const
+const http::Request& RequestContext::request()
 {
-    return request_;
+    if (!request_)
+        request_.emplace(fcgiRequest_.paramMap(), fcgiRequest_.stdIn());
+
+    return *request_;
 }
 
 fcgi::Response& RequestContext::response()

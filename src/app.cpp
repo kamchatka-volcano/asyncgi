@@ -1,6 +1,7 @@
 #include <asyncgi/app.h>
 #include "server.h"
 #include "timer.h"
+#include "client.h"
 #include "runtime.h"
 #include "multithreadedruntime.h"
 #include "connectionfactory.h"
@@ -14,6 +15,7 @@ public:
     std::unique_ptr<IServer> makeServer(IRequestProcessor&) const override;
     std::unique_ptr<IServer> makeServer(IRequestProcessor&, ErrorHandlerFunc errorHandler) const override;
     std::unique_ptr<ITimer> makeTimer() const override;
+    std::unique_ptr<IClient> makeClient(ErrorHandlerFunc errorHandler) const override;
     void exec() override;
 
 private:
@@ -41,6 +43,12 @@ std::unique_ptr<ITimer> App::makeTimer() const
 {
     return std::make_unique<Timer>(runtime_->io());
 }
+
+std::unique_ptr<IClient> App::makeClient(ErrorHandlerFunc errorHandler) const
+{
+    return std::make_unique<Client>(runtime_->io(), errorHandler);
+}
+
 
 void App::exec()
 {
