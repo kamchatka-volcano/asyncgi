@@ -10,7 +10,13 @@ namespace asyncgi{
 
 class IApp{
 public:
+    IApp() = default;
     virtual ~IApp() = default;
+    IApp(const IApp&) = delete;
+    IApp& operator=(const IApp&) = delete;
+    IApp(IApp&&) = delete;
+    IApp&& operator=(IApp&&) = delete;
+
     virtual std::unique_ptr<IServer> makeServer(detail::IRequestProcessor&) const = 0;
     virtual std::unique_ptr<IServer> makeServer(detail::IRequestProcessor&, ErrorHandlerFunc errorHandler) const = 0;
     virtual std::unique_ptr<ITimer> makeTimer() const = 0;

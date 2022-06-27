@@ -44,9 +44,8 @@ public:
     //as FCGIRequest
     const std::string& fcgiParam(const std::string& name) const;
     bool hasFcgiParam(const std::string& name) const;
-    std::vector<std::string> fcgiParamList() const;
+    const std::vector<std::pair<std::string, std::string>>& fcgiParams() const;
     const std::string& fcgiStdIn() const;
-    std::map<std::string, std::string> fcgiParamMap() const;
 
     explicit Request(std::shared_ptr<detail::RequestContext> context);
 

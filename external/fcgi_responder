@@ -4,7 +4,7 @@ if (NOT TARGET fcgi_responder)
     FetchContent_Declare(
             fcgi_responder
             GIT_REPOSITORY https://github.com/kamchatka-volcano/fcgi_responder.git
-            GIT_TAG        v1.0.0
+            GIT_TAG        v1.2.2
             GIT_SHALLOW    ON
             GIT_PROGRESS TRUE
     )

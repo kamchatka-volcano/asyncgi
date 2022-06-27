@@ -1,94 +1,98 @@
 #include "client.h"
 #include "alias_unixdomain.h"
+#include "timerprovider.h"
 #include <asio/write.hpp>
 
-namespace asyncgi{
+namespace asyncgi::detail{
 
 Client::Client(asio::io_context& io, ErrorHandlerFunc errorHandler)
     : socket_{io}
+    , timerProvider_{io}
     , errorHandler_{std::move(errorHandler)}
 {}
 
-void Client::makeRequest(const fs::path& socketPath,
-                         const FCGIRequest& fcgiRequest,
-                         const std::function<void(const std::optional<FCGIResponse>&)>& responseHandler)
+void Client::makeRequest(
+        const fs::path& socketPath,
+        std::map<std::string, std::string> fcgiParams,
+        std::string fcgiStdIn,
+        std::function<void(const std::optional<std::string>&)> responseHandler,
+        const std::chrono::milliseconds& timeout)
 {
-    auto convertResponseHandler = [responseHandler](const std::optional<fcgi::ResponseData>& fcgiResponse) {
-        if (fcgiResponse)
-            responseHandler(FCGIResponse{fcgiResponse->data, fcgiResponse->errorMsg});
+    auto cancelRequestOnTimeout = std::make_shared<std::function<void()>>([]{});
+    auto& responseTimeoutTimer = timerProvider_.emplaceTimer();
+    responseTimeoutTimer.start(timeout, [=] {
+        (*cancelRequestOnTimeout)();
+    }, TimerMode::Once);
+
+    auto onResponseReceived = [=, &responseTimeoutTimer](const std::optional<fcgi::ResponseData>& fcgiResponse) {
+        responseTimeoutTimer.stop();
+        if (fcgiResponse) {
+            if (!fcgiResponse->errorMsg.empty())
+                errorHandler_(ErrorType::RequestProcessingError, -1, fcgiResponse->errorMsg);
+            responseHandler(fcgiResponse->data);
+        }
         else
             responseHandler(std::nullopt);
     };
 
-    if (isConnected_){
-        sendRequest(fcgiRequest.params, fcgiRequest.stdIn, convertResponseHandler);
-        return;
-    }
-
-    auto onFcgiConnectionEstablished =
-        [=](bool isConnected) {
-            if (!isConnected){
-                responseHandler(std::nullopt);
-                return;
-            }
-            isConnected_ = true;
-            sendRequest(fcgiRequest.params, fcgiRequest.stdIn, convertResponseHandler);
-        };
-
-    socket_.async_connect(unixdomain::endpoint{socketPath},
-        [=](auto error_code){
-            if (error_code){
-                responseHandler(std::nullopt);
-                return;
-            }
-            processReading();
-            initConnection(onFcgiConnectionEstablished, true);
-        });
+    makeRequest(socketPath, std::move(fcgiParams), std::move(fcgiStdIn), onResponseReceived, cancelRequestOnTimeout);
 }
 
-void Client::makeRequest(const fs::path& socketPath,
-                         const http::Request& request,
-                         const std::function<void(const std::optional<http::Response>&)>& responseHandler)
+void Client::makeRequest(
+        const fs::path& socketPath,
+        const http::Request& request,
+        const std::function<void(const std::optional<http::Response>&)>& responseHandler,
+        const std::chrono::milliseconds& timeout)
 {
-    auto convertResponseHandler = [responseHandler](const std::optional<fcgi::ResponseData>& fcgiResponse) {
-        if (fcgiResponse)
+    auto cancelRequestOnTimeout = std::make_shared<std::function<void()>>([]{});
+    auto& responseTimeoutTimer = timerProvider_.emplaceTimer();
+    responseTimeoutTimer.start(timeout, [=] {
+        (*cancelRequestOnTimeout)();
+    }, TimerMode::Once);
+
+    auto onResponseReceived = [=, &responseTimeoutTimer](const std::optional<fcgi::ResponseData>& fcgiResponse) {
+        responseTimeoutTimer.stop();
+        if (fcgiResponse) {
+             if (!fcgiResponse->errorMsg.empty())
+                errorHandler_(ErrorType::RequestProcessingError, -1, fcgiResponse->errorMsg);
             responseHandler(http::responseFromString(fcgiResponse->data));
+        }
         else
             responseHandler(std::nullopt);
     };
-
     auto fcgiRequest = request.toFcgiData(http::FormType::Multipart);
-    if (isConnected_){
-        sendRequest(fcgiRequest.params, fcgiRequest.stdIn, convertResponseHandler);
-        return;
-    }
+    makeRequest(socketPath, std::move(fcgiRequest.params), std::move(fcgiRequest.stdIn), onResponseReceived, cancelRequestOnTimeout);
+}
 
-    auto onFcgiConnectionEstablished =
-        [=](bool isConnected) {
-            if (!isConnected){
-                responseHandler(std::nullopt);
-                return;
-            }
-            isConnected_ = true;
-            sendRequest(fcgiRequest.params, fcgiRequest.stdIn, convertResponseHandler);
-        };
-
+void Client::makeRequest(
+        const fs::path& socketPath,
+        std::map<std::string, std::string> fcgiParams,
+        std::string fcgiStdIn,
+        std::function<void(const std::optional<fcgi::ResponseData>&)> responseHandler,
+        const std::shared_ptr<std::function<void()>>& cancelRequestOnTimeout)
+{
     socket_.async_connect(unixdomain::endpoint{socketPath},
-        [=](auto error_code){
+        [this, cancelRequestOnTimeout,
+         fcgiParams = std::move(fcgiParams),
+         fcgiStdIn = std::move(fcgiStdIn),
+         responseHandler = std::move(responseHandler)](auto error_code) mutable{
             if (error_code){
                 responseHandler(std::nullopt);
                 return;
             }
             processReading();
-            initConnection(onFcgiConnectionEstablished, true);
+            auto requestHandle = sendRequest(std::move(fcgiParams), std::move(fcgiStdIn), std::move(responseHandler));
+            if (requestHandle)
+                *cancelRequestOnTimeout = [=]() mutable{
+                    requestHandle->cancelRequest();
+                };
+            else
+                responseHandler(std::nullopt);
         });
 }
-
 
 void Client::disconnect()
 {
-    if (!isConnected_)
-        return;
     disconnectRequested_ = true;
     if (bytesToWrite_ > 0)
         return;
@@ -97,6 +101,8 @@ void Client::disconnect()
 
 void Client::processReading()
 {
+    if (!socket_.is_open())
+        return;
     socket_.async_read_some(asio::buffer(buffer_),
         [this](const auto& error, auto bytesRead){
             if (error){
@@ -147,6 +153,5 @@ void Client::close()
     }
     disconnectRequested_ = false;
 }
-
 
 }

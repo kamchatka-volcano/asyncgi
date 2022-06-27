@@ -10,11 +10,16 @@ class RequestProcessor;
 namespace detail{
 class IRequestProcessor {
 public:
+    IRequestProcessor() = default;
+    virtual ~IRequestProcessor() = default;
+    IRequestProcessor(const IRequestProcessor&) = delete;
+    IRequestProcessor& operator=(const IRequestProcessor&) = delete;
+    IRequestProcessor(IRequestProcessor&&) = delete;
+    IRequestProcessor&& operator=(IRequestProcessor&&) = delete;
+
     virtual void process(const Request&, Response&) = 0;
 
 private:
-    virtual ~IRequestProcessor() = default;
-
     template<class TResponseContext>
     friend class asyncgi::RequestProcessor;
 };

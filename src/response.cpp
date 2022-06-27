@@ -1,12 +1,13 @@
 #include <asyncgi/response.h>
 #include "requestcontext.h"
+#include "timerprovider.h"
 
 namespace asyncgi::detail{
 
-Response::Response(std::shared_ptr<RequestContext> context, ITimer& timer, IClient& client)
-        : context_(std::move(context))
-        , timer_(timer)
-        , client_(client)
+Response::Response(std::shared_ptr<RequestContext> context, TimerProvider& timerProvider, IClient& client)
+    : context_{std::move(context)}
+    , timerProvider_{timerProvider}
+    , client_{client}
 {}
 
 void Response::send(const http::Response& response)
@@ -18,9 +19,9 @@ void Response::send(const http::Response& response)
     context_->response().send();
 }
 
-ITimer& Response::timer()
+ITimer& Response::makeTimer()
 {
-    return timer_;
+    return timerProvider_.get().emplaceTimer();
 }
 
 IClient& Response::client()

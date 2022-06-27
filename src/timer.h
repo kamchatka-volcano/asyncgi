@@ -1,11 +1,14 @@
 #pragma once
 #include <asyncgi/itimer.h>
-#include <asio/io_context.hpp>
 #include <asio/steady_timer.hpp>
 #include <map>
 #include <future>
 #include <functional>
 #include <chrono>
+
+namespace asio{
+    class io_context;
+}
 
 namespace asyncgi::detail{
 

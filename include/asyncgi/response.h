@@ -10,10 +10,10 @@
 #include <future>
 
 namespace asyncgi{
-class TimerFactory;
 
 namespace detail {
 class RequestContext;
+class TimerProvider;
 
 template<class F>
 auto make_copyable_function(F&& f)
@@ -29,15 +29,15 @@ auto make_copyable_function(F&& f)
 namespace detail {
 class Response{
 public:
-    Response(std::shared_ptr<RequestContext> context, ITimer& timer, IClient& client);
+    Response(std::shared_ptr<RequestContext>, TimerProvider&, IClient&);
     void send(const http::Response&);
     bool isSent() const;
-    ITimer& timer();
+    ITimer& makeTimer();
     IClient& client();
 
 private:
     std::shared_ptr<RequestContext> context_;
-    std::reference_wrapper<ITimer> timer_;
+    std::reference_wrapper<TimerProvider> timerProvider_;
     std::reference_wrapper<IClient> client_;
 };
 }
@@ -75,7 +75,7 @@ public:
         static_assert (std::is_invocable_v<TCallable, T>, "TCallable must be invokable with argument of type T");
         if (requestProcessorQueue_)
             requestProcessorQueue_->stop();
-        auto& timer = response_.timer();
+        auto& timer = response_.makeTimer();
         auto timerCallback = [fut = std::move(future), func = std::move(callback), &timer, checkPeriod, this]() mutable{
             if (fut.wait_for(std::chrono::seconds{0}) == std::future_status::ready){
                 timer.stop();
@@ -89,42 +89,46 @@ public:
         timer.start(checkPeriod, detail::make_copyable_function(std::move(timerCallback)), TimerMode::Once);
     }
 
-    void makeRequest(const std::filesystem::path& socketPath,
-                     const FCGIRequest& fcgiRequest,
-                     const std::function<void(const std::optional<FCGIResponse>&)>& responseHandler)
+    void makeRequest(
+            const std::filesystem::path& socketPath,
+            const std::map<std::string, std::string>& fcgiParams,
+            const std::string& fcgiStdIn,
+            const std::function<void(const std::optional<std::string>&)>& responseHandler,
+            const std::chrono::milliseconds timeout = std::chrono::seconds{3})
     {
         if (requestProcessorQueue_)
             requestProcessorQueue_->stop();
 
-        response_.client().makeRequest(socketPath, fcgiRequest,
-           [this, responseHandler](const std::optional<FCGIResponse>& response){
+        response_.client().makeRequest(socketPath, fcgiParams, fcgiStdIn,
+           [this, responseHandler](const std::optional<std::string>& response){
                if (response)
-                   responseHandler(response);
+                   responseHandler(*response);
                else
                    responseHandler(std::nullopt);
                if (requestProcessorQueue_)
                    requestProcessorQueue_->launch();
-           });
+           }, timeout);
     }
 
-    void makeRequest(const std::filesystem::path& socketPath,
-                     const http::Request& request,
-                     const std::function<void(const std::optional<http::Response>&)>& httpResponseHandler)
+    void makeRequest(
+            const std::filesystem::path& socketPath,
+            const http::Request& request,
+            const std::function<void(const std::optional<http::Response>&)>& httpResponseHandler,
+            const std::chrono::milliseconds timeout = std::chrono::seconds{3})
     {
         if (requestProcessorQueue_)
             requestProcessorQueue_->stop();
 
-        auto fcgiRequestData = request.toFcgiData(http::FormType::Multipart);
-        auto fcgiRequest = FCGIRequest{std::move(fcgiRequestData.params), std::move(fcgiRequestData.stdIn)};
-        response_.client().makeRequest(socketPath, fcgiRequest,
-           [this, httpResponseHandler](const std::optional<FCGIResponse>& response){
+        auto fcgiRequest = request.toFcgiData(http::FormType::Multipart);
+        response_.client().makeRequest(socketPath, fcgiRequest.params, fcgiRequest.stdIn,
+           [this, httpResponseHandler](const std::optional<std::string>& response){
                if (response)
-                   httpResponseHandler(http::responseFromString(response->data));
+                   httpResponseHandler(http::responseFromString(*response));
                else
                    httpResponseHandler(std::nullopt);
                if (requestProcessorQueue_)
                    requestProcessorQueue_->launch();
-           });
+           }, timeout);
     }
 
     void cancelRequest()

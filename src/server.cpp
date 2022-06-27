@@ -10,10 +10,10 @@ namespace asyncgi::detail{
 namespace fs = std::filesystem;
 
 Server::Server(asio::io_context& io, std::unique_ptr<ConnectionFactory> connectionFactory, ErrorHandlerFunc errorHandler)
-    : io_(io)
-    , connectionFactory_(std::move(connectionFactory))
-    , errorHandler_(std::move(errorHandler))
-{    
+    : io_{io}
+    , connectionFactory_{std::move(connectionFactory)}
+    , errorHandler_{std::move(errorHandler)}
+{
 }
 
 Server::~Server() = default;

@@ -5,9 +5,9 @@
 namespace asyncgi::detail{
 
 ConnectionFactory::ConnectionFactory(IRequestProcessor& requestProcessor, IRuntime& runtime, ErrorHandlerFunc errorHandler)
-    : requestProcessor_(requestProcessor)
-    , runtime_(runtime)
-    , errorHandler_(errorHandler)
+    : requestProcessor_{requestProcessor}
+    , runtime_{runtime}
+    , errorHandler_{std::move(errorHandler)}
 {}
 
 std::shared_ptr<Connection> ConnectionFactory::makeConnection()

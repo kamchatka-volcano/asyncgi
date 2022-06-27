@@ -3,7 +3,7 @@
 namespace asyncgi{
 
 ErrorHandler::ErrorHandler(ErrorHandlerFunc func)
-    : func_(func)
+    : func_{std::move(func)}
 {}
 
 void ErrorHandler::operator()(ErrorType errorType, const std::error_code& errorCode)

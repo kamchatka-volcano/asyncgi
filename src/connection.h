@@ -1,6 +1,6 @@
 #pragma once
 #include "alias_unixdomain.h"
-#include "timer.h"
+#include "timerprovider.h"
 #include "client.h"
 #include <asyncgi/requestprocessor.h>
 #include <asyncgi/errors.h>
@@ -35,7 +35,7 @@ private:
 
 private:
     IRequestProcessor& requestProcessor_;
-    Timer timer_;
+    TimerProvider timerProvider_;
     Client client_;
     unixdomain::socket socket_;
     std::array<char, 65536> buffer_;

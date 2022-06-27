@@ -1,10 +1,10 @@
 #include "timer.h"
-#include <iostream>
+#include <asio/io_context.hpp>
 
 namespace asyncgi::detail{
 
 Timer::Timer(asio::io_context& io)
-    : io_(io)
+    : io_{io}
     , timer_{io_}
 {}
 

@@ -7,7 +7,7 @@ namespace asyncgi{
 namespace str = sfun::string_utils;
 
 Request::Request(std::shared_ptr<detail::RequestContext> context)
-    : context_(std::move(context))
+    : context_{std::move(context)}
 {
 }
 
@@ -21,19 +21,14 @@ bool Request::hasFcgiParam(const std::string &name) const
     return context_->fcgiRequest().hasParam(name);
 }
 
-std::vector<std::string> Request::fcgiParamList() const
+const std::vector<std::pair<std::string, std::string>>& Request::fcgiParams() const
 {
-    return context_->fcgiRequest().paramList();
+    return context_->fcgiRequest().params();
 }
 
 const std::string& Request::fcgiStdIn() const
 {
     return context_->fcgiRequest().stdIn();
-}
-
-std::map<std::string, std::string> Request::fcgiParamMap() const
-{
-    return context_->fcgiRequest().paramMap();
 }
 
 const std::string& Request::ipAddress() const

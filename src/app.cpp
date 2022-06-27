@@ -1,8 +1,8 @@
 #include <asyncgi/app.h>
 #include "server.h"
-#include "timer.h"
 #include "client.h"
 #include "runtime.h"
+#include "timer.h"
 #include "multithreadedruntime.h"
 #include "connectionfactory.h"
 
@@ -23,7 +23,7 @@ private:
 };
 
 App::App(std::unique_ptr<detail::IRuntime> runtime)
-    : runtime_(std::move(runtime))
+    : runtime_{std::move(runtime)}
 {
 }
 

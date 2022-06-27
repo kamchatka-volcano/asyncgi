@@ -9,11 +9,11 @@
 namespace asyncgi::detail{
 
 Connection::Connection(IRequestProcessor& requestProcessor, asio::io_context& io, ErrorHandlerFunc errorHandler, ConnectionFactoryTag)
-    : requestProcessor_(requestProcessor)
-    , timer_(io)
-    , client_(io, errorHandler)
-    , socket_(io)
-    , errorHandler_(errorHandler)
+    : requestProcessor_{requestProcessor}
+    , timerProvider_{io}
+    , client_{io, errorHandler}
+    , socket_{io}
+    , errorHandler_{errorHandler}
 {}
 
 unixdomain::socket& Connection::socket()
@@ -75,7 +75,7 @@ void Connection::processRequest(fcgi::Request&& fcgiRequest, fcgi::Response&& fc
         auto context = std::make_shared<RequestContext>(std::move(fcgiRequest),
                                                         std::move(fcgiResponse));
         const auto request = Request{context};
-        auto response = Response{context, timer_, client_};
+        auto response = Response{context, timerProvider_, client_};
         requestProcessor_.process(request, response);
     }
     catch(const std::exception& e)

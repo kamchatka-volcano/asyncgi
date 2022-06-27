@@ -3,7 +3,7 @@
 namespace asyncgi::detail{
 
 MultithreadedRuntime::MultithreadedRuntime(std::size_t threadCount)
-    : ioGuard_(io_.get_executor())
+    : ioGuard_{io_.get_executor()}
 {
     for(auto i = 0u; i < threadCount; ++i){
         auto io = std::make_shared<asio::io_context>();
