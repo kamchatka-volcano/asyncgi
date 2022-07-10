@@ -1,35 +1,31 @@
 #pragma once
-#include "alias_unixdomain.h"
 #include <asyncgi/iserver.h>
 #include <asyncgi/types.h>
 #include <asyncgi/errors.h>
+#include <asio/local/stream_protocol.hpp>
+#include <asio/ip/tcp.hpp>
 #include <filesystem>
 #include <string>
+#include <vector>
 #include <memory>
 
-namespace asio{
-class io_context;
-}
 
 namespace asyncgi::detail{
-class ConnectionFactory;
-class Connection;
+class ConnectionListenerFactory;
+template<typename TProtocol>
+class ConnectionListener;
 
 class Server : public IServer{
 public:
-    Server(asio::io_context&, std::unique_ptr<detail::ConnectionFactory>, ErrorHandlerFunc);
+    explicit Server(std::unique_ptr<ConnectionListenerFactory>);
     ~Server() override;
     void listen(const std::filesystem::path& socketPath) override;
+    void listen(std::string_view ipAddress, uint16_t portNumber) override;
 
 private:
-    void waitForConnection();
-    void onConnected(Connection& connection, const std::error_code& error);
-
-private:    
-    asio::io_context& io_;
-    std::unique_ptr<detail::ConnectionFactory> connectionFactory_;
-    ErrorHandler errorHandler_;
-    std::unique_ptr<unixdomain::acceptor> connectionListener_;
+    std::unique_ptr<ConnectionListenerFactory> connectionListenerFactory_;
+    std::vector<std::unique_ptr<ConnectionListener<asio::local::stream_protocol>>> localConnectionProcessors_;
+    std::vector<std::unique_ptr<ConnectionListener<asio::ip::tcp>>> tcpConnectionProcessors_;
 };
 
 }

@@ -51,6 +51,9 @@ set(SRC
     src/client.cpp
     src/timer.cpp
     src/timerprovider.cpp
+    src/connectionlistener.cpp
+    src/connectionlistenerfactory.cpp
+    src/clientconnection.cpp
     src/request.cpp
     src/requestcontext.cpp)
 

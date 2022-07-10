@@ -3,6 +3,7 @@
 #include <memory>
 
 namespace asyncgi::detail{
+template<typename TProtocol>
 class Connection;
 class IRuntime;
 class IRequestProcessor;
@@ -10,7 +11,8 @@ class IRequestProcessor;
 class ConnectionFactory{
 public:
     ConnectionFactory(IRequestProcessor& requestProcessor, IRuntime& runtime, ErrorHandlerFunc errorHandler);
-    std::shared_ptr<Connection> makeConnection();
+    template<typename TProtocol>
+    std::shared_ptr<Connection<TProtocol>> makeConnection();
 
 private:
     IRequestProcessor& requestProcessor_;

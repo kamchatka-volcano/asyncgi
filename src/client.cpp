@@ -1,15 +1,28 @@
 #include "client.h"
-#include "alias_unixdomain.h"
 #include "timerprovider.h"
 #include <asio/write.hpp>
 
 namespace asyncgi::detail{
 
 Client::Client(asio::io_context& io, ErrorHandlerFunc errorHandler)
-    : socket_{io}
+    : io_{io}
     , timerProvider_{io}
     , errorHandler_{std::move(errorHandler)}
 {}
+
+void Client::makeRequest(
+        const fs::path& socketPath,
+        std::map<std::string, std::string> fcgiParams,
+        std::string fcgiStdIn,
+        std::function<void(const std::optional<std::string>&)> responseHandler)
+{
+    makeRequest(
+            socketPath,
+            std::move(fcgiParams),
+            std::move(fcgiStdIn),
+            std::move(responseHandler),
+            std::chrono::seconds{3});
+}
 
 void Client::makeRequest(
         const fs::path& socketPath,
@@ -34,12 +47,128 @@ void Client::makeRequest(
         else
             responseHandler(std::nullopt);
     };
-
-    makeRequest(socketPath, std::move(fcgiParams), std::move(fcgiStdIn), onResponseReceived, cancelRequestOnTimeout);
+    auto& clientProcessor = localClientProcessors_.emplace_back(
+            std::make_unique<ClientConnection<asio::local::stream_protocol>>(io_, errorHandler_));
+    clientProcessor->makeRequest(
+            asio::local::stream_protocol::endpoint{socketPath},
+            std::move(fcgiParams),
+            std::move(fcgiStdIn),
+            onResponseReceived,
+            cancelRequestOnTimeout);
 }
 
 void Client::makeRequest(
         const fs::path& socketPath,
+        const http::Request& request,
+        const std::function<void(const std::optional<http::Response>&)>& responseHandler)
+{
+    makeRequest(
+            socketPath,
+            request,
+            responseHandler,
+            std::chrono::seconds{3});
+}
+
+void Client::makeRequest(
+        const fs::path& socketPath,
+        const http::Request& request,
+        const std::function<void(const std::optional<http::Response>&)>& responseHandler,
+        const std::chrono::milliseconds& timeout)
+{
+    auto cancelRequestOnTimeout = std::make_shared<std::function<void()>>([]{});
+    auto& responseTimeoutTimer = timerProvider_.emplaceTimer();
+    responseTimeoutTimer.start(timeout, [=] {
+        (*cancelRequestOnTimeout)();
+    }, TimerMode::Once);
+    auto onResponseReceived = [=, &responseTimeoutTimer](const std::optional<fcgi::ResponseData>& fcgiResponse) {
+        responseTimeoutTimer.stop();
+        if (fcgiResponse) {
+             if (!fcgiResponse->errorMsg.empty())
+                errorHandler_(ErrorType::RequestProcessingError, -1, fcgiResponse->errorMsg);
+            responseHandler(http::responseFromString(fcgiResponse->data));
+        }
+        else
+            responseHandler(std::nullopt);
+    };
+    auto& clientProcessor = localClientProcessors_.emplace_back(
+            std::make_unique<ClientConnection<asio::local::stream_protocol>>(io_, errorHandler_));
+    auto fcgiRequest = request.toFcgiData(http::FormType::Multipart);
+    clientProcessor->makeRequest(
+            asio::local::stream_protocol::endpoint{socketPath},
+            std::move(fcgiRequest.params),
+            std::move(fcgiRequest.stdIn),
+            onResponseReceived,
+            cancelRequestOnTimeout);
+}
+
+void Client::makeRequest(
+        std::string_view ipAddress,
+        uint16_t port,
+        std::map<std::string, std::string> fcgiParams,
+        std::string fcgiStdIn,
+        std::function<void(const std::optional<std::string>&)> responseHandler)
+{
+    makeRequest(
+            ipAddress,
+            port,
+            std::move(fcgiParams),
+            std::move(fcgiStdIn),
+            std::move(responseHandler),
+            std::chrono::seconds{3});
+}
+
+void Client::makeRequest(
+        std::string_view ipAddress,
+        uint16_t port,
+        std::map<std::string, std::string> fcgiParams,
+        std::string fcgiStdIn,
+        std::function<void(const std::optional<std::string>&)> responseHandler,
+        const std::chrono::milliseconds& timeout)
+{
+    auto cancelRequestOnTimeout = std::make_shared<std::function<void()>>([]{});
+    auto& responseTimeoutTimer = timerProvider_.emplaceTimer();
+    responseTimeoutTimer.start(timeout, [=] {
+        (*cancelRequestOnTimeout)();
+    }, TimerMode::Once);
+    auto onResponseReceived = [=, &responseTimeoutTimer](const std::optional<fcgi::ResponseData>& fcgiResponse) {
+        responseTimeoutTimer.stop();
+        if (fcgiResponse) {
+            if (!fcgiResponse->errorMsg.empty())
+                errorHandler_(ErrorType::RequestProcessingError, -1, fcgiResponse->errorMsg);
+            responseHandler(fcgiResponse->data);
+        }
+        else
+            responseHandler(std::nullopt);
+    };
+    auto& clientProcessor = tcpClientProcessors_.emplace_back(
+            std::make_unique<ClientConnection<asio::ip::tcp>>(io_, errorHandler_));
+    auto address = asio::ip::make_address(ipAddress);
+    clientProcessor->makeRequest(
+            asio::ip::tcp::endpoint{address, port},
+            std::move(fcgiParams),
+            std::move(fcgiStdIn),
+            onResponseReceived,
+            cancelRequestOnTimeout);
+}
+
+
+void Client::makeRequest(
+        std::string_view ipAddress,
+        uint16_t port,
+        const http::Request& request,
+        const std::function<void(const std::optional<http::Response>&)>& responseHandler)
+{
+    makeRequest(
+            ipAddress,
+            port,
+            request,
+            responseHandler,
+            std::chrono::seconds{3});
+}
+
+void Client::makeRequest(
+        std::string_view ipAddress,
+        uint16_t port,
         const http::Request& request,
         const std::function<void(const std::optional<http::Response>&)>& responseHandler,
         const std::chrono::milliseconds& timeout)
@@ -60,98 +189,19 @@ void Client::makeRequest(
         else
             responseHandler(std::nullopt);
     };
+    auto& clientProcessor = tcpClientProcessors_.emplace_back(
+            std::make_unique<ClientConnection<asio::ip::tcp>>(io_, errorHandler_));
     auto fcgiRequest = request.toFcgiData(http::FormType::Multipart);
-    makeRequest(socketPath, std::move(fcgiRequest.params), std::move(fcgiRequest.stdIn), onResponseReceived, cancelRequestOnTimeout);
-}
-
-void Client::makeRequest(
-        const fs::path& socketPath,
-        std::map<std::string, std::string> fcgiParams,
-        std::string fcgiStdIn,
-        std::function<void(const std::optional<fcgi::ResponseData>&)> responseHandler,
-        const std::shared_ptr<std::function<void()>>& cancelRequestOnTimeout)
-{
-    socket_.async_connect(unixdomain::endpoint{socketPath},
-        [this, cancelRequestOnTimeout,
-         fcgiParams = std::move(fcgiParams),
-         fcgiStdIn = std::move(fcgiStdIn),
-         responseHandler = std::move(responseHandler)](auto error_code) mutable{
-            if (error_code){
-                responseHandler(std::nullopt);
-                return;
-            }
-            processReading();
-            auto requestHandle = sendRequest(std::move(fcgiParams), std::move(fcgiStdIn), std::move(responseHandler));
-            if (requestHandle)
-                *cancelRequestOnTimeout = [=]() mutable{
-                    requestHandle->cancelRequest();
-                };
-            else
-                responseHandler(std::nullopt);
-        });
+    auto address = asio::ip::make_address(ipAddress);
+    clientProcessor->makeRequest(
+            asio::ip::tcp::endpoint{address, port},
+            std::move(fcgiRequest.params),
+            std::move(fcgiRequest.stdIn), onResponseReceived, cancelRequestOnTimeout);
 }
 
 void Client::disconnect()
 {
-    disconnectRequested_ = true;
-    if (bytesToWrite_ > 0)
-        return;
-    close();
-}
-
-void Client::processReading()
-{
-    if (!socket_.is_open())
-        return;
-    socket_.async_read_some(asio::buffer(buffer_),
-        [this](const auto& error, auto bytesRead){
-            if (error){
-                if (error.value() != asio::error::operation_aborted)
-                    errorHandler_(ErrorType::SocketReadError, error);
-                return;
-            }
-            readData(bytesRead);
-        });
-}
-
-void Client::readData(std::size_t bytesRead)
-{
-    fcgi::Requester::receiveData(buffer_.data(), bytesRead);
-    processReading();
-}
-
-
-void Client::sendData(const std::string& data)
-{
-    bytesToWrite_ += data.size();
-    writeBuffer_ = data;
-    asio::async_write(socket_, asio::buffer(writeBuffer_),
-        [this](const auto& error, auto bytesWritten){
-            if (error){
-                errorHandler_(ErrorType::SocketWriteError, error);
-                return;
-            }
-            onBytesWritten(bytesWritten);
-        });
-}
-
-void Client::onBytesWritten(std::size_t numOfBytes)
-{
-    bytesToWrite_ -= numOfBytes;
-    if (!bytesToWrite_ && disconnectRequested_)
-        close();
-}
-
-void Client::close()
-{
-    try{
-        socket_.shutdown(unixdomain::socket::shutdown_both);
-        socket_.close();
-    }
-    catch(const std::system_error& e){
-        errorHandler_(ErrorType::SocketCloseError, e.code());
-    }
-    disconnectRequested_ = false;
+    localClientProcessors_.clear();
 }
 
 }

@@ -5,6 +5,7 @@
 #include "timer.h"
 #include "multithreadedruntime.h"
 #include "connectionfactory.h"
+#include "connectionlistenerfactory.h"
 
 namespace asyncgi::detail{
 
@@ -30,7 +31,11 @@ App::App(std::unique_ptr<detail::IRuntime> runtime)
 std::unique_ptr<IServer> App::makeServer(detail::IRequestProcessor& requestProcessor, ErrorHandlerFunc errorHandler) const
 {
     auto connectionFactory = std::make_unique<detail::ConnectionFactory>(requestProcessor, *runtime_, errorHandler);
-    return std::make_unique<detail::Server>(runtime_->io(), std::move(connectionFactory), errorHandler);
+    auto connectionListenerFactory = std::make_unique<detail::ConnectionListenerFactory>(
+            runtime_->io(),
+            std::move(connectionFactory),
+            errorHandler);
+    return std::make_unique<detail::Server>(std::move(connectionListenerFactory));
 }
 
 std::unique_ptr<IServer> App::makeServer(detail::IRequestProcessor& requestProcessor) const

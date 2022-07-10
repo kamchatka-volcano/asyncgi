@@ -1,18 +1,14 @@
 #include "server.h"
-#include "connection.h"
-#include "connectionfactory.h"
-#include "iruntime.h"
-#include "alias_unixdomain.h"
+#include "connectionlistenerfactory.h"
+#include "connectionlistener.h"
 #include <asio/error_code.hpp>
 
 namespace asyncgi::detail{
 
 namespace fs = std::filesystem;
 
-Server::Server(asio::io_context& io, std::unique_ptr<ConnectionFactory> connectionFactory, ErrorHandlerFunc errorHandler)
-    : io_{io}
-    , connectionFactory_{std::move(connectionFactory)}
-    , errorHandler_{std::move(errorHandler)}
+Server::Server(std::unique_ptr<ConnectionListenerFactory> connectionListenerFactory)
+    : connectionListenerFactory_{std::move(connectionListenerFactory)}
 {
 }
 
@@ -30,27 +26,16 @@ void initUnixDomainSocket(const fs::path& path)
 void Server::listen(const fs::path& socketPath)
 {
     initUnixDomainSocket(socketPath);
-    connectionListener_ = std::make_unique<unixdomain::acceptor>(io_, unixdomain::endpoint{socketPath});
-    waitForConnection();
+    localConnectionProcessors_.emplace_back(
+            connectionListenerFactory_->makeConnectionListener<asio::local::stream_protocol>(
+                    asio::local::stream_protocol::endpoint{socketPath}));
 }
 
-void Server::waitForConnection()
+void Server::listen(std::string_view ipAddress, uint16_t portNumber)
 {
-    auto connection = connectionFactory_->makeConnection();
-    connectionListener_->async_accept(connection->socket(),
-        [this, connection](auto error_code){
-            onConnected(*connection, error_code);
-        });
-}
-
-void Server::onConnected(Connection& connection, const std::error_code& error)
-{
-    if (error){
-        errorHandler_(ErrorType::ConnectionError, error);
-        return;
-    }
-    connection.process();
-    waitForConnection();
+    auto address = asio::ip::make_address(ipAddress);
+    tcpConnectionProcessors_.emplace_back(connectionListenerFactory_->makeConnectionListener<asio::ip::tcp>(
+            asio::ip::tcp::endpoint{address, portNumber}));
 }
 
 }

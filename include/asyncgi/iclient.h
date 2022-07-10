@@ -3,11 +3,13 @@
 #include <hot_teacup/request.h>
 #include <hot_teacup/response.h>
 #include <filesystem>
+#include <string_view>
 #include <map>
 #include <string>
 #include <optional>
 #include <functional>
 #include <chrono>
+#include <cstdint>
 
 namespace asyncgi{
 
@@ -21,16 +23,51 @@ public:
     IClient&& operator=(IClient&&) = delete;
 
     virtual void makeRequest(
-            const std::filesystem::path& socketPath,
+            const std::filesystem::path& unixDomainSocketPath,
+            std::map<std::string, std::string> fcgiParams,
+            std::string fcgiStdIn,
+            std::function<void(const std::optional<std::string>&)> responseHandler) = 0;
+    virtual void makeRequest(
+            const std::filesystem::path& unixDomainSocketPath,
             std::map<std::string, std::string> fcgiParams,
             std::string fcgiStdIn,
             std::function<void(const std::optional<std::string>&)> responseHandler,
-            const std::chrono::milliseconds& timeout = std::chrono::seconds{3}) = 0;
+            const std::chrono::milliseconds& timeout) = 0;
     virtual void makeRequest(
-            const std::filesystem::path& socketPath,
+            const std::filesystem::path& unixDomainSocketPath,
+            const http::Request& request,
+            const std::function<void(const std::optional<http::Response>&)>& responseHandler) = 0;
+    virtual void makeRequest(
+            const std::filesystem::path& unixDomainSocketPath,
             const http::Request& request,
             const std::function<void(const std::optional<http::Response>&)>& responseHandler,
-            const std::chrono::milliseconds& timeout = std::chrono::seconds{3}) = 0;
+            const std::chrono::milliseconds& timeout) = 0;
+
+     virtual void makeRequest(
+            std::string_view ipAddress,
+            uint16_t port,
+            std::map<std::string, std::string> fcgiParams,
+            std::string fcgiStdIn,
+            std::function<void(const std::optional<std::string>&)> responseHandler) = 0;
+    virtual void makeRequest(
+            std::string_view ipAddress,
+            uint16_t port,
+            std::map<std::string, std::string> fcgiParams,
+            std::string fcgiStdIn,
+            std::function<void(const std::optional<std::string>&)> responseHandler,
+            const std::chrono::milliseconds& timeout) = 0;
+    virtual void makeRequest(
+            std::string_view ipAddress,
+            uint16_t port,
+            const http::Request& request,
+            const std::function<void(const std::optional<http::Response>&)>& responseHandler) = 0;
+    virtual void makeRequest(
+            std::string_view ipAddress,
+            uint16_t port,
+            const http::Request& request,
+            const std::function<void(const std::optional<http::Response>&)>& responseHandler,
+            const std::chrono::milliseconds& timeout) = 0;
+
     virtual void disconnect() = 0;
 };
 
