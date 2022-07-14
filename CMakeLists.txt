@@ -6,11 +6,11 @@ else()
   set(ASYNCGI_SUBPROJECT ON)
 endif()
 
-project(asyncgi VERSION 1.0.0 DESCRIPTION "asyncgi - async web application microframework")
+project(asyncgi VERSION 0.1.0 DESCRIPTION "asyncgi - asynchronous FastCGI web application microframework")
 
 include(external/asio)
 
-find_package(sfun 1.0 QUIET)
+find_package(sfun 1.1.0 QUIET)
 if (NOT sfun_FOUND)
     message("Configuration info: sfun library wasn't found on your system, downloading it from the GitHub repository")
     include (external/sfun)
@@ -59,41 +59,90 @@ set(SRC
 
 set(PUBLIC_HEADERS
     "include/asyncgi/app.h"
-    "include/asyncgi/cookie.h"
     "include/asyncgi/errors.h"
-    "include/asyncgi/header.h"
-    "include/asyncgi/iruntime.h"
-    "include/asyncgi/query.h"
+    "include/asyncgi/iapp.h"
+    "include/asyncgi/iclient.h"
+    "include/asyncgi/iserver.h"
+    "include/asyncgi/itimer.h"
     "include/asyncgi/request.h"
     "include/asyncgi/requestprocessor.h"
     "include/asyncgi/requestrouter.h"
     "include/asyncgi/response.h"
-    "include/asyncgi/responsevalue.h"
-    "include/asyncgi/route.h"
-    "include/asyncgi/server.h"
     "include/asyncgi/testserver.h"
-    "include/asyncgi/iclient.h"
-    "include/asyncgi/timer.h"
     "include/asyncgi/types.h")
 
 add_library(asyncgi SHARED ${SRC})
+add_library(asyncgi::asyncgi ALIAS asyncgi)
+
 target_compile_features(asyncgi PUBLIC cxx_std_17)
 set_target_properties(asyncgi PROPERTIES CXX_EXTENSIONS OFF)
 set_target_properties(asyncgi PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(asyncgi PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}")
 
-target_include_directories(asyncgi INTERFACE include/)
+target_include_directories(
+    asyncgi
+    INTERFACE
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+target_include_directories(
+    asyncgi
+    INTERFACE
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/asyncgi>
+)
+target_include_directories(
+    asyncgi
+    INTERFACE
+    $<BUILD_INTERFACE:${whaleroute_SOURCE_DIR}/include/>
+)
+target_include_directories(
+    asyncgi
+    INTERFACE
+    $<BUILD_INTERFACE:${hot_teacup_SOURCE_DIR}/include/>
+)
+
 target_include_directories(asyncgi PRIVATE include/)
-target_include_directories(asyncgi PRIVATE src)
-target_link_libraries(asyncgi PUBLIC hot_teacup::hot_teacup whaleroute::whaleroute)
-target_link_libraries(asyncgi PRIVATE sfun::sfun fcgi_responder::fcgi_responder asio)
+
+target_link_libraries(asyncgi PRIVATE asio fcgi_responder::fcgi_responder hot_teacup::hot_teacup whaleroute::whaleroute sfun::sfun)
 
 add_executable(example main.cpp)
 target_compile_features(example PUBLIC cxx_std_17)
 set_target_properties(example PROPERTIES CXX_EXTENSIONS OFF)
 target_link_libraries(example PRIVATE asyncgi Threads::Threads)
 
-include(GNUInstallDirs)
-install(TARGETS asyncgi
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/asyncgi)
+
+option(INSTALL_ASYNCGI "Install asyncgi library unconditionally" OFF)
+if (NOT ASYNCGI_SUBPROJECT OR INSTALL_ASYNCGI)
+    include(GNUInstallDirs)
+    install(TARGETS asyncgi
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/asyncgi)
+    install(DIRECTORY ${whaleroute_SOURCE_DIR}/include/whaleroute DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/asyncgi)
+    install(DIRECTORY ${hot_teacup_SOURCE_DIR}/include/hot_teacup DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/asyncgi)
+
+    set(ASYNCGI_PACK_PATH ${CMAKE_INSTALL_LIBDIR}/cmake/asyncgi)
+
+    install(TARGETS asyncgi
+            EXPORT asyncgi-targets
+            )
+    install(EXPORT asyncgi-targets
+            FILE asyncgiTargets.cmake
+            NAMESPACE asyncgi::
+            DESTINATION ${ASYNCGI_PACK_PATH}
+            )
+    include(CMakePackageConfigHelpers)
+    write_basic_package_version_file(
+            ${CMAKE_CURRENT_BINARY_DIR}/asyncgiConfigVersion.cmake
+            COMPATIBILITY SameMajorVersion
+            ARCH_INDEPENDENT
+    )
+    configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/asyncgiConfig.cmake.in
+            ${CMAKE_CURRENT_BINARY_DIR}/asyncgiConfig.cmake
+            INSTALL_DESTINATION ${ASYNCGI_PACK_PATH}
+            )
+    install(FILES
+            ${CMAKE_CURRENT_BINARY_DIR}/asyncgiConfig.cmake
+            ${CMAKE_CURRENT_BINARY_DIR}/asyncgiConfigVersion.cmake
+            DESTINATION ${ASYNCGI_PACK_PATH}
+            )
+endif()
