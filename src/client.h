@@ -6,7 +6,7 @@
 #include <asyncgi/itimer.h>
 #include <asyncgi/errors.h>
 #include <hot_teacup/request.h>
-#include <hot_teacup/response.h>
+#include <hot_teacup/response_view.h>
 #include <fcgi_responder/requester.h>
 #include <asio/local/stream_protocol.hpp>
 #include <asio/ip/tcp.hpp>
@@ -35,11 +35,11 @@ public:
     void makeRequest(
             const fs::path& socketPath,
             const http::Request& request,
-            const std::function<void(const std::optional<http::Response>&)>& responseHandler) override;
+            const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler) override;
     void makeRequest(
             const fs::path& socketPath,
             const http::Request& request,
-            const std::function<void(const std::optional<http::Response>&)>& responseHandler,
+            const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler,
             const std::chrono::milliseconds& timeout) override;
 
      void makeRequest(
@@ -59,12 +59,12 @@ public:
             std::string_view ipAddress,
             uint16_t port,
             const http::Request& request,
-            const std::function<void(const std::optional<http::Response>&)>& responseHandler) override;
+            const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler) override;
     void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
             const http::Request& request,
-            const std::function<void(const std::optional<http::Response>&)>& responseHandler,
+            const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler,
             const std::chrono::milliseconds& timeout) override;
 
     void disconnect() override;
@@ -73,8 +73,8 @@ private:
     asio::io_context& io_;
     TimerProvider timerProvider_;
     ErrorHandler errorHandler_;
-    std::vector<std::unique_ptr<ClientConnection<asio::local::stream_protocol>>> localClientProcessors_;
-    std::vector<std::unique_ptr<ClientConnection<asio::ip::tcp>>> tcpClientProcessors_;
+    std::vector<std::unique_ptr<ClientConnection<asio::local::stream_protocol>>> localClientConnections_;
+    std::vector<std::unique_ptr<ClientConnection<asio::ip::tcp>>> tcpClientConnections_;
 };
 
 }

@@ -9,7 +9,7 @@ RequestContext::RequestContext(fcgi::Request&& request, fcgi::Response&& respons
 {
 }
 
-const http::Request& RequestContext::request()
+const http::RequestView& RequestContext::request()
 {
     if (!request_)
         request_.emplace(

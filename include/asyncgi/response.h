@@ -113,7 +113,7 @@ public:
     void makeRequest(
             const std::filesystem::path& socketPath,
             const http::Request& request,
-            const std::function<void(const std::optional<http::Response>&)>& httpResponseHandler,
+            const std::function<void(const std::optional<http::ResponseView>&)>& httpResponseHandler,
             const std::chrono::milliseconds timeout = std::chrono::seconds{3})
     {
         if (requestProcessorQueue_)

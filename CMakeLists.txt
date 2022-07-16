@@ -10,7 +10,7 @@ project(asyncgi VERSION 0.1.0 DESCRIPTION "asyncgi - asynchronous FastCGI web ap
 
 include(external/asio)
 
-find_package(sfun 1.1.0 QUIET)
+find_package(sfun 2.0.0 QUIET)
 if (NOT sfun_FOUND)
     message("Configuration info: sfun library wasn't found on your system, downloading it from the GitHub repository")
     include (external/sfun)
@@ -28,7 +28,7 @@ if (NOT fcgi_responder_FOUND)
     include (external/fcgi_responder)
 endif()
 
-find_package(hot_teacup 1.0.1 QUIET)
+find_package(hot_teacup 2.0.0 QUIET)
 if (NOT hot_teacup_FOUND)
     message("Configuration info: hot_teacup library wasn't found on your system, downloading it from the GitHub repository")
     include (external/hot_teacup)
@@ -115,16 +115,15 @@ option(INSTALL_ASYNCGI "Install asyncgi library unconditionally" OFF)
 if (NOT ASYNCGI_SUBPROJECT OR INSTALL_ASYNCGI)
     include(GNUInstallDirs)
     install(TARGETS asyncgi
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/asyncgi)
+            EXPORT asyncgi-targets
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/asyncgi
+    )
     install(DIRECTORY ${whaleroute_SOURCE_DIR}/include/whaleroute DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/asyncgi)
     install(DIRECTORY ${hot_teacup_SOURCE_DIR}/include/hot_teacup DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/asyncgi)
 
     set(ASYNCGI_PACK_PATH ${CMAKE_INSTALL_LIBDIR}/cmake/asyncgi)
 
-    install(TARGETS asyncgi
-            EXPORT asyncgi-targets
-            )
     install(EXPORT asyncgi-targets
             FILE asyncgiTargets.cmake
             NAMESPACE asyncgi::

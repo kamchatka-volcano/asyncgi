@@ -31,7 +31,7 @@ class RequestRouter : public asyncgi::RequestProcessor<TContext>,
 
     std::string getRequestPath(const asyncgi::Request& request) final
     {
-        return request.path();
+        return std::string{request.path()};
     }
 
     http::RequestMethod getRequestType(const asyncgi::Request& request) final

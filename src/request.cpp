@@ -31,17 +31,17 @@ const std::string& Request::fcgiStdIn() const
     return context_->fcgiRequest().stdIn();
 }
 
-const std::string& Request::ipAddress() const
+std::string_view Request::ipAddress() const
 {
     return context_->request().ipAddress();
 }
 
-const std::string& Request::domainName() const
+std::string_view Request::domainName() const
 {
     return context_->request().domainName();
 }
 
-const std::string& Request::path() const
+std::string_view Request::path() const
 {
     return context_->request().path();
 }
@@ -51,72 +51,72 @@ http::RequestMethod Request::method() const
     return context_->request().method();
 }
 
-const std::string& Request::query(const std::string& name) const
+std::string_view Request::query(std::string_view name) const
 {
     return context_->request().query(name);
 }
 
-bool Request::hasQuery(const std::string& name) const
+bool Request::hasQuery(std::string_view name) const
 {
     return context_->request().hasQuery(name);
 }
 
-const std::string& Request::cookie(const std::string& name) const
+std::string_view Request::cookie(std::string_view name) const
 {
     return context_->request().cookie(name);
 }
 
-bool Request::hasCookie(const std::string& name) const
+bool Request::hasCookie(std::string_view name) const
 {
     return context_->request().hasCookie(name);
 }
 
-const std::string& Request::formField(const std::string& name, int index) const
+std::string_view Request::formField(std::string_view name, int index) const
 {
     return context_->request().formField(name, index);
 }
 
-int Request::formFieldCount(const std::string& name) const
+int Request::formFieldCount(std::string_view name) const
 {
     return context_->request().formFieldCount(name);
 }
 
-bool Request::hasFormField(const std::string& name) const
+bool Request::hasFormField(std::string_view name) const
 {
     return context_->request().hasFormField(name);
 }
 
-const std::string& Request::fileData(const std::string& name, int index) const
+std::string_view Request::fileData(std::string_view name, int index) const
 {
     return context_->request().fileData(name, index);
 }
 
-int Request::fileCount(const std::string& name) const
+int Request::fileCount(std::string_view name) const
 {
     return context_->request().fileCount(name);
 }
 
-bool Request::hasFile(const std::string& name) const
+bool Request::hasFile(std::string_view name) const
 {
     return context_->request().hasFile(name);
 }
 
-const std::string& Request::fileName(const std::string &name, int index) const
+std::string_view Request::fileName(std::string_view name, int index) const
 {
     return context_->request().fileName(name, index);
 }
 
-const std::string& Request::fileType(const std::string &name, int index) const
+std::string_view Request::fileType(std::string_view name, int index) const
 {
     return context_->request().fileType(name, index);
 }
 
-const http::Queries& Request::queries() const
+const std::vector<http::QueryView>& Request::queries() const
 {
     return context_->request().queries();
 }
 
-const http::Cookies& Request::cookies() const
+const std::vector<http::CookieView>& Request::cookies() const
 {
     return context_->request().cookies();
 }
@@ -135,7 +135,6 @@ bool Request::hasFiles() const
 {
     return context_->request().hasFiles();
 }
-
 
 }
 

@@ -47,9 +47,9 @@ void Client::makeRequest(
         else
             responseHandler(std::nullopt);
     };
-    auto& clientProcessor = localClientProcessors_.emplace_back(
+    auto& clientConnection = localClientConnections_.emplace_back(
             std::make_unique<ClientConnection<asio::local::stream_protocol>>(io_, errorHandler_));
-    clientProcessor->makeRequest(
+    clientConnection->makeRequest(
             asio::local::stream_protocol::endpoint{socketPath},
             std::move(fcgiParams),
             std::move(fcgiStdIn),
@@ -60,7 +60,7 @@ void Client::makeRequest(
 void Client::makeRequest(
         const fs::path& socketPath,
         const http::Request& request,
-        const std::function<void(const std::optional<http::Response>&)>& responseHandler)
+        const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler)
 {
     makeRequest(
             socketPath,
@@ -72,7 +72,7 @@ void Client::makeRequest(
 void Client::makeRequest(
         const fs::path& socketPath,
         const http::Request& request,
-        const std::function<void(const std::optional<http::Response>&)>& responseHandler,
+        const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler,
         const std::chrono::milliseconds& timeout)
 {
     auto cancelRequestOnTimeout = std::make_shared<std::function<void()>>([]{});
@@ -90,10 +90,10 @@ void Client::makeRequest(
         else
             responseHandler(std::nullopt);
     };
-    auto& clientProcessor = localClientProcessors_.emplace_back(
+    auto& clientConnection = localClientConnections_.emplace_back(
             std::make_unique<ClientConnection<asio::local::stream_protocol>>(io_, errorHandler_));
     auto fcgiRequest = request.toFcgiData(http::FormType::Multipart);
-    clientProcessor->makeRequest(
+    clientConnection->makeRequest(
             asio::local::stream_protocol::endpoint{socketPath},
             std::move(fcgiRequest.params),
             std::move(fcgiRequest.stdIn),
@@ -140,10 +140,10 @@ void Client::makeRequest(
         else
             responseHandler(std::nullopt);
     };
-    auto& clientProcessor = tcpClientProcessors_.emplace_back(
+    auto& clientConnection = tcpClientConnections_.emplace_back(
             std::make_unique<ClientConnection<asio::ip::tcp>>(io_, errorHandler_));
     auto address = asio::ip::make_address(ipAddress);
-    clientProcessor->makeRequest(
+    clientConnection->makeRequest(
             asio::ip::tcp::endpoint{address, port},
             std::move(fcgiParams),
             std::move(fcgiStdIn),
@@ -156,7 +156,7 @@ void Client::makeRequest(
         std::string_view ipAddress,
         uint16_t port,
         const http::Request& request,
-        const std::function<void(const std::optional<http::Response>&)>& responseHandler)
+        const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler)
 {
     makeRequest(
             ipAddress,
@@ -170,7 +170,7 @@ void Client::makeRequest(
         std::string_view ipAddress,
         uint16_t port,
         const http::Request& request,
-        const std::function<void(const std::optional<http::Response>&)>& responseHandler,
+        const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler,
         const std::chrono::milliseconds& timeout)
 {
     auto cancelRequestOnTimeout = std::make_shared<std::function<void()>>([]{});
@@ -189,11 +189,11 @@ void Client::makeRequest(
         else
             responseHandler(std::nullopt);
     };
-    auto& clientProcessor = tcpClientProcessors_.emplace_back(
+    auto& clientConnection = tcpClientConnections_.emplace_back(
             std::make_unique<ClientConnection<asio::ip::tcp>>(io_, errorHandler_));
     auto fcgiRequest = request.toFcgiData(http::FormType::Multipart);
     auto address = asio::ip::make_address(ipAddress);
-    clientProcessor->makeRequest(
+    clientConnection->makeRequest(
             asio::ip::tcp::endpoint{address, port},
             std::move(fcgiRequest.params),
             std::move(fcgiRequest.stdIn), onResponseReceived, cancelRequestOnTimeout);
@@ -201,7 +201,7 @@ void Client::makeRequest(
 
 void Client::disconnect()
 {
-    localClientProcessors_.clear();
+    localClientConnections_.clear();
 }
 
 }

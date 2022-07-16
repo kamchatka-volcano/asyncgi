@@ -4,7 +4,7 @@ if (NOT TARGET hot_teacup)
     FetchContent_Declare(
             hot_teacup
             GIT_REPOSITORY https://github.com/kamchatka-volcano/hot_teacup.git
-            GIT_TAG        09b0e98
+            GIT_TAG        6473763
             GIT_SHALLOW    ON
             GIT_PROGRESS TRUE
     )
