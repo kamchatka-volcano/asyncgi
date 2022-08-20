@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.18)
 
+project(asyncgi VERSION 0.1.0 DESCRIPTION "asyncgi - asynchronous FastCGI web application microframework")
+include(GNUInstallDirs)
+
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   set(ASYNCGI_SUBPROJECT OFF)
 else()
   set(ASYNCGI_SUBPROJECT ON)
 endif()
 
-project(asyncgi VERSION 0.1.0 DESCRIPTION "asyncgi - asynchronous FastCGI web application microframework")
-
 include(external/asio)
-
 find_package(sfun 2.0.0 QUIET)
 if (NOT sfun_FOUND)
     message("Configuration info: sfun library wasn't found on your system, downloading it from the GitHub repository")
@@ -113,7 +113,6 @@ target_link_libraries(example PRIVATE asyncgi Threads::Threads)
 
 option(INSTALL_ASYNCGI "Install asyncgi library unconditionally" OFF)
 if (NOT ASYNCGI_SUBPROJECT OR INSTALL_ASYNCGI)
-    include(GNUInstallDirs)
     install(TARGETS asyncgi
             EXPORT asyncgi-targets
             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

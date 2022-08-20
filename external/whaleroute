@@ -4,7 +4,7 @@ if (NOT TARGET whaleroute)
     FetchContent_Declare(
             whaleroute
             GIT_REPOSITORY https://github.com/kamchatka-volcano/whaleroute.git
-            GIT_TAG        v1.0.1
+            GIT_TAG        v2
             GIT_SHALLOW    ON
             GIT_PROGRESS TRUE
     )

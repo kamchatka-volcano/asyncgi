@@ -7,7 +7,7 @@ Set(FETCHCONTENT_QUIET FALSE)
 if (NOT TARGET asio)
     FetchContent_Declare(asio
             GIT_REPOSITORY git@github.com:chriskohlhoff/asio.git
-            GIT_TAG master
+            GIT_TAG asio-1-24-0
             GIT_SHALLOW    ON
             GIT_PROGRESS TRUE
             CONFIGURE_COMMAND ""
