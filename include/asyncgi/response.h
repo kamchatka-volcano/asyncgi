@@ -10,6 +10,8 @@
 #include <future>
 
 namespace asyncgi{
+template<typename TContext>
+class RequestRouter;
 
 namespace detail {
 class RequestContext;
@@ -64,10 +66,7 @@ public:
         return response_.isSent();
     }
 
-    void setRequestProcessorQueue(const std::shared_ptr<whaleroute::RequestProcessorQueue>& queue)
-    {
-        requestProcessorQueue_ = queue;
-    }
+
 
     template <typename T, typename TCallable>
     void waitFuture(std::future<T>&& future, TCallable callback, std::chrono::milliseconds checkPeriod = std::chrono::milliseconds{1})
@@ -131,15 +130,67 @@ public:
            }, timeout);
     }
 
+        void makeRequest(
+            std::string_view ipAddress,
+            uint16_t port,
+            const std::map<std::string, std::string>& fcgiParams,
+            const std::string& fcgiStdIn,
+            const std::function<void(const std::optional<std::string>&)>& responseHandler,
+            const std::chrono::milliseconds timeout = std::chrono::seconds{3})
+    {
+        if (requestProcessorQueue_)
+            requestProcessorQueue_->stop();
+
+        response_.client().makeRequest(ipAddress, port, fcgiParams, fcgiStdIn,
+           [this, responseHandler](const std::optional<std::string>& response){
+               if (response)
+                   responseHandler(*response);
+               else
+                   responseHandler(std::nullopt);
+               if (requestProcessorQueue_)
+                   requestProcessorQueue_->launch();
+           }, timeout);
+    }
+
+    void makeRequest(
+            std::string_view ipAddress,
+            uint16_t port,
+            const http::Request& request,
+            const std::function<void(const std::optional<http::ResponseView>&)>& httpResponseHandler,
+            const std::chrono::milliseconds timeout = std::chrono::seconds{3})
+    {
+        if (requestProcessorQueue_)
+            requestProcessorQueue_->stop();
+
+        auto fcgiRequest = request.toFcgiData(http::FormType::Multipart);
+        response_.client().makeRequest(ipAddress, port, fcgiRequest.params, fcgiRequest.stdIn,
+           [this, httpResponseHandler](const std::optional<std::string>& response){
+               if (response)
+                   httpResponseHandler(http::responseFromString(*response));
+               else
+                   httpResponseHandler(std::nullopt);
+               if (requestProcessorQueue_)
+                   requestProcessorQueue_->launch();
+           }, timeout);
+    }
+
     void cancelRequest()
     {
         response_.client().disconnect();
     }
 
 private:
+    void setRequestProcessorQueue(const std::shared_ptr<whaleroute::RequestProcessorQueue>& queue)
+    {
+        requestProcessorQueue_ = queue;
+    }
+
+private:
     detail::Response response_;
     TResponseContext responseContext_;
     std::shared_ptr<whaleroute::RequestProcessorQueue> requestProcessorQueue_;
+
+    friend class RequestRouter<TResponseContext>;
 };
 
 

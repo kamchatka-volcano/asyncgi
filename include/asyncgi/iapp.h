@@ -20,6 +20,7 @@ public:
     virtual std::unique_ptr<IServer> makeServer(detail::IRequestProcessor&) const = 0;
     virtual std::unique_ptr<IServer> makeServer(detail::IRequestProcessor&, ErrorHandlerFunc errorHandler) const = 0;
     virtual std::unique_ptr<ITimer> makeTimer() const = 0;
+    virtual std::unique_ptr<IClient> makeClient() const = 0;
     virtual std::unique_ptr<IClient> makeClient(ErrorHandlerFunc errorHandler) const = 0;
     virtual void exec() = 0;
 };

@@ -5,7 +5,6 @@
 #include <string>
 
 namespace asyncgi{
-using Access = whaleroute::RouteAccess;
 using _ = whaleroute::_;
 
 namespace detail {

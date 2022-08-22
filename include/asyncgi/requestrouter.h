@@ -6,13 +6,13 @@
 #include <whaleroute/requestrouter.h>
 
 namespace asyncgi{
+namespace traits = whaleroute::traits;
 
 template<typename TContext>
 class RequestRouter : public asyncgi::RequestProcessor<TContext>,
                       public whaleroute::RequestRouter<
                               asyncgi::Request,
                               asyncgi::Response<TContext>,
-                              http::RequestMethod,
                               asyncgi::RequestProcessor<TContext>,
                               http::Response> {
 
@@ -22,7 +22,6 @@ class RequestRouter : public asyncgi::RequestProcessor<TContext>,
         response.setRequestProcessorQueue(requestProcessorQueuePtr);
         auto requestProcessorQueue = whaleroute::RequestRouter<asyncgi::Request,
                 asyncgi::Response<TContext>,
-                http::RequestMethod,
                 asyncgi::RequestProcessor<TContext>,
                 http::Response>::makeRequestProcessorQueue(request, response);
         *requestProcessorQueuePtr = requestProcessorQueue;
@@ -34,19 +33,9 @@ class RequestRouter : public asyncgi::RequestProcessor<TContext>,
         return std::string{request.path()};
     }
 
-    http::RequestMethod getRequestType(const asyncgi::Request& request) final
-    {
-        return request.method();
-    }
-
     void processUnmatchedRequest(const asyncgi::Request&, asyncgi::Response<TContext>& response) final
     {
         response.send(http::ResponseStatus::Code_404_Not_Found);
-    }
-
-    bool isAccessAuthorized(const asyncgi::Request&) const final
-    {
-        return true;
     }
 
     bool isRouteProcessingFinished(const asyncgi::Request&, asyncgi::Response<TContext>& response) const final
@@ -66,12 +55,12 @@ class RequestRouter : public asyncgi::RequestProcessor<TContext>,
     }
 };
 
-
-template<typename TContext = detail::EmptyContext>
-RequestRouter<TContext> makeRouter()
-{
-    return RequestRouter<TContext>{};
 }
 
-}
-
+template<typename TContext>
+struct asyncgi::traits::RouteSpecification<http::RequestMethod, asyncgi::Request, asyncgi::Response<TContext>> {
+    bool operator()(http::RequestMethod value, const asyncgi::Request& request, asyncgi::Response<TContext>&) const
+    {
+        return value == request.method();
+    }
+};
