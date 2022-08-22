@@ -1,4 +1,5 @@
 #pragma once
+#include "iasiodispatcher.h"
 #include "itimer.h"
 #include "iclient.h"
 #include "types.h"
@@ -8,6 +9,11 @@
 #include <memory>
 #include <optional>
 #include <future>
+#include <functional>
+
+namespace asio{
+    class io_context;
+}
 
 namespace asyncgi{
 template<typename TContext>
@@ -31,16 +37,18 @@ auto make_copyable_function(F&& f)
 namespace detail {
 class Response{
 public:
-    Response(std::shared_ptr<RequestContext>, TimerProvider&, IClient&);
+    Response(std::shared_ptr<RequestContext>, TimerProvider&, IClient&, IAsioDispatcher&);
     void send(const http::Response&);
     bool isSent() const;
     ITimer& makeTimer();
     IClient& client();
+    IAsioDispatcher& asioDispatcher();
 
 private:
     std::shared_ptr<RequestContext> context_;
     std::reference_wrapper<TimerProvider> timerProvider_;
     std::reference_wrapper<IClient> client_;
+    std::reference_wrapper<IAsioDispatcher> asioDispatcher_;
 };
 }
 
@@ -66,7 +74,10 @@ public:
         return response_.isSent();
     }
 
-
+    void dispatch(std::function<void(asio::io_context& io)> task)
+    {
+        response_.asioDispatcher().dispatch(std::move(task));
+    }
 
     template <typename T, typename TCallable>
     void waitFuture(std::future<T>&& future, TCallable callback, std::chrono::milliseconds checkPeriod = std::chrono::milliseconds{1})

@@ -1,4 +1,5 @@
 #include <asyncgi/asyncgi.h>
+#include "asiodispatcher.h"
 #include "server.h"
 #include "client.h"
 #include "runtime.h"
@@ -18,6 +19,7 @@ public:
     std::unique_ptr<ITimer> makeTimer() const override;
     std::unique_ptr<IClient> makeClient() const override;
     std::unique_ptr<IClient> makeClient(ErrorHandlerFunc errorHandler) const override;
+    std::unique_ptr<IAsioDispatcher> makeAsioDispatcher() const override;
     void exec() override;
 
 private:
@@ -64,6 +66,12 @@ void App::exec()
 {
     runtime_->run();
 }
+
+std::unique_ptr<IAsioDispatcher> App::makeAsioDispatcher() const
+{
+    return std::make_unique<AsioDispatcher>(runtime_->io());
+}
+
 }
 
 namespace asyncgi {

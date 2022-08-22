@@ -16,6 +16,7 @@ Connection<TProtocol>::Connection(
         ErrorHandlerFunc errorHandler,
         AccessPermission<ConnectionFactory>)
     : requestProcessor_{requestProcessor}
+    , asioDispatcher_{io}
     , timerProvider_{io}
     , client_{io, errorHandler}
     , socket_{io}
@@ -104,7 +105,7 @@ void Connection<TProtocol>::processRequest(fcgi::Request&& fcgiRequest, fcgi::Re
         auto context = std::make_shared<RequestContext>(std::move(fcgiRequest),
                                                         std::move(fcgiResponse));
         const auto request = Request{context};
-        auto response = Response{context, timerProvider_, client_};
+        auto response = Response{context, timerProvider_, client_, asioDispatcher_};
         requestProcessor_.process(request, response);
     }
     catch(const std::exception& e)

@@ -1,5 +1,6 @@
 #pragma once
 #include "accesspermission.h"
+#include "asiodispatcher.h"
 #include "timerprovider.h"
 #include "client.h"
 #include <asyncgi/requestprocessor.h>
@@ -34,6 +35,7 @@ private:
 
 private:
     IRequestProcessor& requestProcessor_;
+    AsioDispatcher asioDispatcher_;
     TimerProvider timerProvider_;
     Client client_;
     asio::basic_stream_socket<TProtocol> socket_;

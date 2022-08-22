@@ -4,10 +4,15 @@
 
 namespace asyncgi::detail{
 
-Response::Response(std::shared_ptr<RequestContext> context, TimerProvider& timerProvider, IClient& client)
+Response::Response(
+        std::shared_ptr<RequestContext> context,
+        TimerProvider& timerProvider,
+        IClient& client,
+        IAsioDispatcher& asioDispatcher)
     : context_{std::move(context)}
     , timerProvider_{timerProvider}
     , client_{client}
+    , asioDispatcher_{asioDispatcher}
 {}
 
 void Response::send(const http::Response& response)
@@ -27,6 +32,11 @@ ITimer& Response::makeTimer()
 IClient& Response::client()
 {
     return client_;
+}
+
+IAsioDispatcher& Response::asioDispatcher()
+{
+    return asioDispatcher_;
 }
 
 bool Response::isSent() const

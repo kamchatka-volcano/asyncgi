@@ -24,9 +24,9 @@ void ConnectionListener<TProtocol>::waitForConnection()
 {
     auto connection = connectionFactory_.makeConnection<TProtocol>();
     socketAcceptor_->async_accept(connection->socket(),
-                                  [this, connection](auto error_code){
-            onConnected(*connection, error_code);
-        });
+                                  [this, connection](auto error_code) {
+                                      onConnected(*connection, error_code);
+                                  });
 }
 
 template<typename TProtocol>

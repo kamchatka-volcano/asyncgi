@@ -40,6 +40,7 @@ find_package(Threads REQUIRED)
 
 set(SRC
     src/app.cpp
+    src/asiodispatcher.cpp
     src/connection.cpp
     src/connectionfactory.cpp
     src/errors.cpp
@@ -58,9 +59,10 @@ set(SRC
     src/requestcontext.cpp)
 
 set(PUBLIC_HEADERS
-    "include/asyncgi/app.h"
+    "include/asyncgi/asyncgi.h"
     "include/asyncgi/errors.h"
     "include/asyncgi/iapp.h"
+    "include/asyncgi/iasiodispatcher.h"
     "include/asyncgi/iclient.h"
     "include/asyncgi/iserver.h"
     "include/asyncgi/itimer.h"
@@ -102,7 +104,6 @@ target_include_directories(
 )
 
 target_include_directories(asyncgi PRIVATE include/)
-
 target_link_libraries(asyncgi PRIVATE asio fcgi_responder::fcgi_responder hot_teacup::hot_teacup whaleroute::whaleroute sfun::sfun)
 
 add_executable(example main.cpp)
