@@ -6,10 +6,13 @@
 #include <asyncgi/requestprocessor.h>
 #include <asyncgi/errors.h>
 #include <asio/basic_stream_socket.hpp>
+#include <fcgi_responder/request.h>
+#include <fcgi_responder/response.h>
 #include <fcgi_responder/responder.h>
 #include <fcgi_responder/fcgi_limits.h>
 #include <memory>
 #include <array>
+#include <optional>
 
 namespace asio{
     class io_context;
@@ -34,6 +37,8 @@ private:
     void close();
 
 private:
+    std::optional<fcgi::Request> fcgiRequest_;
+    std::optional<fcgi::Response> fcgiResponse_;
     IRequestProcessor& requestProcessor_;
     AsioDispatcher asioDispatcher_;
     TimerProvider timerProvider_;

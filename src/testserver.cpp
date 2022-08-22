@@ -3,7 +3,6 @@
 #include <asyncgi/request.h>
 #include <asyncgi/response.h>
 #include "timerprovider.h"
-#include "requestcontext.h"
 #include "client.h"
 #include "asiodispatcher.h"
 #include <fcgi_responder/request.h>
@@ -33,13 +32,12 @@ std::string TestServer::process(const std::map<std::string, std::string>& fcgiPa
             [&result](std::string&& data, std::string&&){
                 result = data;
             }};
-    auto context = std::make_shared<detail::RequestContext>(std::move(fcgiRequest), std::move(fcgiResponse));
-    auto request = Request{context};
+    auto request = Request{fcgiRequest};
     auto ioContext = asio::io_context{};
     auto timer = detail::TimerProvider{ioContext};
     auto client = detail::Client{ioContext, {}};
     auto asioDispatcher = detail::AsioDispatcher{ioContext};
-    auto response = detail::Response{context, timer, client, asioDispatcher};
+    auto response = detail::Response{fcgiResponse, timer, client, asioDispatcher};
     requestProcessor_.process(request, response);
     return result;
 }
@@ -54,13 +52,12 @@ std::string TestServer::process(const http::Request& httpRequest)
             [&result](std::string&& data, std::string&&){
                 result = data;
             }};
-    auto context = std::make_shared<detail::RequestContext>(std::move(fcgiRequest), std::move(fcgiResponse));
-    auto request = Request{context};
+    auto request = Request{fcgiRequest};
     auto ioContext = asio::io_context{};
     auto timerProvider = detail::TimerProvider{ioContext};
     auto client = detail::Client{ioContext, {}};
      auto asioDispatcher = detail::AsioDispatcher{ioContext};
-    auto response = detail::Response{context, timerProvider, client, asioDispatcher};
+    auto response = detail::Response{fcgiResponse, timerProvider, client, asioDispatcher};
     requestProcessor_.process(request, response);
     return result;
 }

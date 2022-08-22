@@ -56,7 +56,7 @@ set(SRC
     src/connectionlistenerfactory.cpp
     src/clientconnection.cpp
     src/request.cpp
-    src/requestcontext.cpp)
+        )
 
 set(PUBLIC_HEADERS
     "include/asyncgi/asyncgi.h"

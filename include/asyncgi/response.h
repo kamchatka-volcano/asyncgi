@@ -15,12 +15,15 @@ namespace asio{
     class io_context;
 }
 
+namespace fcgi{
+    class Response;
+}
+
 namespace asyncgi{
 template<typename TContext>
 class RequestRouter;
 
 namespace detail {
-class RequestContext;
 class TimerProvider;
 
 template<class F>
@@ -37,7 +40,7 @@ auto make_copyable_function(F&& f)
 namespace detail {
 class Response{
 public:
-    Response(std::shared_ptr<RequestContext>, TimerProvider&, IClient&, IAsioDispatcher&);
+    Response(fcgi::Response&, TimerProvider&, IClient&, IAsioDispatcher&);
     void send(const http::Response&);
     bool isSent() const;
     ITimer& makeTimer();
@@ -45,7 +48,13 @@ public:
     IAsioDispatcher& asioDispatcher();
 
 private:
-    std::shared_ptr<RequestContext> context_;
+    constexpr fcgi::Response& fcgiResponse() const
+    {
+        return fcgiResponse_;
+    }
+
+private:
+    std::reference_wrapper<fcgi::Response> fcgiResponse_;
     std::reference_wrapper<TimerProvider> timerProvider_;
     std::reference_wrapper<IClient> client_;
     std::reference_wrapper<IAsioDispatcher> asioDispatcher_;

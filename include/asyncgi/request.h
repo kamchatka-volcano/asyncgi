@@ -2,16 +2,19 @@
 #include <hot_teacup/cookie_view.h>
 #include <hot_teacup/query_view.h>
 #include <hot_teacup/types.h>
+#include <hot_teacup/request_view.h>
 #include <vector>
 #include <string>
 #include <memory>
 #include <map>
+#include <optional>
 #include <functional>
 
-namespace asyncgi{
-namespace detail {
-class RequestContext;
+namespace fcgi {
+class Request;
 }
+
+namespace asyncgi{
 
 class Request{
 public:
@@ -47,10 +50,18 @@ public:
     const std::vector<std::pair<std::string, std::string>>& fcgiParams() const;
     const std::string& fcgiStdIn() const;
 
-    explicit Request(std::shared_ptr<detail::RequestContext> context);
+    explicit Request(const fcgi::Request& fcgiRequest);
 
 private:
-    std::shared_ptr<detail::RequestContext> context_;
+    constexpr const fcgi::Request& fcgiRequest() const
+    {
+        return fcgiRequest_;
+    }
+    const http::RequestView& httpRequest() const;
+
+private:
+    std::reference_wrapper<const fcgi::Request> fcgiRequest_;
+    mutable std::optional<http::RequestView> httpRequest_;
 };
 
 }

@@ -1,5 +1,4 @@
 #include "connection.h"
-#include "requestcontext.h"
 #include <asyncgi/request.h>
 #include <asyncgi/response.h>
 #include <asio/write.hpp>
@@ -102,10 +101,10 @@ template<typename TProtocol>
 void Connection<TProtocol>::processRequest(fcgi::Request&& fcgiRequest, fcgi::Response&& fcgiResponse)
 {
     try{
-        auto context = std::make_shared<RequestContext>(std::move(fcgiRequest),
-                                                        std::move(fcgiResponse));
-        const auto request = Request{context};
-        auto response = Response{context, timerProvider_, client_, asioDispatcher_};
+        fcgiRequest_ = std::move(fcgiRequest);
+        fcgiResponse_ = std::move(fcgiResponse);
+        const auto request = Request{*fcgiRequest_};
+        auto response = Response{*fcgiResponse_, timerProvider_, client_, asioDispatcher_};
         requestProcessor_.process(request, response);
     }
     catch(const std::exception& e)

@@ -1,15 +1,15 @@
 #include <asyncgi/response.h>
-#include "requestcontext.h"
 #include "timerprovider.h"
+#include <fcgi_responder/response.h>
 
 namespace asyncgi::detail{
 
 Response::Response(
-        std::shared_ptr<RequestContext> context,
+        fcgi::Response& fcgiResponse,
         TimerProvider& timerProvider,
         IClient& client,
         IAsioDispatcher& asioDispatcher)
-    : context_{std::move(context)}
+    : fcgiResponse_{fcgiResponse}
     , timerProvider_{timerProvider}
     , client_{client}
     , asioDispatcher_{asioDispatcher}
@@ -17,11 +17,11 @@ Response::Response(
 
 void Response::send(const http::Response& response)
 {
-    if (!context_->response().isValid())
+    if (!fcgiResponse().isValid())
         return;
 
-    context_->response().setData(response.data());
-    context_->response().send();
+    fcgiResponse().setData(response.data());
+    fcgiResponse().send();
 }
 
 ITimer& Response::makeTimer()
@@ -41,7 +41,7 @@ IAsioDispatcher& Response::asioDispatcher()
 
 bool Response::isSent() const
 {
-    return !context_->response().isValid();
+    return !fcgiResponse().isValid();
 }
 
 }
