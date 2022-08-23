@@ -8,10 +8,10 @@
 namespace asyncgi {
 std::unique_ptr<IApp> makeApp(std::size_t workerThreadCount = 1);
 
-template<typename TContext = detail::EmptyContext>
-RequestRouter<TContext> makeRouter()
+template<typename TRouteContext = detail::EmptyRouteContext>
+RequestRouter<TRouteContext> makeRouter()
 {
-    return RequestRouter<TContext>{};
+    return RequestRouter<TRouteContext>{};
 }
 
 }

@@ -3,6 +3,7 @@
 #include "asiodispatcher.h"
 #include "timerprovider.h"
 #include "client.h"
+#include "responsesender.h"
 #include <asyncgi/requestprocessor.h>
 #include <asyncgi/errors.h>
 #include <asio/basic_stream_socket.hpp>
@@ -38,7 +39,7 @@ private:
 
 private:
     std::optional<fcgi::Request> fcgiRequest_;
-    std::optional<fcgi::Response> fcgiResponse_;
+    std::optional<ResponseSender> responseSender_;
     IRequestProcessor& requestProcessor_;
     AsioDispatcher asioDispatcher_;
     TimerProvider timerProvider_;

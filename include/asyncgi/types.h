@@ -8,7 +8,7 @@ namespace asyncgi{
 using _ = whaleroute::_;
 
 namespace detail {
-struct EmptyContext {
+struct EmptyRouteContext {
 };
 }
 

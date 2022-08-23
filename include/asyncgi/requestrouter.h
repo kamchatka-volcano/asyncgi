@@ -8,21 +8,21 @@
 namespace asyncgi{
 namespace traits = whaleroute::traits;
 
-template<typename TContext>
-class RequestRouter : public asyncgi::RequestProcessor<TContext>,
+template<typename TRouteContext>
+class RequestRouter : public asyncgi::RequestProcessor<TRouteContext>,
                       public whaleroute::RequestRouter<
                               asyncgi::Request,
-                              asyncgi::Response<TContext>,
-                              asyncgi::RequestProcessor<TContext>,
+                              asyncgi::Response<TRouteContext>,
+                              asyncgi::RequestProcessor<TRouteContext>,
                               http::Response> {
 
-    void process(const asyncgi::Request& request, asyncgi::Response<TContext>& response) final
+    void process(const asyncgi::Request& request, asyncgi::Response<TRouteContext>& response) final
     {
         auto requestProcessorQueuePtr = std::make_shared<whaleroute::RequestProcessorQueue>();
         response.setRequestProcessorQueue(requestProcessorQueuePtr);
         auto requestProcessorQueue = whaleroute::RequestRouter<asyncgi::Request,
-                asyncgi::Response<TContext>,
-                asyncgi::RequestProcessor<TContext>,
+                asyncgi::Response<TRouteContext>,
+                asyncgi::RequestProcessor<TRouteContext>,
                 http::Response>::makeRequestProcessorQueue(request, response);
         *requestProcessorQueuePtr = requestProcessorQueue;
         requestProcessorQueuePtr->launch();
@@ -33,23 +33,23 @@ class RequestRouter : public asyncgi::RequestProcessor<TContext>,
         return std::string{request.path()};
     }
 
-    void processUnmatchedRequest(const asyncgi::Request&, asyncgi::Response<TContext>& response) final
+    void processUnmatchedRequest(const asyncgi::Request&, asyncgi::Response<TRouteContext>& response) final
     {
         response.send(http::ResponseStatus::Code_404_Not_Found);
     }
 
-    bool isRouteProcessingFinished(const asyncgi::Request&, asyncgi::Response<TContext>& response) const final
+    bool isRouteProcessingFinished(const asyncgi::Request&, asyncgi::Response<TRouteContext>& response) const final
     {
         return response.isSent();
     }
 
-    void setResponseValue(asyncgi::Response<TContext>& response, const http::Response& httpResponse) final
+    void setResponseValue(asyncgi::Response<TRouteContext>& response, const http::Response& httpResponse) final
     {
         response.send(httpResponse);
     }
 
-    void callRequestProcessor(asyncgi::RequestProcessor<TContext>& requestProcessor, const asyncgi::Request& request,
-                              asyncgi::Response<TContext>& response) final
+    void callRequestProcessor(asyncgi::RequestProcessor<TRouteContext>& requestProcessor, const asyncgi::Request& request,
+                              asyncgi::Response<TRouteContext>& response) final
     {
         requestProcessor.process(request, response);
     }

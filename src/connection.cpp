@@ -102,9 +102,9 @@ void Connection<TProtocol>::processRequest(fcgi::Request&& fcgiRequest, fcgi::Re
 {
     try{
         fcgiRequest_ = std::move(fcgiRequest);
-        fcgiResponse_ = std::move(fcgiResponse);
+        responseSender_.emplace(std::move(fcgiResponse));
         const auto request = Request{*fcgiRequest_};
-        auto response = Response{*fcgiResponse_, timerProvider_, client_, asioDispatcher_};
+        auto response = ResponseContext{*responseSender_, timerProvider_, client_, asioDispatcher_};
         requestProcessor_.process(request, response);
     }
     catch(const std::exception& e)

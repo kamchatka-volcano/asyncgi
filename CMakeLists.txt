@@ -9,7 +9,13 @@ else()
   set(ASYNCGI_SUBPROJECT ON)
 endif()
 
+message("Configuration info: downloading asio library from the GitHub repository")
 include(external/asio)
+
+message("Configuration info: downloading hot_teacup library from the GitHub repository")
+set(HOT_TEACUP_OBJECT_LIB ON)
+include (external/hot_teacup)
+
 find_package(sfun 2.0.0 QUIET)
 if (NOT sfun_FOUND)
     message("Configuration info: sfun library wasn't found on your system, downloading it from the GitHub repository")
@@ -28,13 +34,6 @@ if (NOT fcgi_responder_FOUND)
     include (external/fcgi_responder)
 endif()
 
-find_package(hot_teacup 2.0.0 QUIET)
-if (NOT hot_teacup_FOUND)
-    message("Configuration info: hot_teacup library wasn't found on your system, downloading it from the GitHub repository")
-    include (external/hot_teacup)
-endif()
-
-
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
@@ -45,7 +44,8 @@ set(SRC
     src/connectionfactory.cpp
     src/errors.cpp
     src/multithreadedruntime.cpp
-    src/response.cpp
+    src/responsecontext.cpp
+    src/responsesender.cpp
     src/runtime.cpp
     src/server.cpp
     src/testserver.cpp
@@ -57,21 +57,6 @@ set(SRC
     src/clientconnection.cpp
     src/request.cpp
         )
-
-set(PUBLIC_HEADERS
-    "include/asyncgi/asyncgi.h"
-    "include/asyncgi/errors.h"
-    "include/asyncgi/iapp.h"
-    "include/asyncgi/iasiodispatcher.h"
-    "include/asyncgi/iclient.h"
-    "include/asyncgi/iserver.h"
-    "include/asyncgi/itimer.h"
-    "include/asyncgi/request.h"
-    "include/asyncgi/requestprocessor.h"
-    "include/asyncgi/requestrouter.h"
-    "include/asyncgi/response.h"
-    "include/asyncgi/testserver.h"
-    "include/asyncgi/types.h")
 
 add_library(asyncgi SHARED ${SRC})
 add_library(asyncgi::asyncgi ALIAS asyncgi)
@@ -117,8 +102,8 @@ if (NOT ASYNCGI_SUBPROJECT OR INSTALL_ASYNCGI)
     install(TARGETS asyncgi
             EXPORT asyncgi-targets
             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/asyncgi
     )
+    install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/asyncgi       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
     install(DIRECTORY ${whaleroute_SOURCE_DIR}/include/whaleroute DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/asyncgi)
     install(DIRECTORY ${hot_teacup_SOURCE_DIR}/include/hot_teacup DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/asyncgi)
 

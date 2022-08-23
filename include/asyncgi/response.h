@@ -3,6 +3,8 @@
 #include "itimer.h"
 #include "iclient.h"
 #include "types.h"
+#include "detail/iresponsesender.h"
+#include "detail/responsecontext.h"
 #include <hot_teacup/response.h>
 #include <hot_teacup/request.h>
 #include <whaleroute/requestprocessorqueue.h>
@@ -13,10 +15,6 @@
 
 namespace asio{
     class io_context;
-}
-
-namespace fcgi{
-    class Response;
 }
 
 namespace asyncgi{
@@ -37,55 +35,31 @@ auto make_copyable_function(F&& f)
 }
 }
 
-namespace detail {
+template <typename TRouteContext = detail::EmptyRouteContext>
 class Response{
 public:
-    Response(fcgi::Response&, TimerProvider&, IClient&, IAsioDispatcher&);
-    void send(const http::Response&);
-    bool isSent() const;
-    ITimer& makeTimer();
-    IClient& client();
-    IAsioDispatcher& asioDispatcher();
-
-private:
-    constexpr fcgi::Response& fcgiResponse() const
-    {
-        return fcgiResponse_;
-    }
-
-private:
-    std::reference_wrapper<fcgi::Response> fcgiResponse_;
-    std::reference_wrapper<TimerProvider> timerProvider_;
-    std::reference_wrapper<IClient> client_;
-    std::reference_wrapper<IAsioDispatcher> asioDispatcher_;
-};
-}
-
-template <typename TResponseContext = detail::EmptyContext>
-class Response{
-public:
-    explicit Response(detail::Response response)
-            : response_(std::move(response))
+    explicit Response(detail::ResponseContext responseContext)
+            : responseContext_{responseContext}
     {}
 
-    TResponseContext& context()
+    TRouteContext& context()
     {
-        return responseContext_;
+        return routeContext_;
     }
 
     void send(const http::Response& response)
     {
-        response_.send(response);
+        responseContext_.responseSender().send(response.data());
     }
 
     bool isSent() const
     {
-        return response_.isSent();
+        return responseContext_.responseSender().isSent();
     }
 
     void dispatch(std::function<void(asio::io_context& io)> task)
     {
-        response_.asioDispatcher().dispatch(std::move(task));
+        responseContext_.asioDispatcher().dispatch(std::move(task));
     }
 
     template <typename T, typename TCallable>
@@ -94,7 +68,7 @@ public:
         static_assert (std::is_invocable_v<TCallable, T>, "TCallable must be invokable with argument of type T");
         if (requestProcessorQueue_)
             requestProcessorQueue_->stop();
-        auto& timer = response_.makeTimer();
+        auto& timer = responseContext_.makeTimer();
         auto timerCallback = [fut = std::move(future), func = std::move(callback), &timer, checkPeriod, this]() mutable{
             if (fut.wait_for(std::chrono::seconds{0}) == std::future_status::ready){
                 timer.stop();
@@ -118,8 +92,8 @@ public:
         if (requestProcessorQueue_)
             requestProcessorQueue_->stop();
 
-        response_.client().makeRequest(socketPath, fcgiParams, fcgiStdIn,
-           [this, responseHandler](const std::optional<std::string>& response){
+        responseContext_.client().makeRequest(socketPath, fcgiParams, fcgiStdIn,
+                                              [this, responseHandler](const std::optional<std::string>& response){
                if (response)
                    responseHandler(*response);
                else
@@ -139,8 +113,8 @@ public:
             requestProcessorQueue_->stop();
 
         auto fcgiRequest = request.toFcgiData(http::FormType::Multipart);
-        response_.client().makeRequest(socketPath, fcgiRequest.params, fcgiRequest.stdIn,
-           [this, httpResponseHandler](const std::optional<std::string>& response){
+        responseContext_.client().makeRequest(socketPath, fcgiRequest.params, fcgiRequest.stdIn,
+                                              [this, httpResponseHandler](const std::optional<std::string>& response){
                if (response)
                    httpResponseHandler(http::responseFromString(*response));
                else
@@ -161,8 +135,8 @@ public:
         if (requestProcessorQueue_)
             requestProcessorQueue_->stop();
 
-        response_.client().makeRequest(ipAddress, port, fcgiParams, fcgiStdIn,
-           [this, responseHandler](const std::optional<std::string>& response){
+        responseContext_.client().makeRequest(ipAddress, port, fcgiParams, fcgiStdIn,
+                                              [this, responseHandler](const std::optional<std::string>& response){
                if (response)
                    responseHandler(*response);
                else
@@ -183,8 +157,8 @@ public:
             requestProcessorQueue_->stop();
 
         auto fcgiRequest = request.toFcgiData(http::FormType::Multipart);
-        response_.client().makeRequest(ipAddress, port, fcgiRequest.params, fcgiRequest.stdIn,
-           [this, httpResponseHandler](const std::optional<std::string>& response){
+        responseContext_.client().makeRequest(ipAddress, port, fcgiRequest.params, fcgiRequest.stdIn,
+                                              [this, httpResponseHandler](const std::optional<std::string>& response){
                if (response)
                    httpResponseHandler(http::responseFromString(*response));
                else
@@ -196,7 +170,7 @@ public:
 
     void cancelRequest()
     {
-        response_.client().disconnect();
+        responseContext_.client().disconnect();
     }
 
 private:
@@ -206,11 +180,11 @@ private:
     }
 
 private:
-    detail::Response response_;
-    TResponseContext responseContext_;
+    detail::ResponseContext responseContext_;
+    TRouteContext routeContext_;
     std::shared_ptr<whaleroute::RequestProcessorQueue> requestProcessorQueue_;
 
-    friend class RequestRouter<TResponseContext>;
+    friend class RequestRouter<TRouteContext>;
 };
 
 

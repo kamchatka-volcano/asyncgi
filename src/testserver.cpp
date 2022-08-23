@@ -5,6 +5,7 @@
 #include "timerprovider.h"
 #include "client.h"
 #include "asiodispatcher.h"
+#include "responsesender.h"
 #include <fcgi_responder/request.h>
 #include <fcgi_responder/response.h>
 #include <sfun/string_utils.h>
@@ -37,7 +38,8 @@ std::string TestServer::process(const std::map<std::string, std::string>& fcgiPa
     auto timer = detail::TimerProvider{ioContext};
     auto client = detail::Client{ioContext, {}};
     auto asioDispatcher = detail::AsioDispatcher{ioContext};
-    auto response = detail::Response{fcgiResponse, timer, client, asioDispatcher};
+    auto responseSender = detail::ResponseSender{std::move(fcgiResponse)};
+    auto response = detail::ResponseContext{responseSender, timer, client, asioDispatcher};
     requestProcessor_.process(request, response);
     return result;
 }
@@ -56,8 +58,9 @@ std::string TestServer::process(const http::Request& httpRequest)
     auto ioContext = asio::io_context{};
     auto timerProvider = detail::TimerProvider{ioContext};
     auto client = detail::Client{ioContext, {}};
-     auto asioDispatcher = detail::AsioDispatcher{ioContext};
-    auto response = detail::Response{fcgiResponse, timerProvider, client, asioDispatcher};
+    auto asioDispatcher = detail::AsioDispatcher{ioContext};
+    auto responseSender = detail::ResponseSender{std::move(fcgiResponse)};
+    auto response = detail::ResponseContext{responseSender, timerProvider, client, asioDispatcher};
     requestProcessor_.process(request, response);
     return result;
 }

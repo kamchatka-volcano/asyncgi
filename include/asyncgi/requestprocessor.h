@@ -4,7 +4,7 @@
 
 namespace asyncgi{
 
-template<class TResponseContext>
+template<class TRouteContext>
 class RequestProcessor;
 
 namespace detail{
@@ -17,23 +17,23 @@ public:
     IRequestProcessor(IRequestProcessor&&) = delete;
     IRequestProcessor&& operator=(IRequestProcessor&&) = delete;
 
-    virtual void process(const Request&, Response&) = 0;
+    virtual void process(const Request&, ResponseContext&) = 0;
 
 private:
-    template<class TResponseContext>
+    template<class TRouteContext>
     friend class asyncgi::RequestProcessor;
 };
 }
 
-template <typename TResponseContext = detail::EmptyContext>
+template <typename TRouteContext = detail::EmptyRouteContext>
 class RequestProcessor : public detail::IRequestProcessor{
 public:
-    virtual void process(const Request&, Response<TResponseContext>&) = 0;
+    virtual void process(const Request&, Response<TRouteContext>&) = 0;
 
 private:
-    virtual void process(const Request& request, detail::Response& response) override
+    virtual void process(const Request& request, detail::ResponseContext& response) override
     {
-        auto contextualResponse = Response<TResponseContext>{std::move(response)};
+        auto contextualResponse = Response<TRouteContext>{std::move(response)};
         process(request, contextualResponse);
     };
 };
