@@ -57,9 +57,16 @@ public:
         return responseContext_.responseSender().isSent();
     }
 
-    void dispatch(std::function<void(asio::io_context& io)> task)
+    void executeTask(std::function<void(const TaskContext& ctx)> task)
     {
-        responseContext_.asioDispatcher().dispatch(std::move(task));
+        if (requestProcessorQueue_)
+            requestProcessorQueue_->stop();
+
+        responseContext_.asioDispatcher().postTask(std::move(task),
+                [this]{
+                    if (requestProcessorQueue_)
+                        requestProcessorQueue_->launch();
+                });
     }
 
     template <typename T, typename TCallable>

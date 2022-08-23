@@ -7,9 +7,10 @@ AsioDispatcher::AsioDispatcher(asio::io_context& io)
     : io_{io}
 {}
 
-void AsioDispatcher::dispatch(std::function<void(asio::io_context&)> task)
+void AsioDispatcher::postTask(std::function<void(const TaskContext& ctx)> task, std::function<void()> postTaskAction)
 {
-    io_.dispatch([this, task = std::move(task)]{task(io_);});
+    auto taskContext = TaskContext{io_, std::move(postTaskAction)};
+    io_.post([task = std::move(task), taskContext = std::move(taskContext)]{task(taskContext);});
 }
 
 }

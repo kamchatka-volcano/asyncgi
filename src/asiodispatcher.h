@@ -10,7 +10,7 @@ namespace asyncgi::detail{
 class AsioDispatcher : public IAsioDispatcher{
 public:
     AsioDispatcher(asio::io_context& io);
-    void dispatch(std::function<void(asio::io_context&)>) override;
+    void postTask(std::function<void(const TaskContext&)> task, std::function<void()> postTaskAction) override;
 
 private:
     asio::io_context& io_;

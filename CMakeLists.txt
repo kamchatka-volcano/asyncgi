@@ -11,21 +11,16 @@ endif()
 
 message("Configuration info: downloading asio library from the GitHub repository")
 include(external/asio)
-
 message("Configuration info: downloading hot_teacup library from the GitHub repository")
 set(HOT_TEACUP_OBJECT_LIB ON)
 include (external/hot_teacup)
+message("Configuration info: downloading whaleroute library from the GitHub repository")
+include (external/whaleroute)
 
-find_package(sfun 2.0.0 QUIET)
+find_package(sfun 2.1.1 QUIET)
 if (NOT sfun_FOUND)
     message("Configuration info: sfun library wasn't found on your system, downloading it from the GitHub repository")
     include (external/sfun)
-endif()
-
-find_package(whaleroute 1.0.0 QUIET)
-if (NOT whaleroute_FOUND)
-    message("Configuration info: whaleroute library wasn't found on your system, downloading it from the GitHub repository")
-    include (external/whaleroute)
 endif()
 
 find_package(fcgi_responder 1.2.2 QUIET)
@@ -50,6 +45,7 @@ set(SRC
     src/server.cpp
     src/testserver.cpp
     src/client.cpp
+    src/taskcontext.cpp
     src/timer.cpp
     src/timerprovider.cpp
     src/connectionlistener.cpp
