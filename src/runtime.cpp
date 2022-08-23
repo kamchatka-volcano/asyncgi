@@ -40,4 +40,9 @@ void Runtime::handleStopSignals()
     });
 }
 
+asio::io_context& Runtime::defaultIO()
+{
+    return io_;
+}
+
 }

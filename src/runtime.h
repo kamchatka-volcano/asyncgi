@@ -16,9 +16,10 @@ private:
     void handleStopSignals();
 
 protected:
-    asio::io_context io_;
+    asio::io_context& defaultIO();
 
 private:
+    asio::io_context io_;
     asio::signal_set signals_;
 };
 

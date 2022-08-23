@@ -3,7 +3,7 @@
 namespace asyncgi::detail{
 
 MultithreadedRuntime::MultithreadedRuntime(std::size_t threadCount)
-    : ioGuard_{io_.get_executor()}
+    : ioGuard_{defaultIO().get_executor()}
 {
     for(auto i = 0u; i < threadCount; ++i){
         auto io = std::make_shared<asio::io_context>();
@@ -19,7 +19,7 @@ void MultithreadedRuntime::run()
         {
             io_context->run();
         });
-    io_.run();
+    defaultIO().run();
     for(auto& thread : threadPool_)
         thread.join();
 }
@@ -30,7 +30,7 @@ void MultithreadedRuntime::stop()
     ioGuardPool_.clear();
     for (auto& io : ioPool_)
         io->stop();
-    io_.stop();
+    defaultIO().stop();
 }
 
 asio::io_context& MultithreadedRuntime::nextIO()
