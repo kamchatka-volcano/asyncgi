@@ -87,11 +87,10 @@ target_include_directories(
 target_include_directories(asyncgi PRIVATE include/)
 target_link_libraries(asyncgi PRIVATE asio fcgi_responder::fcgi_responder hot_teacup::hot_teacup whaleroute::whaleroute sfun::sfun)
 
-add_executable(example main.cpp)
-target_compile_features(example PUBLIC cxx_std_17)
-set_target_properties(example PROPERTIES CXX_EXTENSIONS OFF)
-target_link_libraries(example PRIVATE asyncgi Threads::Threads)
-
+option(ENABLE_EXAMPLES "Build examples" OFF)
+if (ENABLE_EXAMPLES AND NOT ASYNCGI_SUBPROJECT)
+    add_subdirectory(examples)
+endif()
 
 option(INSTALL_ASYNCGI "Install asyncgi library unconditionally" OFF)
 if (NOT ASYNCGI_SUBPROJECT OR INSTALL_ASYNCGI)
