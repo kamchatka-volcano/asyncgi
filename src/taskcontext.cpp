@@ -8,7 +8,8 @@ TaskContext::PostAction::PostAction(std::function<void()> action)
 
 TaskContext::PostAction::~PostAction()
 {
-    action_();
+    if (action_)
+        action_();
 }
 
 TaskContext::TaskContext(asio::io_context& io, std::function<void()> postTaskAction)

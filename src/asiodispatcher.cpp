@@ -13,4 +13,9 @@ void AsioDispatcher::postTask(std::function<void(const TaskContext& ctx)> task, 
     io_.post([task = std::move(task), taskContext = std::move(taskContext)]{task(taskContext);});
 }
 
+void AsioDispatcher::postTask(std::function<void(const TaskContext& ctx)> task)
+{
+    postTask(std::move(task), {});
+}
+
 }

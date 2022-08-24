@@ -38,7 +38,7 @@ auto make_copyable_function(F&& f)
 template <typename TRouteContext = detail::EmptyRouteContext>
 class Response{
 public:
-    explicit Response(detail::ResponseContext responseContext)
+    explicit Response(const detail::ResponseContext& responseContext)
             : responseContext_{responseContext}
     {}
 
@@ -49,7 +49,7 @@ public:
 
     void send(const http::Response& response)
     {
-        responseContext_.responseSender().send(response.data());
+        responseContext_.responseSender().send(response.data(http::ResponseMode::CGI));
     }
 
     bool isSent() const
