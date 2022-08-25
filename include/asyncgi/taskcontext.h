@@ -22,8 +22,8 @@ public:
     asio::io_context& io() const;
 
 private:
-    std::shared_ptr<PostAction> postTaskAction_;
     std::reference_wrapper<asio::io_context> io_;
+    std::shared_ptr<PostAction> postTaskAction_;
 };
 
 }
