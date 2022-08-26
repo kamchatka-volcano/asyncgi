@@ -10,7 +10,7 @@ int main()
                 {
                     auto timer = std::make_shared<asio::steady_timer>(ctx.io());
                     timer->expires_after(std::chrono::seconds{3});
-                    timer->async_wait([timer, ctx](auto& ec) mutable{
+                    timer->async_wait([timer, ctx](auto&) mutable{
                         std::cout << "Hello world" << std::endl;
                     });
                 });

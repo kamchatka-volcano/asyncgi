@@ -17,7 +17,7 @@ public:
     IRequestProcessor(IRequestProcessor&&) = delete;
     IRequestProcessor&& operator=(IRequestProcessor&&) = delete;
 
-    virtual void process(const Request&, ResponseContext&) = 0;
+    virtual void processRequest(const Request&, ResponseContext&) = 0;
 
 private:
     template<class TRouteContext>

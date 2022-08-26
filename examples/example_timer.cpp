@@ -7,7 +7,7 @@ struct Greeter : asyncgi::RequestProcessor<>{
     {
     }
 
-    void process(const asyncgi::Request& request, asyncgi::Response<>& response) override
+    void process(const asyncgi::Request&, asyncgi::Response<>& response) override
     {
         response.send("Hello world\n(alive for "s + std::to_string(secondsCounter_) + " seconds)"s);
     }

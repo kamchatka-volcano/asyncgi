@@ -16,7 +16,7 @@ void ErrorHandler::operator()(ErrorType errorType, int code, const std::string& 
 {
     if (func_)
         func_(errorType, code, msg);
-};
+}
 
 }
 

@@ -53,10 +53,7 @@ public:
     explicit Request(const fcgi::Request& fcgiRequest);
 
 private:
-    constexpr const fcgi::Request& fcgiRequest() const
-    {
-        return fcgiRequest_;
-    }
+    const fcgi::Request& fcgiRequest() const;
     const http::RequestView& httpRequest() const;
 
 private:

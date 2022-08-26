@@ -11,6 +11,11 @@ Request::Request(const fcgi::Request& fcgiRequest)
 {
 }
 
+const fcgi::Request& Request::fcgiRequest() const
+{
+    return fcgiRequest_;
+}
+
 const http::RequestView& Request::httpRequest() const
 {
     if (!httpRequest_)

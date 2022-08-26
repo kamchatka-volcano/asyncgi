@@ -22,7 +22,7 @@ struct Authorizer : asyncgi::RequestProcessor<RouteContext>{
 };
 
 struct AdminPage : asyncgi::RequestProcessor<RouteContext>{
-    void process(const asyncgi::Request& request, asyncgi::Response<RouteContext>& response) override
+    void process(const asyncgi::Request&, asyncgi::Response<RouteContext>& response) override
     {
         if (response.context().access == Access::Authorized)
             response.send("Welcome, admin!"s);
@@ -32,7 +32,7 @@ struct AdminPage : asyncgi::RequestProcessor<RouteContext>{
 };
 
 struct ModerationPage : asyncgi::RequestProcessor<RouteContext>{
-    void process(const asyncgi::Request& request, asyncgi::Response<RouteContext>& response) override
+    void process(const asyncgi::Request&, asyncgi::Response<RouteContext>& response) override
     {
         if (response.context().access == Access::Authorized)
             response.send("Welcome, moderator!"s);

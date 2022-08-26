@@ -2,7 +2,7 @@
 
 using namespace std::string_literals;
 struct DelayedPage : asyncgi::RequestProcessor<>{
-    void process(const asyncgi::Request& request, asyncgi::Response<>& response) override
+    void process(const asyncgi::Request&, asyncgi::Response<>& response) override
     {
         response.waitFuture(
             std::async(std::launch::async, []{std::this_thread::sleep_for(std::chrono::seconds(3)); return "World"s;}),

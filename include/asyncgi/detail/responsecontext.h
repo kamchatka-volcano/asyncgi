@@ -16,9 +16,9 @@ public:
     ResponseContext(IResponseSender&, TimerProvider&, IClient&, IAsioDispatcher&);
 
     IResponseSender& responseSender() const;
-    ITimer& makeTimer();
-    IClient& client();
-    IAsioDispatcher& asioDispatcher();
+    ITimer& makeTimer() const;
+    IClient& client() const;
+    IAsioDispatcher& asioDispatcher() const;
 
 private:
     std::reference_wrapper<IResponseSender> responseSender_;

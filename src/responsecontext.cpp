@@ -19,17 +19,17 @@ IResponseSender& ResponseContext::responseSender() const
     return responseSender_;
 }
 
-ITimer& ResponseContext::makeTimer()
+ITimer& ResponseContext::makeTimer() const
 {
     return timerProvider_.get().emplaceTimer();
 }
 
-IClient& ResponseContext::client()
+IClient& ResponseContext::client() const
 {
     return client_;
 }
 
-IAsioDispatcher& ResponseContext::asioDispatcher()
+IAsioDispatcher& ResponseContext::asioDispatcher() const
 {
     return asioDispatcher_;
 }

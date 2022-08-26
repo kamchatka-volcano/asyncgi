@@ -2,7 +2,7 @@
 
 using namespace std::string_literals;
 struct RequestPage : asyncgi::RequestProcessor<>{
-    void process(const asyncgi::Request& request, asyncgi::Response<>& response) override
+    void process(const asyncgi::Request&, asyncgi::Response<>& response) override
     {
         //making request to FastCgi application listening on 127.0.0.1:9000 and showing the received response
         response.makeRequest("127.0.0.1", 9000, http::Request{http::RequestMethod::GET, "/"},

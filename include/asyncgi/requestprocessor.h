@@ -11,7 +11,7 @@ public:
     virtual void process(const Request&, Response<TRouteContext>&) = 0;
 
 private:
-    void process(const Request& request, detail::ResponseContext& response) override
+    void processRequest(const Request& request, detail::ResponseContext& response) override
     {
         auto contextualResponse = Response<TRouteContext>{response};
         process(request, contextualResponse);

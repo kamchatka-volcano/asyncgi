@@ -40,7 +40,7 @@ std::string TestServer::process(const std::map<std::string, std::string>& fcgiPa
     auto asioDispatcher = detail::AsioDispatcher{ioContext};
     auto responseSender = detail::ResponseSender{std::move(fcgiResponse)};
     auto response = detail::ResponseContext{responseSender, timer, client, asioDispatcher};
-    requestProcessor_.process(request, response);
+    requestProcessor_.processRequest(request, response);
     return result;
 }
 
@@ -61,7 +61,7 @@ std::string TestServer::process(const http::Request& httpRequest)
     auto asioDispatcher = detail::AsioDispatcher{ioContext};
     auto responseSender = detail::ResponseSender{std::move(fcgiResponse)};
     auto response = detail::ResponseContext{responseSender, timerProvider, client, asioDispatcher};
-    requestProcessor_.process(request, response);
+    requestProcessor_.processRequest(request, response);
     return result;
 }
 
