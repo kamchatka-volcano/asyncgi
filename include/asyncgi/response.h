@@ -97,16 +97,16 @@ public:
     void makeRequest(
             const std::filesystem::path& socketPath,
             fastcgi::Request request,
-            const std::function<void(const std::optional<fastcgi::Response>&)>& responseHandler,
+            const std::function<void(std::optional<fastcgi::Response>)>& responseHandler,
             const std::chrono::milliseconds timeout = std::chrono::seconds{3})
     {
         if (requestProcessorQueue_)
             requestProcessorQueue_->stop();
 
         responseContext_.client().makeRequest(socketPath, std::move(request),
-                [this, responseHandler](const std::optional<fastcgi::Response>& response){
+                [this, responseHandler](std::optional<fastcgi::Response> response){
                        if (response)
-                           responseHandler(*response);
+                           responseHandler(std::move(*response));
                        else
                            responseHandler(std::nullopt);
                        if (requestProcessorQueue_)
@@ -125,7 +125,7 @@ public:
 
         auto fcgiRequest = request.toFcgiData(http::FormType::Multipart);
         responseContext_.client().makeRequest(socketPath, fcgiRequest.params, fcgiRequest.stdIn,
-                [this, httpResponseHandler](const std::optional<fastcgi::Response>& response){
+                [this, httpResponseHandler](std::optional<fastcgi::Response> response){
                         if (response)
                            httpResponseHandler(http::responseFromString(response->data));
                         else
@@ -139,16 +139,16 @@ public:
             std::string_view ipAddress,
             uint16_t port,
             fastcgi::Request request,
-            const std::function<void(const std::optional<fastcgi::Response>&)>& responseHandler,
+            const std::function<void(std::optional<fastcgi::Response>)>& responseHandler,
             const std::chrono::milliseconds timeout = std::chrono::seconds{3})
     {
         if (requestProcessorQueue_)
             requestProcessorQueue_->stop();
 
         responseContext_.client().makeRequest(ipAddress, port, std::move(request),
-                [this, responseHandler](const std::optional<fastcgi::Response>& response){
+                [this, responseHandler](std::optional<fastcgi::Response> response){
                         if (response)
-                           responseHandler(*response);
+                           responseHandler(std::move(*response));
                         else
                            responseHandler(std::nullopt);
                         if (requestProcessorQueue_)
@@ -169,7 +169,7 @@ public:
         auto [params, stdIn] = request.toFcgiData(http::FormType::Multipart);
         auto fcgiRequest = fastcgi::Request{std::move(params), std::move(stdIn)};
         responseContext_.client().makeRequest(ipAddress, port, std::move(fcgiRequest),
-                [this, httpResponseHandler](const std::optional<fastcgi::Response>& response){
+                [this, httpResponseHandler](std::optional<fastcgi::Response> response){
                         if (response)
                            httpResponseHandler(http::responseFromString(response->data));
                         else

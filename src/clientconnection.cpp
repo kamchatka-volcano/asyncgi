@@ -22,7 +22,7 @@ template<typename TProtocol>
 void ClientConnection<TProtocol>::makeRequest(
         const typename TProtocol::endpoint& socketPath,
         fastcgi::Request request,
-        std::function<void(const std::optional<fcgi::ResponseData>&)> responseHandler,
+        std::function<void(std::optional<fcgi::ResponseData>)> responseHandler,
         const std::shared_ptr<std::function<void()>>& cancelRequestOnTimeout)
 {
     socket_.async_connect(socketPath,

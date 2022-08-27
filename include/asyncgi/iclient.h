@@ -25,11 +25,11 @@ public:
     virtual void makeRequest(
             const std::filesystem::path& unixDomainSocketPath,
             fastcgi::Request request,
-            std::function<void(const std::optional<fastcgi::Response>&)> responseHandler) = 0;
+            std::function<void(std::optional<fastcgi::Response>)> responseHandler) = 0;
     virtual void makeRequest(
             const std::filesystem::path& unixDomainSocketPath,
             fastcgi::Request request,
-            std::function<void(const std::optional<fastcgi::Response>&)> responseHandler,
+            std::function<void(std::optional<fastcgi::Response>)> responseHandler,
             const std::chrono::milliseconds& timeout) = 0;
     virtual void makeRequest(
             const std::filesystem::path& unixDomainSocketPath,
@@ -45,12 +45,12 @@ public:
             std::string_view ipAddress,
             uint16_t port,
             fastcgi::Request,
-            std::function<void(const std::optional<fastcgi::Response>&)> responseHandler) = 0;
+            std::function<void(std::optional<fastcgi::Response>)> responseHandler) = 0;
     virtual void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
             fastcgi::Request,
-            std::function<void(const std::optional<fastcgi::Response>&)> responseHandler,
+            std::function<void(std::optional<fastcgi::Response>)> responseHandler,
             const std::chrono::milliseconds& timeout) = 0;
     virtual void makeRequest(
             std::string_view ipAddress,

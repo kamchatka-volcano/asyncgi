@@ -24,11 +24,11 @@ public:
     void makeRequest(
             const fs::path& socketPath,
             fastcgi::Request request,
-            std::function<void(const std::optional<fastcgi::Response>&)> responseHandler) override;
+            std::function<void(std::optional<fastcgi::Response>)> responseHandler) override;
     void makeRequest(
             const fs::path& socketPath,
             fastcgi::Request request,
-            std::function<void(const std::optional<fastcgi::Response>&)> responseHandler,
+            std::function<void(std::optional<fastcgi::Response>)> responseHandler,
             const std::chrono::milliseconds& timeout) override;
     void makeRequest(
             const fs::path& socketPath,
@@ -44,12 +44,12 @@ public:
             std::string_view ipAddress,
             uint16_t port,
             fastcgi::Request request,
-            std::function<void(const std::optional<fastcgi::Response>&)> responseHandler) override;
+            std::function<void(std::optional<fastcgi::Response>)> responseHandler) override;
     void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
             fastcgi::Request request,
-            std::function<void(const std::optional<fastcgi::Response>&)> responseHandler,
+            std::function<void(std::optional<fastcgi::Response>)> responseHandler,
             const std::chrono::milliseconds& timeout) override;
     void makeRequest(
             std::string_view ipAddress,

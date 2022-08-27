@@ -22,7 +22,7 @@ public:
     void makeRequest(
             const typename TProtocol::endpoint& socketPath,
             fastcgi::Request request,
-            std::function<void(const std::optional<fcgi::ResponseData>&)> responseHandler,
+            std::function<void(std::optional<fcgi::ResponseData>)> responseHandler,
             const std::shared_ptr<std::function<void()>>& cancelRequestOnTimeout);
     void disconnect() override;
 

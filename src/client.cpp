@@ -13,7 +13,7 @@ Client::Client(asio::io_context& io, ErrorHandlerFunc errorHandler)
 void Client::makeRequest(
         const fs::path& socketPath,
         fastcgi::Request request,
-        std::function<void(const std::optional<fastcgi::Response>&)> responseHandler)
+        std::function<void(std::optional<fastcgi::Response>)> responseHandler)
 {
     makeRequest(
             socketPath,
@@ -25,7 +25,7 @@ void Client::makeRequest(
 void Client::makeRequest(
         const fs::path& socketPath,
         fastcgi::Request request,
-        std::function<void(const std::optional<fastcgi::Response>&)> responseHandler,
+        std::function<void(std::optional<fastcgi::Response>)> responseHandler,
         const std::chrono::milliseconds& timeout)
 {
     auto cancelRequestOnTimeout = std::make_shared<std::function<void()>>([]{});
@@ -34,12 +34,12 @@ void Client::makeRequest(
         (*cancelRequestOnTimeout)();
     }, TimerMode::Once);
 
-    auto onResponseReceived = [=, &responseTimeoutTimer](const std::optional<fcgi::ResponseData>& fcgiResponse) {
+    auto onResponseReceived = [=, &responseTimeoutTimer](std::optional<fcgi::ResponseData> fcgiResponse) {
         responseTimeoutTimer.stop();
         if (fcgiResponse) {
             if (!fcgiResponse->errorMsg.empty())
                 errorHandler_(ErrorType::RequestProcessingError, -1, fcgiResponse->errorMsg);
-            responseHandler(fastcgi::Response{fcgiResponse->data, fcgiResponse->errorMsg});
+            responseHandler(fastcgi::Response{std::move(fcgiResponse->data), std::move(fcgiResponse->errorMsg)});
         }
         else
             responseHandler(std::nullopt);
@@ -76,7 +76,7 @@ void Client::makeRequest(
     responseTimeoutTimer.start(timeout, [=] {
         (*cancelRequestOnTimeout)();
     }, TimerMode::Once);
-    auto onResponseReceived = [=, &responseTimeoutTimer](const std::optional<fcgi::ResponseData>& fcgiResponse) {
+    auto onResponseReceived = [=, &responseTimeoutTimer](std::optional<fcgi::ResponseData> fcgiResponse) {
         responseTimeoutTimer.stop();
         if (fcgiResponse) {
              if (!fcgiResponse->errorMsg.empty())
@@ -101,7 +101,7 @@ void Client::makeRequest(
         std::string_view ipAddress,
         uint16_t port,
         fastcgi::Request request,
-        std::function<void(const std::optional<fastcgi::Response>&)> responseHandler)
+        std::function<void(std::optional<fastcgi::Response>)> responseHandler)
 {
     makeRequest(
             ipAddress,
@@ -115,7 +115,7 @@ void Client::makeRequest(
         std::string_view ipAddress,
         uint16_t port,
         fastcgi::Request request,
-        std::function<void(const std::optional<fastcgi::Response>&)> responseHandler,
+        std::function<void(std::optional<fastcgi::Response>)> responseHandler,
         const std::chrono::milliseconds& timeout)
 {
     auto cancelRequestOnTimeout = std::make_shared<std::function<void()>>([]{});
@@ -123,12 +123,12 @@ void Client::makeRequest(
     responseTimeoutTimer.start(timeout, [=] {
         (*cancelRequestOnTimeout)();
     }, TimerMode::Once);
-    auto onResponseReceived = [=, &responseTimeoutTimer](const std::optional<fcgi::ResponseData>& fcgiResponse) {
+    auto onResponseReceived = [=, &responseTimeoutTimer](std::optional<fcgi::ResponseData> fcgiResponse) {
         responseTimeoutTimer.stop();
         if (fcgiResponse) {
             if (!fcgiResponse->errorMsg.empty())
                 errorHandler_(ErrorType::RequestProcessingError, -1, fcgiResponse->errorMsg);
-            responseHandler(fastcgi::Response{fcgiResponse->data, fcgiResponse->errorMsg});
+            responseHandler(fastcgi::Response{std::move(fcgiResponse->data), std::move(fcgiResponse->errorMsg)});
         }
         else
             responseHandler(std::nullopt);
@@ -171,7 +171,7 @@ void Client::makeRequest(
         (*cancelRequestOnTimeout)();
     }, TimerMode::Once);
 
-    auto onResponseReceived = [=, &responseTimeoutTimer](const std::optional<fcgi::ResponseData>& fcgiResponse) {
+    auto onResponseReceived = [=, &responseTimeoutTimer](std::optional<fcgi::ResponseData> fcgiResponse) {
         responseTimeoutTimer.stop();
         if (fcgiResponse) {
              if (!fcgiResponse->errorMsg.empty())
