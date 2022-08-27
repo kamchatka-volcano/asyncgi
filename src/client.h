@@ -23,48 +23,44 @@ public:
     Client(asio::io_context&, ErrorHandlerFunc);
     void makeRequest(
             const fs::path& socketPath,
-            std::map<std::string, std::string> fcgiParams,
-            std::string fcgiStdIn,
-            std::function<void(const std::optional<std::string>&)> responseHandler) override;
+            fastcgi::Request request,
+            std::function<void(std::optional<fastcgi::Response>)> responseHandler) override;
     void makeRequest(
             const fs::path& socketPath,
-            std::map<std::string, std::string> fcgiParams,
-            std::string fcgiStdIn,
-            std::function<void(const std::optional<std::string>&)> responseHandler,
+            fastcgi::Request request,
+            std::function<void(std::optional<fastcgi::Response>)> responseHandler,
             const std::chrono::milliseconds& timeout) override;
     void makeRequest(
             const fs::path& socketPath,
             const http::Request& request,
-            const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler) override;
+            const std::function<void(std::optional<http::ResponseView>)>& responseHandler) override;
     void makeRequest(
             const fs::path& socketPath,
             const http::Request& request,
-            const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler,
+            const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
             const std::chrono::milliseconds& timeout) override;
 
      void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
-            std::map<std::string, std::string> fcgiParams,
-            std::string fcgiStdIn,
-            std::function<void(const std::optional<std::string>&)> responseHandler) override;
+            fastcgi::Request request,
+            std::function<void(std::optional<fastcgi::Response>)> responseHandler) override;
     void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
-            std::map<std::string, std::string> fcgiParams,
-            std::string fcgiStdIn,
-            std::function<void(const std::optional<std::string>&)> responseHandler,
+            fastcgi::Request request,
+            std::function<void(std::optional<fastcgi::Response>)> responseHandler,
             const std::chrono::milliseconds& timeout) override;
     void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
             const http::Request& request,
-            const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler) override;
+            const std::function<void(std::optional<http::ResponseView>)>& responseHandler) override;
     void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
             const http::Request& request,
-            const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler,
+            const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
             const std::chrono::milliseconds& timeout) override;
 
     void disconnect() override;

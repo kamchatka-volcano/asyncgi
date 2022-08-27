@@ -21,15 +21,14 @@ ClientConnection<TProtocol>::~ClientConnection()
 template<typename TProtocol>
 void ClientConnection<TProtocol>::makeRequest(
         const typename TProtocol::endpoint& socketPath,
-        std::map<std::string, std::string> fcgiParams,
-        std::string fcgiStdIn,
-        std::function<void(const std::optional<fcgi::ResponseData>&)> responseHandler,
+        fastcgi::Request request,
+        std::function<void(std::optional<fcgi::ResponseData>)> responseHandler,
         const std::shared_ptr<std::function<void()>>& cancelRequestOnTimeout)
 {
     socket_.async_connect(socketPath,
         [this, cancelRequestOnTimeout,
-         fcgiParams = std::move(fcgiParams),
-         fcgiStdIn = std::move(fcgiStdIn),
+         fcgiParams = std::move(request.params),
+         fcgiStdIn = std::move(request.stdIn),
          responseHandler = std::move(responseHandler)](auto error_code) mutable{
             if (error_code){
                 responseHandler(std::nullopt);

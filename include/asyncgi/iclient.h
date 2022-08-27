@@ -24,48 +24,44 @@ public:
 
     virtual void makeRequest(
             const std::filesystem::path& unixDomainSocketPath,
-            std::map<std::string, std::string> fcgiParams,
-            std::string fcgiStdIn,
-            std::function<void(const std::optional<std::string>&)> responseHandler) = 0;
+            fastcgi::Request request,
+            std::function<void(std::optional<fastcgi::Response>)> responseHandler) = 0;
     virtual void makeRequest(
             const std::filesystem::path& unixDomainSocketPath,
-            std::map<std::string, std::string> fcgiParams,
-            std::string fcgiStdIn,
-            std::function<void(const std::optional<std::string>&)> responseHandler,
+            fastcgi::Request request,
+            std::function<void(std::optional<fastcgi::Response>)> responseHandler,
             const std::chrono::milliseconds& timeout) = 0;
     virtual void makeRequest(
             const std::filesystem::path& unixDomainSocketPath,
             const http::Request& request,
-            const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler) = 0;
+            const std::function<void(std::optional<http::ResponseView>)>& responseHandler) = 0;
     virtual void makeRequest(
             const std::filesystem::path& unixDomainSocketPath,
             const http::Request& request,
-            const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler,
+            const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
             const std::chrono::milliseconds& timeout) = 0;
 
      virtual void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
-            std::map<std::string, std::string> fcgiParams,
-            std::string fcgiStdIn,
-            std::function<void(const std::optional<std::string>&)> responseHandler) = 0;
+            fastcgi::Request,
+            std::function<void(std::optional<fastcgi::Response>)> responseHandler) = 0;
     virtual void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
-            std::map<std::string, std::string> fcgiParams,
-            std::string fcgiStdIn,
-            std::function<void(const std::optional<std::string>&)> responseHandler,
+            fastcgi::Request,
+            std::function<void(std::optional<fastcgi::Response>)> responseHandler,
             const std::chrono::milliseconds& timeout) = 0;
     virtual void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
             const http::Request& request,
-            const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler) = 0;
+            const std::function<void(std::optional<http::ResponseView>)>& responseHandler) = 0;
     virtual void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
             const http::Request& request,
-            const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler,
+            const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
             const std::chrono::milliseconds& timeout) = 0;
 
     virtual void disconnect() = 0;

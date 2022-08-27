@@ -13,6 +13,7 @@ public:
     IResponseSender&& operator=(IResponseSender&&) = delete;
 
     virtual void send(std::string data) = 0;
+    virtual void send(std::string data, std::string errorMsg) = 0;
     virtual bool isSent() const = 0;
 };
 
