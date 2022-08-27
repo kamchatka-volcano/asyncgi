@@ -33,11 +33,11 @@ public:
     void makeRequest(
             const fs::path& socketPath,
             const http::Request& request,
-            const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler) override;
+            const std::function<void(std::optional<http::ResponseView>)>& responseHandler) override;
     void makeRequest(
             const fs::path& socketPath,
             const http::Request& request,
-            const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler,
+            const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
             const std::chrono::milliseconds& timeout) override;
 
      void makeRequest(
@@ -55,12 +55,12 @@ public:
             std::string_view ipAddress,
             uint16_t port,
             const http::Request& request,
-            const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler) override;
+            const std::function<void(std::optional<http::ResponseView>)>& responseHandler) override;
     void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
             const http::Request& request,
-            const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler,
+            const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
             const std::chrono::milliseconds& timeout) override;
 
     void disconnect() override;

@@ -117,7 +117,7 @@ public:
     void makeRequest(
             const std::filesystem::path& socketPath,
             const http::Request& request,
-            const std::function<void(const std::optional<http::ResponseView>&)>& httpResponseHandler,
+            const std::function<void(std::optional<http::ResponseView>)>& httpResponseHandler,
             const std::chrono::milliseconds timeout = std::chrono::seconds{3})
     {
         if (requestProcessorQueue_)
@@ -160,7 +160,7 @@ public:
             std::string_view ipAddress,
             uint16_t port,
             const http::Request& request,
-            const std::function<void(const std::optional<http::ResponseView>&)>& httpResponseHandler,
+            const std::function<void(std::optional<http::ResponseView>)>& httpResponseHandler,
             const std::chrono::milliseconds timeout = std::chrono::seconds{3})
     {
         if (requestProcessorQueue_)

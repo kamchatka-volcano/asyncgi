@@ -56,7 +56,7 @@ void Client::makeRequest(
 void Client::makeRequest(
         const fs::path& socketPath,
         const http::Request& request,
-        const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler)
+        const std::function<void(std::optional<http::ResponseView>)>& responseHandler)
 {
     makeRequest(
             socketPath,
@@ -68,7 +68,7 @@ void Client::makeRequest(
 void Client::makeRequest(
         const fs::path& socketPath,
         const http::Request& request,
-        const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler,
+        const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
         const std::chrono::milliseconds& timeout)
 {
     auto cancelRequestOnTimeout = std::make_shared<std::function<void()>>([]{});
@@ -148,7 +148,7 @@ void Client::makeRequest(
         std::string_view ipAddress,
         uint16_t port,
         const http::Request& request,
-        const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler)
+        const std::function<void(std::optional<http::ResponseView>)>& responseHandler)
 {
     makeRequest(
             ipAddress,
@@ -162,7 +162,7 @@ void Client::makeRequest(
         std::string_view ipAddress,
         uint16_t port,
         const http::Request& request,
-        const std::function<void(const std::optional<http::ResponseView>&)>& responseHandler,
+        const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
         const std::chrono::milliseconds& timeout)
 {
     auto cancelRequestOnTimeout = std::make_shared<std::function<void()>>([]{});
