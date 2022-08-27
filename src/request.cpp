@@ -20,13 +20,13 @@ const http::RequestView& Request::httpRequest() const
 {
     if (!httpRequest_)
         httpRequest_.emplace(
-                fcgiRequest().hasParam("REQUEST_METHOD") ? fcgiRequest().param("REQUEST_METHOD") : "",
-                fcgiRequest().hasParam("REMOTE_ADDR") ? fcgiRequest().param("REMOTE_ADDR") : "",
-                fcgiRequest().hasParam("HTTP_HOST") ? fcgiRequest().param("HTTP_HOST") : "",
-                fcgiRequest().hasParam("REQUEST_URI") ? fcgiRequest().param("REQUEST_URI") : "",
-                fcgiRequest().hasParam("QUERY_STRING") ? fcgiRequest().param("QUERY_STRING") : "",
-                fcgiRequest().hasParam("HTTP_COOKIE") ? fcgiRequest().param("HTTP_COOKIE") : "",
-                fcgiRequest().hasParam("CONTENT_TYPE") ? fcgiRequest().param("CONTENT_TYPE") : "",
+                fcgiRequest().hasParam("REQUEST_METHOD") ? fcgiRequest().param("REQUEST_METHOD") : std::string_view{},
+                fcgiRequest().hasParam("REMOTE_ADDR") ? fcgiRequest().param("REMOTE_ADDR") : std::string_view{},
+                fcgiRequest().hasParam("HTTP_HOST") ? fcgiRequest().param("HTTP_HOST") : std::string_view{},
+                fcgiRequest().hasParam("REQUEST_URI") ? fcgiRequest().param("REQUEST_URI") : std::string_view{},
+                fcgiRequest().hasParam("QUERY_STRING") ? fcgiRequest().param("QUERY_STRING") : std::string_view{},
+                fcgiRequest().hasParam("HTTP_COOKIE") ? fcgiRequest().param("HTTP_COOKIE") : std::string_view{},
+                fcgiRequest().hasParam("CONTENT_TYPE") ? fcgiRequest().param("CONTENT_TYPE") : std::string_view{},
                 fcgiRequest().stdIn());
 
     return *httpRequest_;
