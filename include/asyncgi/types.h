@@ -11,6 +11,17 @@ namespace detail {
 struct EmptyRouteContext {
 };
 }
+}
 
+namespace fastcgi{
+    struct Response{
+        std::string data;
+        std::string errorMsg;
+    };
+
+    struct Request{
+        std::map<std::string, std::string> params;
+        std::string stdIn;
+    };
 }
 

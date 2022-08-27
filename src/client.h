@@ -23,14 +23,12 @@ public:
     Client(asio::io_context&, ErrorHandlerFunc);
     void makeRequest(
             const fs::path& socketPath,
-            std::map<std::string, std::string> fcgiParams,
-            std::string fcgiStdIn,
-            std::function<void(const std::optional<std::string>&)> responseHandler) override;
+            fastcgi::Request request,
+            std::function<void(const std::optional<fastcgi::Response>&)> responseHandler) override;
     void makeRequest(
             const fs::path& socketPath,
-            std::map<std::string, std::string> fcgiParams,
-            std::string fcgiStdIn,
-            std::function<void(const std::optional<std::string>&)> responseHandler,
+            fastcgi::Request request,
+            std::function<void(const std::optional<fastcgi::Response>&)> responseHandler,
             const std::chrono::milliseconds& timeout) override;
     void makeRequest(
             const fs::path& socketPath,
@@ -45,15 +43,13 @@ public:
      void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
-            std::map<std::string, std::string> fcgiParams,
-            std::string fcgiStdIn,
-            std::function<void(const std::optional<std::string>&)> responseHandler) override;
+            fastcgi::Request request,
+            std::function<void(const std::optional<fastcgi::Response>&)> responseHandler) override;
     void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
-            std::map<std::string, std::string> fcgiParams,
-            std::string fcgiStdIn,
-            std::function<void(const std::optional<std::string>&)> responseHandler,
+            fastcgi::Request request,
+            std::function<void(const std::optional<fastcgi::Response>&)> responseHandler,
             const std::chrono::milliseconds& timeout) override;
     void makeRequest(
             std::string_view ipAddress,

@@ -8,10 +8,16 @@ ResponseSender::ResponseSender(fcgi::Response response)
 
 void ResponseSender::send(std::string data)
 {
+    send(data, {});
+}
+
+void ResponseSender::send(std::string data, std::string errorMsg)
+{
     if (!response_.isValid())
         return;
 
     response_.setData(std::move(data));
+    response_.setErrorMsg(std::move(errorMsg));
     response_.send();
 }
 

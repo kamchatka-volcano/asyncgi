@@ -1,4 +1,5 @@
 #pragma once
+#include <asyncgi/types.h>
 #include <asyncgi/itimer.h>
 #include <asyncgi/errors.h>
 #include <hot_teacup/request.h>
@@ -20,8 +21,7 @@ public:
 
     void makeRequest(
             const typename TProtocol::endpoint& socketPath,
-            std::map<std::string, std::string> fcgiParams,
-            std::string fcgiStdIn,
+            fastcgi::Request request,
             std::function<void(const std::optional<fcgi::ResponseData>&)> responseHandler,
             const std::shared_ptr<std::function<void()>>& cancelRequestOnTimeout);
     void disconnect() override;

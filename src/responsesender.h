@@ -12,6 +12,7 @@ class ResponseSender : public IResponseSender{
 public:
     explicit ResponseSender(fcgi::Response response);
     void send(std::string data) override;
+    void send(std::string data, std::string errorMsg) override;
     bool isSent() const override;
 
 private:
