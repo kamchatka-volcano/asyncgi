@@ -1,8 +1,6 @@
 #include <asyncgi/asyncgi.h>
 #include <mutex>
 
-using namespace std::string_literals;
-
 class State {
 public:
     std::string name()
@@ -51,7 +49,7 @@ public:
     void process(const asyncgi::Request& request, asyncgi::Response<>& response) override
     {
         state_.setName(std::string{request.formField("name")});
-        response.send(http::Response("/", http::RedirectType::Found));
+        response.redirect("/");
     }
 
 private:
@@ -74,10 +72,12 @@ int main()
                          "<input id=\"name\" name=\"name\" value=\"\">"
                          "<input value=\"Submit\" data-popup=\"true\" type=\"submit\">"
                          "</form>"
-                         "</html>"s);
+                         "</html>");
             }
     );
-    router.route().set(http::ResponseStatus::Code_404_Not_Found);
+    router.route().set(http::Response{http::ResponseStatus::Code_404_Not_Found, "Page not found"});
+    //Alternatively, it's possible to pass arguments for creation of http::Response object to the set() method.
+    //router.route().set(http::ResponseStatus::Code_404_Not_Found, "Page not found");
 
     auto server = app->makeServer(router);
     server->listen("/tmp/fcgi.sock");

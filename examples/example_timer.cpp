@@ -1,6 +1,5 @@
 #include <asyncgi/asyncgi.h>
 
-using namespace std::string_literals;
 struct Greeter : asyncgi::RequestProcessor<>{
     Greeter(const int& secondsCounter)
         : secondsCounter_{secondsCounter}
@@ -9,7 +8,7 @@ struct Greeter : asyncgi::RequestProcessor<>{
 
     void process(const asyncgi::Request&, asyncgi::Response<>& response) override
     {
-        response.send("Hello world\n(alive for "s + std::to_string(secondsCounter_) + " seconds)"s);
+        response.send("Hello world\n(alive for " + std::to_string(secondsCounter_) + " seconds)");
     }
 
 private:

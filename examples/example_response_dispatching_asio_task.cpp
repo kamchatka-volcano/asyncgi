@@ -1,7 +1,6 @@
 #include <asyncgi/asyncgi.h>
 #include <asio/steady_timer.hpp>
 
-using namespace std::string_literals;
 struct DelayedPage : asyncgi::RequestProcessor<>{
     void process(const asyncgi::Request&, asyncgi::Response<>& response) override
     {
@@ -11,7 +10,7 @@ struct DelayedPage : asyncgi::RequestProcessor<>{
                     auto timer = std::make_shared<asio::steady_timer>(ctx.io());
                     timer->expires_after(std::chrono::seconds{3});
                     timer->async_wait([timer, response, ctx](auto&) mutable{ //Note how we capture ctx object here,
-                        response.send("Hello world"s);                       //it's necessary to keep it (or its copy) alive
+                        response.send("Hello world");                       //it's necessary to keep it (or its copy) alive
                     });                                                      //before the end of request processing
                 });
     }

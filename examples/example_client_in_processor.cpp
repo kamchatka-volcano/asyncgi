@@ -1,6 +1,5 @@
 #include <asyncgi/asyncgi.h>
 
-using namespace std::string_literals;
 struct RequestPage : asyncgi::RequestProcessor<>{
     void process(const asyncgi::Request&, asyncgi::Response<>& response) override
     {
@@ -10,7 +9,7 @@ struct RequestPage : asyncgi::RequestProcessor<>{
                  if (reqResponse)
                      response.send(std::string{reqResponse->body()});
                  else
-                     response.send("No response"s);
+                     response.send("No response");
                 }
         );
     }

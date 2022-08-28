@@ -1,13 +1,12 @@
 #include <asyncgi/asyncgi.h>
 
-using namespace std::string_literals;
 struct Greeter : asyncgi::RequestProcessor<>{
     void process(
             const asyncgi::Request& request,
             asyncgi::Response<>& response) override
     {
         if (request.path() == "/")
-            response.send("Hello world"s);
+            response.send("Hello world");
         else
             response.send(http::ResponseStatus::Code_404_Not_Found);
     }

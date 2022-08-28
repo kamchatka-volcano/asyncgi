@@ -1,7 +1,5 @@
 #include <asyncgi/asyncgi.h>
 
-using namespace std::string_literals;
-
 enum class Access{
     Authorized,
     Forbidden
@@ -24,14 +22,14 @@ struct Authorizer : asyncgi::RequestProcessor<RouteContext>{
 struct AdminPage : asyncgi::RequestProcessor<RouteContext>{
     void process(const asyncgi::Request&, asyncgi::Response<RouteContext>& response) override
     {
-       response.send("Welcome, admin!"s);
+       response.send("Welcome, admin!");
     }
 };
 
 struct ModerationPage : asyncgi::RequestProcessor<RouteContext>{
     void process(const asyncgi::Request&, asyncgi::Response<RouteContext>& response) override
     {
-        response.send("Welcome, moderator!"s);
+        response.send("Welcome, moderator!");
     }
 };
 
@@ -53,8 +51,8 @@ int main()
     //RequestMethod parameter is implemented using RouteSpecification as well.
     //As you can see below, the order of provided RouteSpecification parameters isn't important.
     router.route("/moderation", Access::Authorized, http::RequestMethod::GET).process<ModerationPage>();
-    router.route(std::regex{".*"}, Access::Forbidden).set(http::Response{http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page."s});
-    router.route().set(http::Response{http::ResponseStatus::Code_404_Not_Found, "Page not found."});
+    router.route(std::regex{".*"}, Access::Forbidden).set(http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page.");
+    router.route().set(http::ResponseStatus::Code_404_Not_Found, "Page not found.");
 
     auto server = app->makeServer(router);
     server->listen("/tmp/fcgi.sock");

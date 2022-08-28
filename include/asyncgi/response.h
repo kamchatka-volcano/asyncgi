@@ -47,6 +47,22 @@ public:
         return routeContext_;
     }
 
+    template<typename... TArgs>
+    void send(TArgs... args)
+    {
+        auto response = http::Response{std::forward<TArgs>(args)...};
+        responseContext_.responseSender().send(response.data(http::ResponseMode::CGI));
+    }
+
+    void redirect(std::string path,
+                  http::RedirectType redirectType = http::RedirectType::Found,
+                  std::vector<http::Cookie> cookies = {},
+                  std::vector<http::Header> headers = {})
+    {
+        auto response = http::Response{std::move(path), redirectType, std::move(cookies), std::move(headers)};
+        responseContext_.responseSender().send(response.data(http::ResponseMode::CGI));
+    }
+
     void send(const http::Response& response)
     {
         responseContext_.responseSender().send(response.data(http::ResponseMode::CGI));

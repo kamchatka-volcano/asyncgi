@@ -6,15 +6,14 @@
  
 ```c++
 #include <asyncgi/asyncgi.h>
-using namespace std::string_literals;
 
 int main()
 {
     auto app = asyncgi::makeApp();
     auto router = asyncgi::makeRouter();
-    router.route("/", http::RequestMethod::GET).set("Hello world"s);
+    router.route("/", http::RequestMethod::GET).set("Hello world");
     router.route().set(http::ResponseStatus::Code_404_Not_Found);
-   
+
     auto server = app->makeServer(router);
     server->listen("/tmp/fcgi.sock");
     app->exec();
@@ -76,14 +75,13 @@ To process requests it's necessary to provide an implementation of `asyncgi::Req
 ///
 #include <asyncgi/asyncgi.h>
 
-using namespace std::string_literals;
 struct Greeter : asyncgi::RequestProcessor<>{
     void process(
             const asyncgi::Request& request,
             asyncgi::Response<>& response) override
     {
         if (request.path() == "/")
-            response.send("Hello world"s);
+            response.send("Hello world");
         else
             response.send(http::ResponseStatus::Code_404_Not_Found);
     }
@@ -115,8 +113,6 @@ To use multiple threads for request processing, pass a desired number of workers
 ///
 #include <asyncgi/asyncgi.h>
 #include <mutex>
-
-using namespace std::string_literals;
 
 class State {
 public:
@@ -166,7 +162,7 @@ public:
     void process(const asyncgi::Request& request, asyncgi::Response<>& response) override
     {
         state_.setName(std::string{request.formField("name")});
-        response.send(http::Response("/", http::RedirectType::Found));
+        response.redirect("/");
     }
 
 private:
@@ -189,10 +185,12 @@ int main()
                          "<input id=\"name\" name=\"name\" value=\"\">"
                          "<input value=\"Submit\" data-popup=\"true\" type=\"submit\">"
                          "</form>"
-                         "</html>"s);
+                         "</html>");
             }
     );
-    router.route().set(http::ResponseStatus::Code_404_Not_Found);
+    router.route().set(http::Response{http::ResponseStatus::Code_404_Not_Found, "Page not found"});
+    //Alternatively, it's possible to pass arguments for creation of http::Response object to the set() method.
+    //router.route().set(http::ResponseStatus::Code_404_Not_Found, "Page not found");
 
     auto server = app->makeServer(router);
     server->listen("/tmp/fcgi.sock");
@@ -212,8 +210,6 @@ int main()
 ///examples/example_route_context.cpp
 ///
 #include <asyncgi/asyncgi.h>
-
-using namespace std::string_literals;
 
 enum class Access{
     Authorized,
@@ -235,22 +231,22 @@ struct Authorizer : asyncgi::RequestProcessor<RouteContext>{
 };
 
 struct AdminPage : asyncgi::RequestProcessor<RouteContext>{
-    void process(const asyncgi::Request& request, asyncgi::Response<RouteContext>& response) override
+    void process(const asyncgi::Request&, asyncgi::Response<RouteContext>& response) override
     {
         if (response.context().access == Access::Authorized)
-            response.send("Welcome, admin!"s);
+            response.send("Welcome, admin!");
         else
-            response.send(http::Response{http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page."s});
+            response.send(http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page.");
     }
 };
 
 struct ModerationPage : asyncgi::RequestProcessor<RouteContext>{
-    void process(const asyncgi::Request& request, asyncgi::Response<RouteContext>& response) override
+    void process(const asyncgi::Request&, asyncgi::Response<RouteContext>& response) override
     {
         if (response.context().access == Access::Authorized)
-            response.send("Welcome, moderator!"s);
+            response.send("Welcome, moderator!");
         else
-            response.send(http::Response{http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page."s});
+            response.send(http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page.");
     }
 };
 
@@ -262,7 +258,7 @@ int main()
     router.route(std::regex{".*"}).process<Authorizer>();
     router.route("/admin", http::RequestMethod::GET).process<AdminPage>();
     router.route("/moderation", http::RequestMethod::GET).process<ModerationPage>();
-    router.route().set(http::Response{http::ResponseStatus::Code_404_Not_Found, "Page not found."});
+    router.route().set(http::ResponseStatus::Code_404_Not_Found, "Page not found.");
 
     auto server = app->makeServer(router);
     server->listen("/tmp/fcgi.sock");
@@ -284,8 +280,6 @@ Any parameter of request or response objects (including parameters of the route 
 ///
 #include <asyncgi/asyncgi.h>
 
-using namespace std::string_literals;
-
 enum class Access{
     Authorized,
     Forbidden
@@ -306,16 +300,16 @@ struct Authorizer : asyncgi::RequestProcessor<RouteContext>{
 };
 
 struct AdminPage : asyncgi::RequestProcessor<RouteContext>{
-    void process(const asyncgi::Request& request, asyncgi::Response<RouteContext>& response) override
+    void process(const asyncgi::Request&, asyncgi::Response<RouteContext>& response) override
     {
-       response.send("Welcome, admin!"s);
+       response.send("Welcome, admin!");
     }
 };
 
 struct ModerationPage : asyncgi::RequestProcessor<RouteContext>{
-    void process(const asyncgi::Request& request, asyncgi::Response<RouteContext>& response) override
+    void process(const asyncgi::Request&, asyncgi::Response<RouteContext>& response) override
     {
-        response.send("Welcome, moderator!"s);
+        response.send("Welcome, moderator!");
     }
 };
 
@@ -337,8 +331,8 @@ int main()
     //RequestMethod parameter is implemented using RouteSpecification as well.
     //As you can see below, the order of provided RouteSpecification parameters isn't important.
     router.route("/moderation", Access::Authorized, http::RequestMethod::GET).process<ModerationPage>();
-    router.route(std::regex{".*"}, Access::Forbidden).set(http::Response{http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page."s});
-    router.route().set(http::Response{http::ResponseStatus::Code_404_Not_Found, "Page not found."});
+    router.route(std::regex{".*"}, Access::Forbidden).set(http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page.");
+    router.route().set(http::ResponseStatus::Code_404_Not_Found, "Page not found.");
 
     auto server = app->makeServer(router);
     server->listen("/tmp/fcgi.sock");
@@ -360,16 +354,15 @@ A timer object implementing the interface `asyncgi::ITimer` can be created to ch
 ///
 #include <asyncgi/asyncgi.h>
 
-using namespace std::string_literals;
 struct Greeter : asyncgi::RequestProcessor<>{
     Greeter(const int& secondsCounter)
         : secondsCounter_{secondsCounter}
     {
     }
 
-    void process(const asyncgi::Request& request, asyncgi::Response<>& response) override
+    void process(const asyncgi::Request&, asyncgi::Response<>& response) override
     {
-        response.send("Hello world\n(alive for "s + std::to_string(secondsCounter_) + " seconds)"s);
+        response.send("Hello world\n(alive for " + std::to_string(secondsCounter_) + " seconds)");
     }
 
 private:
@@ -438,9 +431,8 @@ If you need to make a `FastCGI` request during request processing don't use a cl
 ///
 #include <asyncgi/asyncgi.h>
 
-using namespace std::string_literals;
 struct RequestPage : asyncgi::RequestProcessor<>{
-    void process(const asyncgi::Request& request, asyncgi::Response<>& response) override
+    void process(const asyncgi::Request&, asyncgi::Response<>& response) override
     {
         //making request to FastCgi application listening on 127.0.0.1:9000 and showing the received response
         response.makeRequest("127.0.0.1", 9000, http::Request{http::RequestMethod::GET, "/"},
@@ -448,7 +440,7 @@ struct RequestPage : asyncgi::RequestProcessor<>{
                  if (reqResponse)
                      response.send(std::string{reqResponse->body()});
                  else
-                     response.send("No response"s);
+                     response.send("No response");
                 }
         );
     }
@@ -482,12 +474,11 @@ int main()
 ///
 #include <asyncgi/asyncgi.h>
 
-using namespace std::string_literals;
 struct DelayedPage : asyncgi::RequestProcessor<>{
-    void process(const asyncgi::Request& request, asyncgi::Response<>& response) override
+    void process(const asyncgi::Request&, asyncgi::Response<>& response) override
     {
         response.waitFuture(
-            std::async(std::launch::async, []{std::this_thread::sleep_for(std::chrono::seconds(3)); return "World"s;}),
+            std::async(std::launch::async, []{std::this_thread::sleep_for(std::chrono::seconds(3)); return "World";}),
             [response](const std::string& result) mutable
             {
                 response.send(http::Response{"Hello " + result});
@@ -551,18 +542,17 @@ If you need to invoke such callable object during request processing don't use a
 #include <asyncgi/asyncgi.h>
 #include <asio/steady_timer.hpp>
 
-using namespace std::string_literals;
 struct DelayedPage : asyncgi::RequestProcessor<>{
-    void process(const asyncgi::Request& request, asyncgi::Response<>& response) override
+    void process(const asyncgi::Request&, asyncgi::Response<>& response) override
     {
         response.executeTask(
                 [response](const asyncgi::TaskContext& ctx) mutable
                 {
                     auto timer = std::make_shared<asio::steady_timer>(ctx.io());
                     timer->expires_after(std::chrono::seconds{3});
-                    timer->async_wait([timer, response, ctx](auto& ec) mutable{ //Note how we capture ctx object here,
-                        response.send("Hello world"s);                          //it's necessary to keep it (or its copy) alive
-                    });                                                         //before the end of request processing
+                    timer->async_wait([timer, response, ctx](auto&) mutable{ //Note how we capture ctx object here,
+                        response.send("Hello world");                       //it's necessary to keep it (or its copy) alive
+                    });                                                      //before the end of request processing
                 });
     }
 };
