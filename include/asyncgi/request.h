@@ -1,4 +1,5 @@
 #pragma once
+#include "detail/lazyinitialized.h"
 #include <hot_teacup/cookie_view.h>
 #include <hot_teacup/query_view.h>
 #include <hot_teacup/types.h>
@@ -58,7 +59,7 @@ private:
 
 private:
     std::reference_wrapper<const fcgi::Request> fcgiRequest_;
-    mutable std::optional<http::RequestView> httpRequest_;
+    detail::LazyInitialized<http::RequestView> httpRequest_;
 };
 
 }
