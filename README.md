@@ -116,6 +116,8 @@ To use multiple threads for request processing, pass a desired number of workers
 #include <asyncgi/asyncgi.h>
 #include <mutex>
 
+using namespace std::string_literals;
+
 class State {
 public:
     std::string name()
@@ -147,11 +149,10 @@ public:
         if (name.empty())
             name = std::string{"world"};
 
-        auto page = "<html>"
-                    "<p>Hello, " + name + "</p>"
-                    "<a href=\"/settings\">settings</a>"
-                    "</html>";
-        response.send(http::Response::Content(page));
+        response.send("<html>"
+                      "<p>Hello, " + name + "</p>"
+                      "<a href=\"/settings\">settings</a>"
+                      "</html>");
     }
 private:
     State& state_;
@@ -165,7 +166,7 @@ public:
     void process(const asyncgi::Request& request, asyncgi::Response<>& response) override
     {
         state_.setName(std::string{request.formField("name")});
-        response.send(http::Response::Redirect("/"));
+        response.send(http::Response("/", http::RedirectType::Found));
     }
 
 private:
@@ -181,14 +182,14 @@ int main()
     router.route("/settings", http::RequestMethod::POST).process<ChangeSettings>(state);
     router.route("/settings", http::RequestMethod::GET).process(
             [](const auto&, auto& response){
-                response.send(http::Response::Content(
+                response.send(
                          "<html>"
                          "<form method=\"post\" enctype=\"multipart/form-data\">"
                          "<label for=\"name\">Name:</label>"
                          "<input id=\"name\" name=\"name\" value=\"\">"
                          "<input value=\"Submit\" data-popup=\"true\" type=\"submit\">"
                          "</form>"
-                         "</html>"));
+                         "</html>"s);
             }
     );
     router.route().set(http::ResponseStatus::Code_404_Not_Found);
