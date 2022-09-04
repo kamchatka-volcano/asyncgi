@@ -34,7 +34,7 @@ struct ModerationPage : asyncgi::RequestProcessor<RouteContext>{
 };
 
 template<>
-struct asyncgi::traits::RouteSpecification<Access, asyncgi::Request, asyncgi::Response<RouteContext>> {
+struct asyncgi::config::RouteSpecification<Access, asyncgi::Request, asyncgi::Response<RouteContext>> {
     bool operator()(Access value, const asyncgi::Request&, asyncgi::Response<RouteContext>& response) const
     {
         return value == response.context().access;
@@ -46,12 +46,12 @@ int main()
 {
     auto app = asyncgi::makeApp();
     auto router = asyncgi::makeRouter<RouteContext>();
-    router.route(std::regex{".*"}).process<Authorizer>();
+    router.route(asyncgi::rx{".*"}).process<Authorizer>();
     router.route("/admin", http::RequestMethod::GET, Access::Authorized).process<AdminPage>();
     //RequestMethod parameter is implemented using RouteSpecification as well.
     //As you can see below, the order of provided RouteSpecification parameters isn't important.
     router.route("/moderation", Access::Authorized, http::RequestMethod::GET).process<ModerationPage>();
-    router.route(std::regex{".*"}, Access::Forbidden).set(http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page.");
+    router.route(asyncgi::rx{".*"}, Access::Forbidden).set(http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page.");
     router.route().set(http::ResponseStatus::Code_404_Not_Found, "Page not found.");
 
     auto server = app->makeServer(router);

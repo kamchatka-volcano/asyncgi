@@ -206,10 +206,16 @@ private:
         requestProcessorQueue_ = queue;
     }
 
+    void setRouteParams(const std::vector<std::string>& params)
+    {
+        routeParams_ = params;
+    }
+
 private:
     detail::ResponseContext responseContext_;
     TRouteContext routeContext_;
     std::shared_ptr<whaleroute::RequestProcessorQueue> requestProcessorQueue_;
+    std::vector<std::string> routeParams_;
 
     friend class RequestRouter<TRouteContext>;
 };

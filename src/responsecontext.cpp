@@ -34,4 +34,14 @@ IAsioDispatcher& ResponseContext::asioDispatcher() const
     return asioDispatcher_;
 }
 
+const std::vector<std::string>& ResponseContext::routeParams() const
+{
+    return routeParams_;
+}
+
+void ResponseContext::setRouteParams(const std::vector<std::string>& params)
+{
+    routeParams_ = params;
+}
+
 }

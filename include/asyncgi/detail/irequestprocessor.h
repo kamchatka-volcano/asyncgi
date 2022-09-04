@@ -1,7 +1,7 @@
 #pragma once
 
 namespace asyncgi{
-template<class TRouteContext>
+template<class TRouteContext, typename... TRouteParam>
 class RequestProcessor;
 class Request;
 class ResponseContext;
@@ -20,7 +20,7 @@ public:
     virtual void processRequest(const Request&, ResponseContext&) = 0;
 
 private:
-    template<class TRouteContext>
+    template<class TRouteContext, typename... TRouteParam>
     friend class asyncgi::RequestProcessor;
 };
 
