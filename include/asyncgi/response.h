@@ -35,7 +35,7 @@ auto make_copyable_function(F&& f)
 }
 }
 
-template <typename TRouteContext = detail::EmptyRouteContext>
+template <typename TRouteContext = _>
 class Response{
 public:
     explicit Response(const detail::ResponseContext& responseContext)

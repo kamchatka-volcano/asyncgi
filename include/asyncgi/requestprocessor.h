@@ -10,7 +10,7 @@ namespace asyncgi{
 
 namespace detail{
 
-template <typename TRouteContext = detail::EmptyRouteContext>
+template <typename TRouteContext = _>
 class BaseRequestProcessor : public detail::IRequestProcessor{
 public:
     virtual void doProcess(const Request&, Response<TRouteContext>&) = 0;
@@ -24,7 +24,7 @@ private:
 };
 }
 
-template <typename TRouteContext = detail::EmptyRouteContext, typename... TRouteParam>
+template <typename TRouteContext = _, typename... TRouteParam>
 class RequestProcessor : public detail::BaseRequestProcessor<TRouteContext>,
                          public whaleroute::RequestProcessor<Request, Response<TRouteContext>, TRouteParam...>
 {

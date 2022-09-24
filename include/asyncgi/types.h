@@ -11,11 +11,6 @@ using rx = whaleroute::rx;
 namespace string_literals = whaleroute::string_literals;
 using RegexMode = whaleroute::RegexMode;
 using TrailingSlashMode = whaleroute::TrailingSlashMode;
-
-namespace detail {
-struct EmptyRouteContext {
-};
-}
 }
 
 namespace fastcgi{
