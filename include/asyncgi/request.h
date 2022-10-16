@@ -1,9 +1,9 @@
 #pragma once
 #include "detail/lazyinitialized.h"
-#include <hot_teacup/cookie_view.h>
-#include <hot_teacup/query_view.h>
-#include <hot_teacup/types.h>
-#include <hot_teacup/request_view.h>
+#include "http/cookie_view.h"
+#include "http/query_view.h"
+#include "http/types.h"
+#include "http/request_view.h"
 #include <vector>
 #include <string>
 #include <memory>
@@ -11,11 +11,11 @@
 #include <optional>
 #include <functional>
 
+namespace asyncgi{
+
 namespace fcgi {
 class Request;
 }
-
-namespace asyncgi{
 
 class Request{
 public:

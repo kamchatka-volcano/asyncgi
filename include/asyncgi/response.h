@@ -5,8 +5,8 @@
 #include "types.h"
 #include "detail/iresponsesender.h"
 #include "detail/responsecontext.h"
-#include <hot_teacup/response.h>
-#include <hot_teacup/request.h>
+#include "http/response.h"
+#include "http/request.h"
 #include <whaleroute/requestprocessorqueue.h>
 #include <memory>
 #include <optional>

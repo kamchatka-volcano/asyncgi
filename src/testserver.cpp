@@ -13,10 +13,11 @@
 
 namespace asyncgi{
 namespace str = sfun::string_utils;
-
+namespace fcgi{
 class Request;
 class MsgStdIn;
 class MsgParams;
+}
 
 TestServer::TestServer(detail::IRequestProcessor& requestProcessor)
     : requestProcessor_{requestProcessor}

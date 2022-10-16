@@ -2,7 +2,7 @@
 #include "requestprocessor.h"
 #include "request.h"
 #include "response.h"
-#include <hot_teacup/response.h>
+#include "http/response.h"
 #include <whaleroute/requestrouter.h>
 
 namespace asyncgi{
@@ -51,8 +51,8 @@ class RequestRouter : public RequestProcessor<TRouteContext>,
 }
 
 template<typename TContext>
-struct asyncgi::config::RouteSpecification<http::RequestMethod, asyncgi::Request, asyncgi::Response<TContext>> {
-    bool operator()(http::RequestMethod value, const asyncgi::Request& request, asyncgi::Response<TContext>&) const
+struct asyncgi::config::RouteSpecification<asyncgi::http::RequestMethod, asyncgi::Request, asyncgi::Response<TContext>> {
+    bool operator()(asyncgi::http::RequestMethod value, const asyncgi::Request& request, asyncgi::Response<TContext>&) const
     {
         return value == request.method();
     }

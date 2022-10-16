@@ -1,5 +1,7 @@
 #include <asyncgi/asyncgi.h>
 
+using namespace asyncgi;
+
 struct DelayedPage : asyncgi::RequestProcessor<>{
     void process(const asyncgi::Request&, asyncgi::Response<>& response) override
     {

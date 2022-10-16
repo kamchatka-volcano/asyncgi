@@ -1,6 +1,8 @@
 #include <asyncgi/asyncgi.h>
 #include <mutex>
 
+using namespace asyncgi;
+
 class State {
 public:
     std::string name()

@@ -1,7 +1,7 @@
 #pragma once
 #include "types.h"
-#include <hot_teacup/request.h>
-#include <hot_teacup/response_view.h>
+#include "http/request.h"
+#include "http/response_view.h"
 #include <filesystem>
 #include <string_view>
 #include <map>

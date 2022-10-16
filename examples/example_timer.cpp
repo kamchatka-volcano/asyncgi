@@ -1,5 +1,7 @@
 #include <asyncgi/asyncgi.h>
 
+using namespace asyncgi;
+
 struct Greeter : asyncgi::RequestProcessor<>{
     Greeter(const int& secondsCounter)
         : secondsCounter_{secondsCounter}

@@ -1,5 +1,7 @@
 #include <asyncgi/asyncgi.h>
 
+using namespace asyncgi;
+
 enum class Access{
     Authorized,
     Forbidden

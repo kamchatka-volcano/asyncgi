@@ -1,6 +1,8 @@
 #include <asyncgi/asyncgi.h>
 #include <iostream>
 
+using namespace asyncgi;
+
 int main()
 {
     auto app = asyncgi::makeApp();

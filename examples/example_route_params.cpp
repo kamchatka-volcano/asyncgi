@@ -1,6 +1,8 @@
 #include <asyncgi/asyncgi.h>
 #include <tuple>
 
+using namespace asyncgi;
+
 enum class Access{
     Authorized,
     Forbidden

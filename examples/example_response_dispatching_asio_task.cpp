@@ -1,6 +1,8 @@
 #include <asyncgi/asyncgi.h>
 #include <asio/steady_timer.hpp>
 
+using namespace asyncgi;
+
 struct DelayedPage : asyncgi::RequestProcessor<>{
     void process(const asyncgi::Request&, asyncgi::Response<>& response) override
     {

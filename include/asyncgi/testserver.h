@@ -5,11 +5,10 @@
 #include <variant>
 #include <filesystem>
 
+namespace asyncgi{
 namespace http{
 class Request;
 }
-
-namespace asyncgi{
 namespace detail {
 class IRequestProcessor;
 }

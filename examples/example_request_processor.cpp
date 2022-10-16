@@ -1,5 +1,7 @@
 #include <asyncgi/asyncgi.h>
 
+using namespace asyncgi;
+
 struct Greeter : asyncgi::RequestProcessor<>{
     void process(
             const asyncgi::Request& request,

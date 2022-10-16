@@ -5,27 +5,43 @@ include(GNUInstallDirs)
 include(external/seal_lake)
 include(external/asio)
 
-SealLake_FindOrDownload(
-        sfun 2.4.0
+SealLake_Bundle(
+        NAME asyncgi_sfun
         GIT_REPOSITORY https://github.com/kamchatka-volcano/sfun.git
         GIT_TAG        cmake_maintenance
-)
-SealLake_FindOrDownload(
-        fcgi_responder 1.4.0
-        GIT_REPOSITORY https://github.com/kamchatka-volcano/fcgi_responder.git
-        GIT_TAG        cmake_maintenance
-)
-SealLake_FindOrDownload(
-        whaleroute 2.0.0
-        GIT_REPOSITORY https://github.com/kamchatka-volcano/whaleroute.git
-        GIT_TAG        v2-params
+        TEXT_REPLACEMENTS
+            "namespace sfun" "namespace asyncgi::sfun"
+            "SFUN_" "ASYNCGI_SFUN_"
 )
 
-set(HOT_TEACUP_OBJECT_LIB ON)
-SealLake_FindOrDownload(
-        hot_teacup 2.0.0
+SealLake_Bundle(
+        NAME asyncgi_fcgi_responder
+        GIT_REPOSITORY https://github.com/kamchatka-volcano/fcgi_responder.git
+        GIT_TAG        cmake_maintenance
+        TEXT_REPLACEMENTS
+            "namespace fcgi" "namespace asyncgi::fcgi"
+)
+
+SealLake_Bundle(
+        NAME asyncgi_whaleroute
+        GIT_REPOSITORY https://github.com/kamchatka-volcano/whaleroute.git
+        GIT_TAG        v2-params
+        DESTINATION include/asyncgi/detail/external
+        DIRECTORIES include/whaleroute
+        TEXT_REPLACEMENTS
+            "namespace whaleroute" "namespace asyncgi::whaleroute"
+)
+
+set(ASYNCGI_HOT_TEACUP_OBJECT_LIB ON)
+SealLake_Bundle(
+        NAME asyncgi_hot_teacup
         GIT_REPOSITORY https://github.com/kamchatka-volcano/hot_teacup.git
         GIT_TAG        v2
+        WILDCARDS
+            include/hot_teacup/*.h
+        DESTINATION include/asyncgi/http
+        TEXT_REPLACEMENTS
+            "namespace http" "namespace asyncgi::http"
 )
 
 set(SRC
@@ -55,21 +71,16 @@ SealLake_SharedLibrary(
         COMPILE_FEATURES cxx_std_17
         PROPERTIES
             CXX_EXTENSIONS OFF
+        INTERFACE_INCLUDES
+            asyncgi/detail/external
         INCLUDES
-            asyncgi
-        BUILD_INCLUDES
-            ${hot_teacup_SOURCE_DIR}/include/
-            ${whaleroute_SOURCE_DIR}/include/
+            asyncgi/detail/external
         LIBRARIES
-           asio fcgi_responder::fcgi_responder hot_teacup::hot_teacup sfun::sfun whaleroute::whaleroute
+            asio
+            asyncgi_fcgi_responder::asyncgi_fcgi_responder
+            asyncgi_sfun::asyncgi_sfun
+            asyncgi_hot_teacup::asyncgi_hot_teacup
+
 )
 
-SealLake_Install(
-        DIRECTORIES
-            ${whaleroute_SOURCE_DIR}/include/whaleroute
-            ${hot_teacup_SOURCE_DIR}/include/hot_teacup
-)
-
-SealLake_OptionalBuildSteps(
-        IF_ENABLED_AND_STANDALONE examples
-)
+SealLake_OptionalBuildSteps(examples)
