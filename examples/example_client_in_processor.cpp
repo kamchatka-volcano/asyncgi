@@ -2,8 +2,8 @@
 
 using namespace asyncgi;
 
-struct RequestPage : RequestProcessor<>{
-    void process(const asyncgi::Request&, asyncgi::Response<>& response) override
+struct RequestPage{
+    void operator()(const asyncgi::Request&, asyncgi::Response<>& response)
     {
         //making request to FastCgi application listening on 127.0.0.1:9000 and showing the received response
         response.makeRequest("127.0.0.1", 9000, http::Request{http::RequestMethod::GET, "/"},

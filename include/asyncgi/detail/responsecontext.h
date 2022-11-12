@@ -2,7 +2,6 @@
 #include <functional>
 #include <vector>
 #include <string>
-#include <any>
 
 namespace asyncgi{
 class ITimer;
@@ -32,7 +31,6 @@ private:
     std::reference_wrapper<IClient> client_;
     std::reference_wrapper<IAsioDispatcher> asioDispatcher_;
     std::vector<std::string> routeParams_;
-    std::any routeContext_;
 };
 
 }

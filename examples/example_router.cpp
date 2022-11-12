@@ -22,13 +22,13 @@ private:
     std::mutex mutex_;
 };
 
-class HelloPage : public asyncgi::RequestProcessor<>{
+class HelloPage{
 public:
     HelloPage(State& state)
         : state_(state)
     {}
 
-    void process(const asyncgi::Request&, asyncgi::Response<>& response) override
+    void operator()(const asyncgi::Request&, asyncgi::Response<>& response)
     {
         auto name = state_.name();
         if (name.empty())
@@ -43,12 +43,13 @@ private:
     State& state_;
 };
 
-class ChangeSettings : public asyncgi::RequestProcessor<>{
+class ChangeSettings{
 public:
     ChangeSettings(State& state)
         : state_(state)
     {}
-    void process(const asyncgi::Request& request, asyncgi::Response<>& response) override
+
+    void operator()(const asyncgi::Request& request, asyncgi::Response<>& response)
     {
         state_.setName(std::string{request.formField("name")});
         response.redirect("/");
@@ -66,7 +67,7 @@ int main()
     router.route("/", http::RequestMethod::GET).process<HelloPage>(state);
     router.route("/settings", http::RequestMethod::POST).process<ChangeSettings>(state);
     router.route("/settings", http::RequestMethod::GET).process(
-            [](const auto&, auto& response){
+            [](const asyncgi::Request&, asyncgi::Response<>& response){
                 response.send(
                          "<html>"
                          "<form method=\"post\" enctype=\"multipart/form-data\">"

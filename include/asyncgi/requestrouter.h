@@ -1,5 +1,4 @@
 #pragma once
-#include "requestprocessor.h"
 #include "request.h"
 #include "response.h"
 #include "http/response.h"
@@ -9,13 +8,9 @@ namespace asyncgi{
 namespace config = whaleroute::config;
 
 template<typename TRouteContext>
-class RequestRouter : public RequestProcessor<TRouteContext>,
-                      public whaleroute::RequestRouter<
-                              Request,
-                              Response<TRouteContext>,
-                              http::Response> {
-
-    void process(const Request& request, Response<TRouteContext>& response) final
+class RequestRouter : public whaleroute::RequestRouter<Request,Response<TRouteContext>, http::Response> {
+public:
+    void operator()(const Request& request, Response<TRouteContext>& response)
     {
         auto requestProcessorQueuePtr = std::make_shared<whaleroute::RequestProcessorQueue>();
         response.setRequestProcessorQueue(requestProcessorQueuePtr);
@@ -27,6 +22,7 @@ class RequestRouter : public RequestProcessor<TRouteContext>,
         requestProcessorQueuePtr->launch();
     }
 
+private:
     std::string getRequestPath(const Request& request) final
     {
         return std::string{request.path()};
@@ -46,6 +42,11 @@ class RequestRouter : public RequestProcessor<TRouteContext>,
     {
         response.send(httpResponse);
     }
+
+    void onRouteParametersError(const Request&, Response<TRouteContext>& response, const whaleroute::RouteParameterError&) override
+    {
+        response.send(http::ResponseStatus::Code_500_Internal_Server_Error);
+    };
 };
 
 }

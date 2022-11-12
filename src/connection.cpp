@@ -10,11 +10,11 @@ namespace asyncgi::detail{
 
 template<typename TProtocol>
 Connection<TProtocol>::Connection(
-        IRequestProcessor& requestProcessor,
+        RequestProcessor requestProcessor,
         asio::io_context& io,
         ErrorHandlerFunc errorHandler,
         AccessPermission<ConnectionFactory>)
-    : requestProcessor_{requestProcessor}
+    : requestProcessor_{std::move(requestProcessor)}
     , asioDispatcher_{io}
     , timerProvider_{io}
     , client_{io, errorHandler}
@@ -105,7 +105,7 @@ void Connection<TProtocol>::processRequest(fcgi::Request&& fcgiRequest, fcgi::Re
         responseSender_.emplace(std::move(fcgiResponse));
         const auto request = Request{*fcgiRequest_};
         auto response = ResponseContext{*responseSender_, timerProvider_, client_, asioDispatcher_};
-        requestProcessor_.processRequest(request, response);
+        requestProcessor_(request, response);
     }
     catch(const std::exception& e)
     {

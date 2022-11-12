@@ -4,7 +4,7 @@
 namespace asyncgi::detail{
 
 Runtime::Runtime()
-    : signals_{io_, SIGINT, SIGTERM}
+    : signals_{io_, SIGINT, SIGQUIT, SIGTERM}
 {
     handleStopSignals();
 }

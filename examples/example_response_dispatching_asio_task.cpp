@@ -3,8 +3,8 @@
 
 using namespace asyncgi;
 
-struct DelayedPage : asyncgi::RequestProcessor<>{
-    void process(const asyncgi::Request&, asyncgi::Response<>& response) override
+struct DelayedPage{
+    void operator()(const asyncgi::Request&, asyncgi::Response<>& response)
     {
         response.executeTask(
                 [response](const asyncgi::TaskContext& ctx) mutable

@@ -7,8 +7,8 @@
 
 namespace asyncgi::detail{
 
-ConnectionFactory::ConnectionFactory(IRequestProcessor& requestProcessor, IRuntime& runtime, ErrorHandlerFunc errorHandler)
-    : requestProcessor_{requestProcessor}
+ConnectionFactory::ConnectionFactory(RequestProcessor requestProcessor, IRuntime& runtime, ErrorHandlerFunc errorHandler)
+    : requestProcessor_{std::move(requestProcessor)}
     , runtime_{runtime}
     , errorHandler_{std::move(errorHandler)}
 {}

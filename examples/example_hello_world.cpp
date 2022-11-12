@@ -7,7 +7,7 @@ int main()
     auto app = asyncgi::makeApp();
     auto router = asyncgi::makeRouter();
     router.route("/", http::RequestMethod::GET).set("Hello world");
-    router.route(asyncgi::rx{"/(.+)"}, http::RequestMethod::GET).process<std::string>(
+    router.route(asyncgi::rx{"/(.+)"}, http::RequestMethod::GET).process(
             [](const std::string& name, const asyncgi::Request&, asyncgi::Response<>& response)
             {
                 response.send("Hello " + name);

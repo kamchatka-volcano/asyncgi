@@ -1,4 +1,5 @@
 #include <asyncgi/asyncgi.h>
+#include <asyncgi/requestprocessor.h>
 #include "asiodispatcher.h"
 #include "server.h"
 #include "client.h"
@@ -14,8 +15,8 @@ class App : public IApp
 {
 public:
     explicit App(std::unique_ptr<detail::IRuntime>);
-    std::unique_ptr<IServer> makeServer(IRequestProcessor&) const override;
-    std::unique_ptr<IServer> makeServer(IRequestProcessor&, ErrorHandlerFunc errorHandler) const override;
+    std::unique_ptr<IServer> makeServer(RequestProcessor) const override;
+    std::unique_ptr<IServer> makeServer(RequestProcessor, ErrorHandlerFunc errorHandler) const override;
     std::unique_ptr<ITimer> makeTimer() const override;
     std::unique_ptr<IClient> makeClient() const override;
     std::unique_ptr<IClient> makeClient(ErrorHandlerFunc errorHandler) const override;
@@ -31,9 +32,9 @@ App::App(std::unique_ptr<detail::IRuntime> runtime)
 {
 }
 
-std::unique_ptr<IServer> App::makeServer(detail::IRequestProcessor& requestProcessor, ErrorHandlerFunc errorHandler) const
+std::unique_ptr<IServer> App::makeServer(RequestProcessor requestProcessor, ErrorHandlerFunc errorHandler) const
 {
-    auto connectionFactory = std::make_unique<detail::ConnectionFactory>(requestProcessor, *runtime_, errorHandler);
+    auto connectionFactory = std::make_unique<detail::ConnectionFactory>(std::move(requestProcessor), *runtime_, errorHandler);
     auto connectionListenerFactory = std::make_unique<detail::ConnectionListenerFactory>(
             runtime_->io(),
             std::move(connectionFactory),
@@ -41,9 +42,9 @@ std::unique_ptr<IServer> App::makeServer(detail::IRequestProcessor& requestProce
     return std::make_unique<detail::Server>(std::move(connectionListenerFactory));
 }
 
-std::unique_ptr<IServer> App::makeServer(detail::IRequestProcessor& requestProcessor) const
+std::unique_ptr<IServer> App::makeServer(RequestProcessor requestProcessor) const
 {
-    return makeServer(requestProcessor, {});
+    return makeServer(std::move(requestProcessor), {});
 }
 
 

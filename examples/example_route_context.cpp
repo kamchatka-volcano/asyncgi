@@ -11,8 +11,8 @@ struct RouteContext{
     Access access = Access::Forbidden;
 };
 
-struct Authorizer : asyncgi::RequestProcessor<RouteContext>{
-    void process(const asyncgi::Request& request, asyncgi::Response<RouteContext>& response) override
+struct Authorizer{
+    void operator()(const asyncgi::Request& request, asyncgi::Response<RouteContext>& response)
     {
         if(request.cookie("admin_id") == "ADMIN_SECRET")
             response.context().access = Access::Authorized;
@@ -21,8 +21,8 @@ struct Authorizer : asyncgi::RequestProcessor<RouteContext>{
     }
 };
 
-struct AdminPage : asyncgi::RequestProcessor<RouteContext>{
-    void process(const asyncgi::Request&, asyncgi::Response<RouteContext>& response) override
+struct AdminPage{
+    void operator()(const asyncgi::Request&, asyncgi::Response<RouteContext>& response)
     {
         if (response.context().access == Access::Authorized)
             response.send("Welcome, admin!");
@@ -31,8 +31,8 @@ struct AdminPage : asyncgi::RequestProcessor<RouteContext>{
     }
 };
 
-struct ModerationPage : asyncgi::RequestProcessor<RouteContext>{
-    void process(const asyncgi::Request&, asyncgi::Response<RouteContext>& response) override
+struct ModerationPage{
+    void operator()(const asyncgi::Request&, asyncgi::Response<RouteContext>& response)
     {
         if (response.context().access == Access::Authorized)
             response.send("Welcome, moderator!");

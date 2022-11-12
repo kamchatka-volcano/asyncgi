@@ -3,9 +3,9 @@
 #include "itimer.h"
 #include "iclient.h"
 #include "iasiodispatcher.h"
+#include "requestprocessor.h"
 #include "errors.h"
 #include "types.h"
-#include "requestprocessor.h"
 
 namespace asyncgi{
 
@@ -18,8 +18,8 @@ public:
     IApp(IApp&&) = delete;
     IApp&& operator=(IApp&&) = delete;
 
-    virtual std::unique_ptr<IServer> makeServer(detail::IRequestProcessor&) const = 0;
-    virtual std::unique_ptr<IServer> makeServer(detail::IRequestProcessor&, ErrorHandlerFunc errorHandler) const = 0;
+    virtual std::unique_ptr<IServer> makeServer(RequestProcessor) const = 0;
+    virtual std::unique_ptr<IServer> makeServer(RequestProcessor, ErrorHandlerFunc errorHandler) const = 0;
     virtual std::unique_ptr<ITimer> makeTimer() const = 0;
     virtual std::unique_ptr<IClient> makeClient() const = 0;
     virtual std::unique_ptr<IClient> makeClient(ErrorHandlerFunc errorHandler) const = 0;

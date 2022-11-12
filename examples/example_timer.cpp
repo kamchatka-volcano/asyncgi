@@ -2,13 +2,13 @@
 
 using namespace asyncgi;
 
-struct Greeter : asyncgi::RequestProcessor<>{
+struct Greeter{
     Greeter(const int& secondsCounter)
         : secondsCounter_{secondsCounter}
     {
     }
 
-    void process(const asyncgi::Request&, asyncgi::Response<>& response) override
+    void operator()(const asyncgi::Request&, asyncgi::Response<>& response)
     {
         response.send("Hello world\n(alive for " + std::to_string(secondsCounter_) + " seconds)");
     }

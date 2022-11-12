@@ -200,6 +200,9 @@ public:
         responseContext_.client().disconnect();
     }
 
+public:
+    using response_route_context = TRouteContext;
+
 private:
     void setRequestProcessorQueue(const std::shared_ptr<whaleroute::RequestProcessorQueue>& queue)
     {

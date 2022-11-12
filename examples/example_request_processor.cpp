@@ -2,10 +2,8 @@
 
 using namespace asyncgi;
 
-struct Greeter : asyncgi::RequestProcessor<>{
-    void process(
-            const asyncgi::Request& request,
-            asyncgi::Response<>& response) override
+struct Greeter{
+    void operator()(const asyncgi::Request& request, asyncgi::Response<>& response)
     {
         if (request.path() == "/")
             response.send("Hello world");

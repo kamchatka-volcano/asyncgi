@@ -4,8 +4,8 @@
 #include "timerprovider.h"
 #include "client.h"
 #include "responsesender.h"
-#include <asyncgi/requestprocessor.h>
 #include <asyncgi/errors.h>
+#include <asyncgi/requestprocessor.h>
 #include <asio/basic_stream_socket.hpp>
 #include <fcgi_responder/request.h>
 #include <fcgi_responder/response.h>
@@ -25,7 +25,7 @@ class ConnectionFactory;
 template <typename TProtocol>
 class Connection : public std::enable_shared_from_this<Connection<TProtocol>>, public fcgi::Responder {
 public:
-    Connection(IRequestProcessor&, asio::io_context&, ErrorHandlerFunc, AccessPermission<ConnectionFactory>);
+    Connection(RequestProcessor, asio::io_context&, ErrorHandlerFunc, AccessPermission<ConnectionFactory>);
     asio::basic_socket<TProtocol>& socket();
     void process();
     void readData(std::size_t bytesRead);
@@ -40,7 +40,7 @@ private:
 private:
     std::optional<fcgi::Request> fcgiRequest_;
     std::optional<ResponseSender> responseSender_;
-    IRequestProcessor& requestProcessor_;
+    RequestProcessor requestProcessor_;
     AsioDispatcher asioDispatcher_;
     TimerProvider timerProvider_;
     Client client_;
