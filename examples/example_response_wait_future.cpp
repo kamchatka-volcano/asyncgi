@@ -1,4 +1,5 @@
 #include <asyncgi/asyncgi.h>
+#include <thread>
 
 using namespace asyncgi;
 
