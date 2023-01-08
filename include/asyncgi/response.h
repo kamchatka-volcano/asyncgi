@@ -1,63 +1,61 @@
 #pragma once
 #include "iasiodispatcher.h"
-#include "itimer.h"
 #include "iclient.h"
+#include "itimer.h"
 #include "types.h"
+#include "detail/external/sfun/interface.h"
+#include "detail/external/whaleroute/requestprocessorqueue.h"
 #include "detail/iresponsesender.h"
 #include "detail/responsecontext.h"
-#include "http/response.h"
 #include "http/request.h"
-#include <whaleroute/requestprocessorqueue.h>
+#include "http/response.h"
+#include <functional>
+#include <future>
 #include <memory>
 #include <optional>
-#include <future>
-#include <functional>
 
-namespace asio{
-    class io_context;
+namespace asio {
+class io_context;
 }
 
-namespace asyncgi{
-template<typename TContext>
+namespace asyncgi {
+template <typename TContext>
 class RequestRouter;
 
 namespace detail {
 class TimerProvider;
 
-template<class F>
+template <class F>
 auto make_copyable_function(F&& f)
 {
     using dF = std::decay_t<F>;
     auto spf = std::make_shared<dF>(std::forward<F>(f));
-    return [spf](auto&& ... args) -> decltype(auto) {
+    return [spf](auto&&... args) -> decltype(auto)
+    {
         return (*spf)(decltype(args)(args)...);
     };
 }
-}
+} // namespace detail
 
-template <typename TRouteContext = _>
-class Response{
+class Response {
 public:
     explicit Response(const detail::ResponseContext& responseContext)
-            : responseContext_{responseContext}
-    {}
-
-    TRouteContext& context()
+        : responseContext_{responseContext}
     {
-        return routeContext_;
     }
 
-    template<typename... TArgs>
+    template <typename... TArgs>
     void send(TArgs... args)
     {
         auto response = http::Response{std::forward<TArgs>(args)...};
         responseContext_.responseSender().send(response.data(http::ResponseMode::CGI));
     }
 
-    void redirect(std::string path,
-                  http::RedirectType redirectType = http::RedirectType::Found,
-                  std::vector<http::Cookie> cookies = {},
-                  std::vector<http::Header> headers = {})
+    void redirect(
+            std::string path,
+            http::RedirectType redirectType = http::RedirectType::Found,
+            std::vector<http::Cookie> cookies = {},
+            std::vector<http::Header> headers = {})
     {
         auto response = http::Response{std::move(path), redirectType, std::move(cookies), std::move(headers)};
         responseContext_.responseSender().send(response.data(http::ResponseMode::CGI));
@@ -83,22 +81,28 @@ public:
         if (requestProcessorQueue_)
             requestProcessorQueue_->stop();
 
-        responseContext_.asioDispatcher().postTask(std::move(task),
-                [this]{
+        responseContext_.asioDispatcher().postTask(
+                std::move(task),
+                [this]
+                {
                     if (requestProcessorQueue_)
                         requestProcessorQueue_->launch();
                 });
     }
 
     template <typename T, typename TCallable>
-    void waitFuture(std::future<T>&& future, TCallable callback, std::chrono::milliseconds checkPeriod = std::chrono::milliseconds{1})
+    void waitFuture(
+            std::future<T>&& future,
+            TCallable callback,
+            std::chrono::milliseconds checkPeriod = std::chrono::milliseconds{1})
     {
-        static_assert (std::is_invocable_v<TCallable, T>, "TCallable must be invokable with argument of type T");
+        static_assert(std::is_invocable_v<TCallable, T>, "TCallable must be invokable with argument of type T");
         if (requestProcessorQueue_)
             requestProcessorQueue_->stop();
         auto& timer = responseContext_.makeTimer();
-        auto timerCallback = [fut = std::move(future), func = std::move(callback), &timer, checkPeriod, this]() mutable{
-            if (fut.wait_for(std::chrono::seconds{0}) == std::future_status::ready){
+        auto timerCallback = [fut = std::move(future), func = std::move(callback), &timer, checkPeriod, this]() mutable
+        {
+            if (fut.wait_for(std::chrono::seconds{0}) == std::future_status::ready) {
                 timer.stop();
                 func(fut.get());
                 if (requestProcessorQueue_)
@@ -119,15 +123,19 @@ public:
         if (requestProcessorQueue_)
             requestProcessorQueue_->stop();
 
-        responseContext_.client().makeRequest(socketPath, std::move(request),
-                [this, responseHandler](std::optional<fastcgi::Response> response){
-                       if (response)
-                           responseHandler(std::move(*response));
-                       else
-                           responseHandler(std::nullopt);
-                       if (requestProcessorQueue_)
-                           requestProcessorQueue_->launch();
-                }, timeout);
+        responseContext_.client().makeRequest(
+                socketPath,
+                std::move(request),
+                [this, responseHandler](std::optional<fastcgi::Response> response)
+                {
+                    if (response)
+                        responseHandler(std::move(*response));
+                    else
+                        responseHandler(std::nullopt);
+                    if (requestProcessorQueue_)
+                        requestProcessorQueue_->launch();
+                },
+                timeout);
     }
 
     void makeRequest(
@@ -139,16 +147,20 @@ public:
         if (requestProcessorQueue_)
             requestProcessorQueue_->stop();
 
-        auto fcgiRequest = request.toFcgiData(http::FormType::Multipart);
-        responseContext_.client().makeRequest(socketPath, fcgiRequest.params, fcgiRequest.stdIn,
-                [this, httpResponseHandler](std::optional<fastcgi::Response> response){
-                        if (response)
-                           httpResponseHandler(http::responseFromString(response->data));
-                        else
-                           httpResponseHandler(std::nullopt);
-                        if (requestProcessorQueue_)
-                           requestProcessorQueue_->launch();
-                }, timeout);
+        auto fcgiRequestData = request.toFcgiData(http::FormType::Multipart);
+        responseContext_.client().makeRequest(
+                socketPath,
+                fastcgi::Request{std::move(fcgiRequestData.params), std::move(fcgiRequestData.stdIn)},
+                [this, httpResponseHandler](std::optional<fastcgi::Response> response)
+                {
+                    if (response)
+                        httpResponseHandler(http::responseFromString(response->data));
+                    else
+                        httpResponseHandler(std::nullopt);
+                    if (requestProcessorQueue_)
+                        requestProcessorQueue_->launch();
+                },
+                timeout);
     }
 
     void makeRequest(
@@ -161,15 +173,20 @@ public:
         if (requestProcessorQueue_)
             requestProcessorQueue_->stop();
 
-        responseContext_.client().makeRequest(ipAddress, port, std::move(request),
-                [this, responseHandler](std::optional<fastcgi::Response> response){
-                        if (response)
-                           responseHandler(std::move(*response));
-                        else
-                           responseHandler(std::nullopt);
-                        if (requestProcessorQueue_)
-                           requestProcessorQueue_->launch();
-                }, timeout);
+        responseContext_.client().makeRequest(
+                ipAddress,
+                port,
+                std::move(request),
+                [this, responseHandler](std::optional<fastcgi::Response> response)
+                {
+                    if (response)
+                        responseHandler(std::move(*response));
+                    else
+                        responseHandler(std::nullopt);
+                    if (requestProcessorQueue_)
+                        requestProcessorQueue_->launch();
+                },
+                timeout);
     }
 
     void makeRequest(
@@ -184,15 +201,20 @@ public:
 
         auto [params, stdIn] = request.toFcgiData(http::FormType::Multipart);
         auto fcgiRequest = fastcgi::Request{std::move(params), std::move(stdIn)};
-        responseContext_.client().makeRequest(ipAddress, port, std::move(fcgiRequest),
-                [this, httpResponseHandler](std::optional<fastcgi::Response> response){
-                        if (response)
-                           httpResponseHandler(http::responseFromString(response->data));
-                        else
-                           httpResponseHandler(std::nullopt);
-                        if (requestProcessorQueue_)
-                           requestProcessorQueue_->launch();
-                }, timeout);
+        responseContext_.client().makeRequest(
+                ipAddress,
+                port,
+                std::move(fcgiRequest),
+                [this, httpResponseHandler](std::optional<fastcgi::Response> response)
+                {
+                    if (response)
+                        httpResponseHandler(http::responseFromString(response->data));
+                    else
+                        httpResponseHandler(std::nullopt);
+                    if (requestProcessorQueue_)
+                        requestProcessorQueue_->launch();
+                },
+                timeout);
     }
 
     void cancelRequest()
@@ -200,28 +222,17 @@ public:
         responseContext_.client().disconnect();
     }
 
-public:
-    using response_route_context = TRouteContext;
-
-private:
-    void setRequestProcessorQueue(const std::shared_ptr<whaleroute::RequestProcessorQueue>& queue)
+    template <typename TRouteContext>
+    void setRequestProcessorQueue(
+            const std::shared_ptr<whaleroute::RequestProcessorQueue>& queue,
+            sfun::AccessPermission<RequestRouter<TRouteContext>>)
     {
         requestProcessorQueue_ = queue;
     }
 
-    void setRouteParams(const std::vector<std::string>& params)
-    {
-        routeParams_ = params;
-    }
-
 private:
     detail::ResponseContext responseContext_;
-    TRouteContext routeContext_;
     std::shared_ptr<whaleroute::RequestProcessorQueue> requestProcessorQueue_;
-    std::vector<std::string> routeParams_;
-
-    friend class RequestRouter<TRouteContext>;
 };
 
-
-}
+} // namespace asyncgi

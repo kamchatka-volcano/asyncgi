@@ -3,14 +3,20 @@
 using namespace asyncgi;
 
 struct DelayedPage{
-    void operator()(const asyncgi::Request&, asyncgi::Response<>& response)
+    void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
         response.waitFuture(
-            std::async(std::launch::async, []{std::this_thread::sleep_for(std::chrono::seconds(3)); return "World";}),
-            [response](const std::string& result) mutable
-            {
-                response.send(http::Response{"Hello " + result});
-            });
+                std::async(
+                        std::launch::async,
+                        []
+                        {
+                            std::this_thread::sleep_for(std::chrono::seconds(3));
+                            return "World";
+                        }),
+                [response](const std::string& result) mutable
+                {
+                    response.send(http::Response{"Hello " + result});
+                });
     }
 };
 

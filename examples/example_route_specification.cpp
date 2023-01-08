@@ -12,34 +12,34 @@ struct RouteContext{
 };
 
 struct Authorizer{
-    void operator()(const asyncgi::Request& request, asyncgi::Response<RouteContext>& response)
+    void operator()(const asyncgi::Request& request, asyncgi::Response&, RouteContext& context)
     {
-        if(request.cookie("admin_id") == "ADMIN_SECRET")
-            response.context().access = Access::Authorized;
+        if (request.cookie("admin_id") == "ADMIN_SECRET")
+            context.access = Access::Authorized;
         else
-            response.context().access = Access::Forbidden;
+            context.access = Access::Forbidden;
     }
 };
 
 struct AdminPage{
-    void operator()(const asyncgi::Request&, asyncgi::Response<RouteContext>& response)
+    void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
-       response.send("Welcome, admin!");
+        response.send("Welcome, admin!");
     }
 };
 
 struct ModerationPage{
-    void operator()(const asyncgi::Request&, asyncgi::Response<RouteContext>& response)
+    void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
         response.send("Welcome, moderator!");
     }
 };
 
 template<>
-struct asyncgi::config::RouteSpecification<Access, asyncgi::Request, asyncgi::Response<RouteContext>> {
-    bool operator()(Access value, const asyncgi::Request&, asyncgi::Response<RouteContext>& response) const
+struct asyncgi::config::RouteSpecification<Access, asyncgi::Request, asyncgi::Response, RouteContext> {
+    bool operator()(Access value, const asyncgi::Request&, asyncgi::Response&, RouteContext& context) const
     {
-        return value == response.context().access;
+        return value == context.access;
     }
 };
 

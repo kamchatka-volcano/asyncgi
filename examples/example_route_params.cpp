@@ -1,5 +1,4 @@
 #include <asyncgi/asyncgi.h>
-#include <tuple>
 
 using namespace asyncgi;
 
@@ -13,19 +12,23 @@ struct RouteContext{
 };
 
 struct Authorizer{
-    void operator()(const asyncgi::Request& request, asyncgi::Response<RouteContext>& response)
+    void operator()(const asyncgi::Request& request, asyncgi::Response&, RouteContext& context)
     {
-        if(request.cookie("admin_id") == "ADMIN_SECRET")
-            response.context().access = Access::Authorized;
+        if (request.cookie("admin_id") == "ADMIN_SECRET")
+            context.access = Access::Authorized;
         else
-            response.context().access = Access::Authorized;
+            context.access = Access::Forbidden;
     }
 };
 
 struct AdminPage{
-    void operator()(const std::string& name, const asyncgi::Request&, asyncgi::Response<RouteContext>& response)
+    void operator()(
+            const std::string& name,
+            const asyncgi::Request&,
+            asyncgi::Response& response,
+            RouteContext& context)
     {
-        if (response.context().access == Access::Authorized)
+        if (context.access == Access::Authorized)
             response.send("Welcome, admin " + name + "!");
         else
             response.send(http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page.");
@@ -33,15 +36,14 @@ struct AdminPage{
 };
 
 struct ModerationPage{
-    void operator()(const asyncgi::Request&, asyncgi::Response<RouteContext>& response)
+    void operator()(const asyncgi::Request&, asyncgi::Response& response, RouteContext& context) const
     {
-        if (response.context().access == Access::Authorized)
+        if (context.access == Access::Authorized)
             response.send("Welcome, moderator!");
         else
             response.send(http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page.");
     }
 };
-
 
 int main()
 {
@@ -51,8 +53,11 @@ int main()
     router.route(asyncgi::rx{"/admin/(.+)"}, http::RequestMethod::GET).process<AdminPage>();
     router.route("/moderation", http::RequestMethod::GET).process<ModerationPage>();
     //router.route().set(http::ResponseStatus::Code_404_Not_Found, "Page not found.");
-    router.route().process([](const asyncgi::Request&, asyncgi::Response<RouteContext>& response){
-        response.send(http::ResponseStatus::Code_404_Not_Found, "Page not found.");});
+    router.route().process(
+            [](const asyncgi::Request&, asyncgi::Response& response, RouteContext&)
+            {
+                response.send(http::ResponseStatus::Code_404_Not_Found, "Page not found.");
+            });
 
     auto server = app->makeServer(router);
     server->listen("/tmp/fcgi.sock");

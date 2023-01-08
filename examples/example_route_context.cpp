@@ -12,19 +12,19 @@ struct RouteContext{
 };
 
 struct Authorizer{
-    void operator()(const asyncgi::Request& request, asyncgi::Response<RouteContext>& response)
+    void operator()(const asyncgi::Request& request, asyncgi::Response&, RouteContext& context)
     {
-        if(request.cookie("admin_id") == "ADMIN_SECRET")
-            response.context().access = Access::Authorized;
+        if (request.cookie("admin_id") == "ADMIN_SECRET")
+            context.access = Access::Authorized;
         else
-            response.context().access = Access::Forbidden;
+            context.access = Access::Forbidden;
     }
 };
 
 struct AdminPage{
-    void operator()(const asyncgi::Request&, asyncgi::Response<RouteContext>& response)
+    void operator()(const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)
     {
-        if (response.context().access == Access::Authorized)
+        if (context.access == Access::Authorized)
             response.send("Welcome, admin!");
         else
             response.send(http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page.");
@@ -32,9 +32,9 @@ struct AdminPage{
 };
 
 struct ModerationPage{
-    void operator()(const asyncgi::Request&, asyncgi::Response<RouteContext>& response)
+    void operator()(const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)
     {
-        if (response.context().access == Access::Authorized)
+        if (context.access == Access::Authorized)
             response.send("Welcome, moderator!");
         else
             response.send(http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page.");

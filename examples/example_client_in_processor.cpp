@@ -3,17 +3,20 @@
 using namespace asyncgi;
 
 struct RequestPage{
-    void operator()(const asyncgi::Request&, asyncgi::Response<>& response)
+    void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
-        //making request to FastCgi application listening on 127.0.0.1:9000 and showing the received response
-        response.makeRequest("127.0.0.1", 9000, http::Request{http::RequestMethod::GET, "/"},
-                [response](const std::optional<http::ResponseView>& reqResponse) mutable {
-                 if (reqResponse)
-                     response.send(std::string{reqResponse->body()});
-                 else
-                     response.send("No response");
-                }
-        );
+        // making request to FastCgi application listening on 127.0.0.1:9000 and showing the received response
+        response.makeRequest(
+                "127.0.0.1",
+                9000,
+                http::Request{http::RequestMethod::GET, "/"},
+                [response](const std::optional<http::ResponseView>& reqResponse) mutable
+                {
+                    if (reqResponse)
+                        response.send(std::string{reqResponse->body()});
+                    else
+                        response.send("No response");
+                });
     }
 };
 

@@ -8,10 +8,10 @@ int main()
     auto router = asyncgi::makeRouter();
     router.route("/", http::RequestMethod::GET).set("Hello world");
     router.route(asyncgi::rx{"/(.+)"}, http::RequestMethod::GET).process(
-            [](const std::string& name, const asyncgi::Request&, asyncgi::Response<>& response)
-            {
-                response.send("Hello " + name);
-            });
+                    [](const std::string& name, const asyncgi::Request&, asyncgi::Response& response)
+                    {
+                        response.send("Hello " + name);
+                    });
     router.route().set(http::ResponseStatus::Code_404_Not_Found);
 
     auto server = app->makeServer(router);

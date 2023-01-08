@@ -28,17 +28,21 @@ public:
         : state_(state)
     {}
 
-    void operator()(const asyncgi::Request&, asyncgi::Response<>& response)
+    void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
         auto name = state_.name();
         if (name.empty())
             name = std::string{"world"};
 
-        response.send("<html>"
-                      "<p>Hello, " + name + "</p>"
-                      "<a href=\"/settings\">settings</a>"
-                      "</html>");
+        response.send(
+                "<html>"
+                "<p>Hello, " +
+                name +
+                "</p>"
+                "<a href=\"/settings\">settings</a>"
+                "</html>");
     }
+
 private:
     State& state_;
 };
@@ -49,7 +53,7 @@ public:
         : state_(state)
     {}
 
-    void operator()(const asyncgi::Request& request, asyncgi::Response<>& response)
+    void operator()(const asyncgi::Request& request, asyncgi::Response& response)
     {
         state_.setName(std::string{request.formField("name")});
         response.redirect("/");
@@ -67,17 +71,16 @@ int main()
     router.route("/", http::RequestMethod::GET).process<HelloPage>(state);
     router.route("/settings", http::RequestMethod::POST).process<ChangeSettings>(state);
     router.route("/settings", http::RequestMethod::GET).process(
-            [](const asyncgi::Request&, asyncgi::Response<>& response){
-                response.send(
-                         "<html>"
-                         "<form method=\"post\" enctype=\"multipart/form-data\">"
-                         "<label for=\"name\">Name:</label>"
-                         "<input id=\"name\" name=\"name\" value=\"\">"
-                         "<input value=\"Submit\" data-popup=\"true\" type=\"submit\">"
-                         "</form>"
-                         "</html>");
-            }
-    );
+                    [](const asyncgi::Request&, asyncgi::Response& response)
+                    {
+                        response.send("<html>"
+                                      "<form method=\"post\" enctype=\"multipart/form-data\">"
+                                      "<label for=\"name\">Name:</label>"
+                                      "<input id=\"name\" name=\"name\" value=\"\">"
+                                      "<input value=\"Submit\" data-popup=\"true\" type=\"submit\">"
+                                      "</form>"
+                                      "</html>");
+                    });
     router.route().set(http::Response{http::ResponseStatus::Code_404_Not_Found, "Page not found"});
     //Alternatively, it's possible to pass arguments for creation of http::Response object to the set() method.
     //router.route().set(http::ResponseStatus::Code_404_Not_Found, "Page not found");

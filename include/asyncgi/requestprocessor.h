@@ -1,37 +1,60 @@
 #pragma once
 #include "request.h"
 #include "response.h"
+#include "detail/external/sfun/functional.h"
 #include "detail/responsecontext.h"
-#include "detail/utils.h"
 #include <functional>
 
-namespace asyncgi{
+namespace asyncgi {
 
-class RequestProcessor{
+namespace detail {
+template <typename TRequestProcessorArgs>
+constexpr void checkRequestProcessorSignature(const TRequestProcessorArgs&)
+{
+    constexpr auto args = TRequestProcessorArgs{};
+    static_assert(args.size() == 2);
+    static_assert(std::is_same_v<const asyncgi::Request&, typename decltype(sfun::get<args.size() - 2>(args))::type>);
+    static_assert(std::is_same_v<asyncgi::Response&, typename decltype(sfun::get<args.size() - 1>(args))::type>);
+}
+} // namespace detail
+
+class RequestProcessor {
 public:
-	template<typename TRequestProcessorFunc, typename std::enable_if_t<!std::is_same_v<TRequestProcessorFunc, RequestProcessor>>* = nullptr>
-	RequestProcessor(TRequestProcessorFunc& requestProcessor)
-	{
-        using args = detail::callable_args<TRequestProcessorFunc>;
-        detail::checkRequestProcessorSignature<args>();
-        auto list = args{};
-        constexpr auto argsSize = detail::type_list_size<args>;
-        [[maybe_unused]] auto responseTypeElement = std::get<argsSize - 1>(list);
-        using responseType = std::decay_t<detail::unwrap_type<decltype(responseTypeElement)>>;
-		requestProcessorInvoker_ = [&requestProcessor](const Request& request, detail::ResponseContext& response)
-		{
-            auto contextualResponse = responseType{response};
-            requestProcessor(request, contextualResponse);
-		};
-	}
+    template <
+            typename TRequestProcessorFunc,
+            typename std::enable_if_t<
+                    !std::is_same_v<std::remove_reference_t<TRequestProcessorFunc>, RequestProcessor>>* = nullptr>
+    RequestProcessor(TRequestProcessorFunc&& requestProcessor)
+    {
+        constexpr auto args = sfun::callable_args<TRequestProcessorFunc>{};
+        detail::checkRequestProcessorSignature(args);
+        using ResponseType = std::decay_t<typename decltype(sfun::get<args.size() - 1>(args))::type>;
 
-	void operator()(const Request& request, detail::ResponseContext& response)
-	{
+        if constexpr (std::is_lvalue_reference_v<TRequestProcessorFunc>) {
+            requestProcessorInvoker_ = [&requestProcessor](const Request& request, detail::ResponseContext& response)
+            {
+                auto contextualResponse = ResponseType{response};
+                requestProcessor(request, contextualResponse);
+            };
+        }
+        else {
+            requestProcessorInvoker_ = [requestProcessor = std::move(requestProcessor)](
+                                               const Request& request,
+                                               detail::ResponseContext& response)
+            {
+                auto contextualResponse = ResponseType{response};
+                requestProcessor(request, contextualResponse);
+            };
+        }
+    }
+
+    void operator()(const Request& request, detail::ResponseContext& response)
+    {
         requestProcessorInvoker_(request, response);
-	}
+    }
 
 private:
-	std::function<void(const Request& request, detail::ResponseContext& response)> requestProcessorInvoker_;
+    std::function<void(const Request& request, detail::ResponseContext& response)> requestProcessorInvoker_;
 };
 
-}
+} // namespace asyncgi

@@ -4,16 +4,16 @@
 using namespace asyncgi;
 
 struct DelayedPage{
-    void operator()(const asyncgi::Request&, asyncgi::Response<>& response)
+    void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
         response.executeTask(
                 [response](const asyncgi::TaskContext& ctx) mutable
                 {
                     auto timer = std::make_shared<asio::steady_timer>(ctx.io());
                     timer->expires_after(std::chrono::seconds{3});
-                    timer->async_wait([timer, response, ctx](auto&) mutable{ //Note how we capture ctx object here,
-                        response.send("Hello world");                       //it's necessary to keep it (or its copy) alive
-                    });                                                      //before the end of request processing
+                    timer->async_wait([timer, response, ctx](auto&) mutable { // Note how we capture ctx object here,
+                        response.send("Hello world"); // it's necessary to keep it (or its copy) alive
+                    }); // before the end of request processing
                 });
     }
 };

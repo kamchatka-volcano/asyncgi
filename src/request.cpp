@@ -1,10 +1,8 @@
 #include <asyncgi/request.h>
 #include <asyncgi/types.h>
-#include <sfun/string_utils.h>
 #include <fcgi_responder/request.h>
 
 namespace asyncgi{
-namespace str = sfun::string_utils;
 
 Request::Request(const fcgi::Request& request)
     : fcgiRequest_{request}

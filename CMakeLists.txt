@@ -8,10 +8,12 @@ include(external/asio)
 SealLake_Bundle(
         NAME asyncgi_sfun
         GIT_REPOSITORY https://github.com/kamchatka-volcano/sfun.git
-        GIT_TAG        v2.4.0
+        GIT_TAG v3
+        DESTINATION include/asyncgi/detail/external
+        DIRECTORIES include/sfun
         TEXT_REPLACEMENTS
-            "namespace sfun" "namespace asyncgi::sfun"
-            "SFUN_" "ASYNCGI_SFUN_"
+        "namespace sfun" "namespace asyncgi::sfun"
+        "SFUN_" "ASYNCGI_SFUN_"
 )
 
 SealLake_Bundle(

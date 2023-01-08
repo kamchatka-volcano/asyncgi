@@ -8,7 +8,7 @@ struct Greeter{
     {
     }
 
-    void operator()(const asyncgi::Request&, asyncgi::Response<>& response)
+    void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
         response.send("Hello world\n(alive for " + std::to_string(secondsCounter_) + " seconds)");
     }
