@@ -3,11 +3,11 @@
 #include <memory>
 #include <vector>
 
-namespace asio{
-    class io_context;
+namespace asio {
+class io_context;
 }
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 
 class TimerProvider {
 public:
@@ -19,4 +19,4 @@ private:
     std::vector<std::unique_ptr<ITimer>> timers_;
 };
 
-}
+} // namespace asyncgi::detail

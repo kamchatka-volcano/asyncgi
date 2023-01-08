@@ -2,17 +2,18 @@
 #include <functional>
 #include <memory>
 
-namespace asio{
+namespace asio {
 class io_context;
 }
 
-namespace asyncgi{
+namespace asyncgi {
 
-class TaskContext{
-    class PostAction{
+class TaskContext {
+    class PostAction {
     public:
         explicit PostAction(std::function<void()> action);
         ~PostAction();
+
     private:
         std::function<void()> action_;
     };
@@ -26,4 +27,4 @@ private:
     std::shared_ptr<PostAction> postTaskAction_;
 };
 
-}
+} // namespace asyncgi

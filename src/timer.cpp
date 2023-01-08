@@ -1,18 +1,20 @@
 #include "timer.h"
 #include <asio/io_context.hpp>
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 
 Timer::Timer(asio::io_context& io)
     : io_{io}
     , timer_{io_}
-{}
+{
+}
 
 void Timer::start(std::chrono::milliseconds time, std::function<void()> callback, TimerMode mode)
 {
     timer_.expires_after(time);
     timer_.async_wait(
-            [this, time, task = std::move(callback), mode](auto& ec) mutable {
+            [this, time, task = std::move(callback), mode](auto& ec) mutable
+            {
                 if (ec)
                     return;
 
@@ -37,6 +39,4 @@ void Timer::stop()
     timer_.cancel();
 }
 
-}
-
-
+} // namespace asyncgi::detail

@@ -3,7 +3,6 @@
 #include "iclient.h"
 #include "itimer.h"
 #include "types.h"
-#include "detail/external/sfun/interface.h"
 #include "detail/external/whaleroute/requestprocessorqueue.h"
 #include "detail/iresponsesender.h"
 #include "detail/responsecontext.h"
@@ -14,16 +13,12 @@
 #include <memory>
 #include <optional>
 
-namespace asio {
-class io_context;
-}
 
 namespace asyncgi {
 template <typename TContext>
 class RequestRouter;
 
 namespace detail {
-class TimerProvider;
 
 template <class F>
 auto make_copyable_function(F&& f)
@@ -39,55 +34,13 @@ auto make_copyable_function(F&& f)
 
 class Response {
 public:
-    explicit Response(const detail::ResponseContext& responseContext)
-        : responseContext_{responseContext}
-    {
-    }
+    explicit Response(const detail::ResponseContext& responseContext);
 
     template <typename... TArgs>
     void send(TArgs... args)
     {
         auto response = http::Response{std::forward<TArgs>(args)...};
         responseContext_.responseSender().send(response.data(http::ResponseMode::CGI));
-    }
-
-    void redirect(
-            std::string path,
-            http::RedirectType redirectType = http::RedirectType::Found,
-            std::vector<http::Cookie> cookies = {},
-            std::vector<http::Header> headers = {})
-    {
-        auto response = http::Response{std::move(path), redirectType, std::move(cookies), std::move(headers)};
-        responseContext_.responseSender().send(response.data(http::ResponseMode::CGI));
-    }
-
-    void send(const http::Response& response)
-    {
-        responseContext_.responseSender().send(response.data(http::ResponseMode::CGI));
-    }
-
-    void send(fastcgi::Response response)
-    {
-        responseContext_.responseSender().send(std::move(response.data), std::move(response.errorMsg));
-    }
-
-    bool isSent() const
-    {
-        return responseContext_.responseSender().isSent();
-    }
-
-    void executeTask(std::function<void(const TaskContext& ctx)> task)
-    {
-        if (requestProcessorQueue_)
-            requestProcessorQueue_->stop();
-
-        responseContext_.asioDispatcher().postTask(
-                std::move(task),
-                [this]
-                {
-                    if (requestProcessorQueue_)
-                        requestProcessorQueue_->launch();
-                });
     }
 
     template <typename T, typename TCallable>
@@ -114,113 +67,44 @@ public:
         timer.start(checkPeriod, detail::make_copyable_function(std::move(timerCallback)), TimerMode::Once);
     }
 
+    void redirect(
+            std::string path,
+            http::RedirectType redirectType = http::RedirectType::Found,
+            std::vector<http::Cookie> cookies = {},
+            std::vector<http::Header> headers = {});
+
+    void send(const http::Response& response);
+    void send(fastcgi::Response response);
+    bool isSent() const;
+    void executeTask(std::function<void(const TaskContext& ctx)> task);
+
     void makeRequest(
             const std::filesystem::path& socketPath,
             fastcgi::Request request,
             const std::function<void(std::optional<fastcgi::Response>)>& responseHandler,
-            const std::chrono::milliseconds timeout = std::chrono::seconds{3})
-    {
-        if (requestProcessorQueue_)
-            requestProcessorQueue_->stop();
-
-        responseContext_.client().makeRequest(
-                socketPath,
-                std::move(request),
-                [this, responseHandler](std::optional<fastcgi::Response> response)
-                {
-                    if (response)
-                        responseHandler(std::move(*response));
-                    else
-                        responseHandler(std::nullopt);
-                    if (requestProcessorQueue_)
-                        requestProcessorQueue_->launch();
-                },
-                timeout);
-    }
+            const std::chrono::milliseconds timeout = std::chrono::seconds{3});
 
     void makeRequest(
             const std::filesystem::path& socketPath,
             const http::Request& request,
             const std::function<void(std::optional<http::ResponseView>)>& httpResponseHandler,
-            const std::chrono::milliseconds timeout = std::chrono::seconds{3})
-    {
-        if (requestProcessorQueue_)
-            requestProcessorQueue_->stop();
-
-        auto fcgiRequestData = request.toFcgiData(http::FormType::Multipart);
-        responseContext_.client().makeRequest(
-                socketPath,
-                fastcgi::Request{std::move(fcgiRequestData.params), std::move(fcgiRequestData.stdIn)},
-                [this, httpResponseHandler](std::optional<fastcgi::Response> response)
-                {
-                    if (response)
-                        httpResponseHandler(http::responseFromString(response->data));
-                    else
-                        httpResponseHandler(std::nullopt);
-                    if (requestProcessorQueue_)
-                        requestProcessorQueue_->launch();
-                },
-                timeout);
-    }
+            const std::chrono::milliseconds timeout = std::chrono::seconds{3});
 
     void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
             fastcgi::Request request,
             const std::function<void(std::optional<fastcgi::Response>)>& responseHandler,
-            const std::chrono::milliseconds timeout = std::chrono::seconds{3})
-    {
-        if (requestProcessorQueue_)
-            requestProcessorQueue_->stop();
-
-        responseContext_.client().makeRequest(
-                ipAddress,
-                port,
-                std::move(request),
-                [this, responseHandler](std::optional<fastcgi::Response> response)
-                {
-                    if (response)
-                        responseHandler(std::move(*response));
-                    else
-                        responseHandler(std::nullopt);
-                    if (requestProcessorQueue_)
-                        requestProcessorQueue_->launch();
-                },
-                timeout);
-    }
+            const std::chrono::milliseconds timeout = std::chrono::seconds{3});
 
     void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
             const http::Request& request,
             const std::function<void(std::optional<http::ResponseView>)>& httpResponseHandler,
-            const std::chrono::milliseconds timeout = std::chrono::seconds{3})
-    {
-        if (requestProcessorQueue_)
-            requestProcessorQueue_->stop();
+            const std::chrono::milliseconds timeout = std::chrono::seconds{3});
 
-        auto [params, stdIn] = request.toFcgiData(http::FormType::Multipart);
-        auto fcgiRequest = fastcgi::Request{std::move(params), std::move(stdIn)};
-        responseContext_.client().makeRequest(
-                ipAddress,
-                port,
-                std::move(fcgiRequest),
-                [this, httpResponseHandler](std::optional<fastcgi::Response> response)
-                {
-                    if (response)
-                        httpResponseHandler(http::responseFromString(response->data));
-                    else
-                        httpResponseHandler(std::nullopt);
-                    if (requestProcessorQueue_)
-                        requestProcessorQueue_->launch();
-                },
-                timeout);
-    }
-
-    void cancelRequest()
-    {
-        responseContext_.client().disconnect();
-    }
+    void cancelRequest();
 
     template <typename TRouteContext>
     void setRequestProcessorQueue(

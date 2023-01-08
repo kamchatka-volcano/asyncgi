@@ -1,51 +1,56 @@
 #include "client.h"
 #include "timerprovider.h"
-#include <asio/write.hpp>
-#include <asio/local/stream_protocol.hpp>
 #include <asio/ip/tcp.hpp>
+#include <asio/local/stream_protocol.hpp>
+#include <asio/write.hpp>
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 
-template<typename TProtocol>
+template <typename TProtocol>
 ClientConnection<TProtocol>::ClientConnection(asio::io_context& io, ErrorHandlerFunc errorHandler)
     : socket_{io}
     , errorHandler_{std::move(errorHandler)}
-{}
+{
+}
 
-template<typename TProtocol>
+template <typename TProtocol>
 ClientConnection<TProtocol>::~ClientConnection()
 {
     close();
 }
 
-template<typename TProtocol>
+template <typename TProtocol>
 void ClientConnection<TProtocol>::makeRequest(
         const typename TProtocol::endpoint& socketPath,
         fastcgi::Request request,
         std::function<void(std::optional<fcgi::ResponseData>)> responseHandler,
         const std::shared_ptr<std::function<void()>>& cancelRequestOnTimeout)
 {
-    socket_.async_connect(socketPath,
-        [this, cancelRequestOnTimeout,
-         fcgiParams = std::move(request.params),
-         fcgiStdIn = std::move(request.stdIn),
-         responseHandler = std::move(responseHandler)](auto error_code) mutable{
-            if (error_code){
-                responseHandler(std::nullopt);
-                return;
-            }
-            processReading();
-            auto requestHandle = sendRequest(std::move(fcgiParams), std::move(fcgiStdIn), responseHandler);
-            if (requestHandle)
-                *cancelRequestOnTimeout = [=]() mutable{
-                    requestHandle->cancelRequest();
-                };
-            else
-                responseHandler(std::nullopt);
-        });
+    socket_.async_connect(
+            socketPath,
+            [this,
+             cancelRequestOnTimeout,
+             fcgiParams = std::move(request.params),
+             fcgiStdIn = std::move(request.stdIn),
+             responseHandler = std::move(responseHandler)](auto error_code) mutable
+            {
+                if (error_code) {
+                    responseHandler(std::nullopt);
+                    return;
+                }
+                processReading();
+                auto requestHandle = sendRequest(std::move(fcgiParams), std::move(fcgiStdIn), responseHandler);
+                if (requestHandle)
+                    *cancelRequestOnTimeout = [=]() mutable
+                    {
+                        requestHandle->cancelRequest();
+                    };
+                else
+                    responseHandler(std::nullopt);
+            });
 }
 
-template<typename TProtocol>
+template <typename TProtocol>
 void ClientConnection<TProtocol>::disconnect()
 {
     disconnectRequested_ = true;
@@ -54,30 +59,32 @@ void ClientConnection<TProtocol>::disconnect()
     close();
 }
 
-template<typename TProtocol>
+template <typename TProtocol>
 void ClientConnection<TProtocol>::processReading()
 {
     if (!socket_.is_open())
         return;
-    socket_.async_read_some(asio::buffer(buffer_),
-        [this](const auto& error, auto bytesRead){
-            if (error){
-                if (error.value() != asio::error::operation_aborted)
-                    errorHandler_(ErrorType::SocketReadError, error);
-                return;
-            }
-            readData(bytesRead);
-        });
+    socket_.async_read_some(
+            asio::buffer(buffer_),
+            [this](const auto& error, auto bytesRead)
+            {
+                if (error) {
+                    if (error.value() != asio::error::operation_aborted)
+                        errorHandler_(ErrorType::SocketReadError, error);
+                    return;
+                }
+                readData(bytesRead);
+            });
 }
 
-template<typename TProtocol>
+template <typename TProtocol>
 void ClientConnection<TProtocol>::readData(std::size_t bytesRead)
 {
     fcgi::Requester::receiveData(buffer_.data(), bytesRead);
     processReading();
 }
 
-template<typename TProtocol>
+template <typename TProtocol>
 void ClientConnection<TProtocol>::sendData(const std::string& data)
 {
     if (bytesToWrite_) {
@@ -93,17 +100,20 @@ void ClientConnection<TProtocol>::sendData(const std::string& data)
         writeBuffer_ = data;
 
     bytesToWrite_ += writeBuffer_.size();
-    asio::async_write(socket_, asio::buffer(writeBuffer_),
-        [this](const auto& error, auto bytesWritten){
-            if (error){
-                errorHandler_(ErrorType::SocketWriteError, error);
-                return;
-            }
-            onBytesWritten(bytesWritten);
-        });
+    asio::async_write(
+            socket_,
+            asio::buffer(writeBuffer_),
+            [this](const auto& error, auto bytesWritten)
+            {
+                if (error) {
+                    errorHandler_(ErrorType::SocketWriteError, error);
+                    return;
+                }
+                onBytesWritten(bytesWritten);
+            });
 }
 
-template<typename TProtocol>
+template <typename TProtocol>
 void ClientConnection<TProtocol>::onBytesWritten(std::size_t numOfBytes)
 {
     bytesToWrite_ -= numOfBytes;
@@ -116,14 +126,13 @@ void ClientConnection<TProtocol>::onBytesWritten(std::size_t numOfBytes)
         close();
 }
 
-template<typename TProtocol>
+template <typename TProtocol>
 void ClientConnection<TProtocol>::close()
 {
-    try{
+    try {
         socket_.shutdown(asio::basic_stream_socket<TProtocol>::shutdown_both);
         socket_.close();
-    }
-    catch(const std::system_error& e){
+    } catch (const std::system_error& e) {
         errorHandler_(ErrorType::SocketCloseError, e.code());
     }
     disconnectRequested_ = false;
@@ -132,4 +141,4 @@ void ClientConnection<TProtocol>::close()
 template class ClientConnection<asio::local::stream_protocol>;
 template class ClientConnection<asio::ip::tcp>;
 
-}
+} // namespace asyncgi::detail

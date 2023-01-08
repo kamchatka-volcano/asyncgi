@@ -1,23 +1,17 @@
 #pragma once
+#include "errors.h"
+#include "iasiodispatcher.h"
+#include "iclient.h"
 #include "iserver.h"
 #include "itimer.h"
-#include "iclient.h"
-#include "iasiodispatcher.h"
 #include "requestprocessor.h"
-#include "errors.h"
 #include "types.h"
+#include "detail/external/sfun/interface.h"
 
-namespace asyncgi{
+namespace asyncgi {
 
-class IApp{
+class IApp : private sfun::Interface<IApp> {
 public:
-    IApp() = default;
-    virtual ~IApp() = default;
-    IApp(const IApp&) = delete;
-    IApp& operator=(const IApp&) = delete;
-    IApp(IApp&&) = delete;
-    IApp&& operator=(IApp&&) = delete;
-
     virtual std::unique_ptr<IServer> makeServer(RequestProcessor) const = 0;
     virtual std::unique_ptr<IServer> makeServer(RequestProcessor, ErrorHandlerFunc errorHandler) const = 0;
     virtual std::unique_ptr<ITimer> makeTimer() const = 0;
@@ -27,4 +21,4 @@ public:
     virtual void exec() = 0;
 };
 
-}
+} // namespace asyncgi

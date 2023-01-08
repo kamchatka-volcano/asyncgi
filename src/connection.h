@@ -1,31 +1,32 @@
 #pragma once
-#include "accesspermission.h"
 #include "asiodispatcher.h"
-#include "timerprovider.h"
 #include "client.h"
 #include "responsesender.h"
+#include "timerprovider.h"
+#include <asio/basic_stream_socket.hpp>
+#include <asyncgi/detail/external/sfun/interface.h>
 #include <asyncgi/errors.h>
 #include <asyncgi/requestprocessor.h>
-#include <asio/basic_stream_socket.hpp>
-#include <fcgi_responder/request.h>
-#include <fcgi_responder/response.h>
-#include <fcgi_responder/responder.h>
 #include <fcgi_responder/fcgi_limits.h>
-#include <memory>
+#include <fcgi_responder/request.h>
+#include <fcgi_responder/responder.h>
+#include <fcgi_responder/response.h>
 #include <array>
+#include <memory>
 #include <optional>
 
-namespace asio{
-    class io_context;
+namespace asio {
+class io_context;
 }
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 class ConnectionFactory;
 
 template <typename TProtocol>
-class Connection : public std::enable_shared_from_this<Connection<TProtocol>>, public fcgi::Responder {
+class Connection : public std::enable_shared_from_this<Connection<TProtocol>>,
+                   public fcgi::Responder {
 public:
-    Connection(RequestProcessor, asio::io_context&, ErrorHandlerFunc, AccessPermission<ConnectionFactory>);
+    Connection(RequestProcessor, asio::io_context&, ErrorHandlerFunc, sfun::AccessPermission<ConnectionFactory>);
     asio::basic_socket<TProtocol>& socket();
     void process();
     void readData(std::size_t bytesRead);
@@ -53,4 +54,4 @@ private:
     ErrorHandler errorHandler_;
 };
 
-}
+} // namespace asyncgi::detail

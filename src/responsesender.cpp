@@ -1,10 +1,11 @@
 #include "responsesender.h"
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 
 ResponseSender::ResponseSender(fcgi::Response response)
     : response_{std::move(response)}
-{}
+{
+}
 
 void ResponseSender::send(std::string data)
 {
@@ -26,4 +27,4 @@ bool ResponseSender::isSent() const
     return !response_.isValid();
 }
 
-}
+} // namespace asyncgi::detail

@@ -1,19 +1,19 @@
 #pragma once
 #include <functional>
-#include <vector>
 #include <string>
+#include <vector>
 
-namespace asyncgi{
+namespace asyncgi {
 class ITimer;
 class IClient;
 class IAsioDispatcher;
-}
+} // namespace asyncgi
 
 namespace asyncgi::detail {
 class IResponseSender;
 class TimerProvider;
 
-class ResponseContext{
+class ResponseContext {
 public:
     ResponseContext(IResponseSender&, TimerProvider&, IClient&, IAsioDispatcher&);
 
@@ -33,4 +33,4 @@ private:
     std::vector<std::string> routeParams_;
 };
 
-}
+} // namespace asyncgi::detail

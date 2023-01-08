@@ -2,24 +2,24 @@
 #include "detail/lazyinitialized.h"
 #include "http/cookie_view.h"
 #include "http/query_view.h"
-#include "http/types.h"
 #include "http/request_view.h"
-#include <vector>
-#include <string>
-#include <memory>
-#include <map>
-#include <optional>
+#include "http/types.h"
 #include <functional>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
-namespace asyncgi{
+namespace asyncgi {
 
 namespace fcgi {
 class Request;
 }
 
-class Request{
+class Request {
 public:
-    //as http::Request
+    // as http::Request
     std::string_view ipAddress() const;
     std::string_view domainName() const;
     std::string_view path() const;
@@ -45,7 +45,7 @@ public:
     std::string_view fileType(std::string_view name, int index = 0) const;
     bool hasFiles() const;
 
-    //as FCGIRequest
+    // as FCGIRequest
     const std::string& fcgiParam(const std::string& name) const;
     bool hasFcgiParam(const std::string& name) const;
     const std::vector<std::pair<std::string, std::string>>& fcgiParams() const;
@@ -62,4 +62,4 @@ private:
     detail::LazyInitialized<http::RequestView> httpRequest_;
 };
 
-}
+} // namespace asyncgi

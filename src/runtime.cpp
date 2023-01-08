@@ -1,7 +1,7 @@
 #include "runtime.h"
 #include <asio/signal_set.hpp>
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 
 Runtime::Runtime()
     : signals_{io_, SIGINT, SIGQUIT, SIGTERM}
@@ -31,13 +31,15 @@ void Runtime::stop()
 
 void Runtime::handleStopSignals()
 {
-    signals_.async_wait([&](auto error, auto){
-        if (!error){
-            stop();
-            return;
-        }
-        handleStopSignals();
-    });
+    signals_.async_wait(
+            [&](auto error, auto)
+            {
+                if (!error) {
+                    stop();
+                    return;
+                }
+                handleStopSignals();
+            });
 }
 
 asio::io_context& Runtime::defaultIO()
@@ -45,4 +47,4 @@ asio::io_context& Runtime::defaultIO()
     return io_;
 }
 
-}
+} // namespace asyncgi::detail

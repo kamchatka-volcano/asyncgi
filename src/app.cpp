@@ -1,18 +1,17 @@
-#include <asyncgi/asyncgi.h>
-#include <asyncgi/requestprocessor.h>
 #include "asiodispatcher.h"
-#include "server.h"
 #include "client.h"
-#include "runtime.h"
-#include "timer.h"
-#include "multithreadedruntime.h"
 #include "connectionfactory.h"
 #include "connectionlistenerfactory.h"
+#include "multithreadedruntime.h"
+#include "runtime.h"
+#include "server.h"
+#include "timer.h"
+#include <asyncgi/asyncgi.h>
+#include <asyncgi/requestprocessor.h>
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 
-class App : public IApp
-{
+class App : public IApp {
 public:
     explicit App(std::unique_ptr<detail::IRuntime>);
     std::unique_ptr<IServer> makeServer(RequestProcessor) const override;
@@ -34,7 +33,8 @@ App::App(std::unique_ptr<detail::IRuntime> runtime)
 
 std::unique_ptr<IServer> App::makeServer(RequestProcessor requestProcessor, ErrorHandlerFunc errorHandler) const
 {
-    auto connectionFactory = std::make_unique<detail::ConnectionFactory>(std::move(requestProcessor), *runtime_, errorHandler);
+    auto connectionFactory =
+            std::make_unique<detail::ConnectionFactory>(std::move(requestProcessor), *runtime_, errorHandler);
     auto connectionListenerFactory = std::make_unique<detail::ConnectionListenerFactory>(
             runtime_->io(),
             std::move(connectionFactory),
@@ -46,7 +46,6 @@ std::unique_ptr<IServer> App::makeServer(RequestProcessor requestProcessor) cons
 {
     return makeServer(std::move(requestProcessor), {});
 }
-
 
 std::unique_ptr<ITimer> App::makeTimer() const
 {
@@ -73,7 +72,7 @@ std::unique_ptr<IAsioDispatcher> App::makeAsioDispatcher() const
     return std::make_unique<AsioDispatcher>(runtime_->io());
 }
 
-}
+} // namespace asyncgi::detail
 
 namespace asyncgi {
 std::unique_ptr<IApp> makeApp(std::size_t workerThreadCount)
@@ -83,5 +82,4 @@ std::unique_ptr<IApp> makeApp(std::size_t workerThreadCount)
     else
         return std::make_unique<detail::App>(std::make_unique<detail::MultithreadedRuntime>(workerThreadCount));
 }
-}
-
+} // namespace asyncgi

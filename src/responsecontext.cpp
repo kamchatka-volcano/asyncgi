@@ -1,7 +1,7 @@
-#include <asyncgi/detail/responsecontext.h>
 #include "timerprovider.h"
+#include <asyncgi/detail/responsecontext.h>
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 
 ResponseContext::ResponseContext(
         IResponseSender& responseSender,
@@ -12,7 +12,8 @@ ResponseContext::ResponseContext(
     , timerProvider_{timerProvider}
     , client_{client}
     , asioDispatcher_{asioDispatcher}
-{}
+{
+}
 
 IResponseSender& ResponseContext::responseSender() const
 {
@@ -44,4 +45,4 @@ void ResponseContext::setRouteParams(const std::vector<std::string>& params)
     routeParams_ = params;
 }
 
-}
+} // namespace asyncgi::detail

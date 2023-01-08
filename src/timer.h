@@ -1,18 +1,18 @@
 #pragma once
-#include <asyncgi/itimer.h>
 #include <asio/steady_timer.hpp>
-#include <map>
-#include <future>
-#include <functional>
+#include <asyncgi/itimer.h>
 #include <chrono>
+#include <functional>
+#include <future>
+#include <map>
 
-namespace asio{
-    class io_context;
+namespace asio {
+class io_context;
 }
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 
-class Timer : public ITimer{
+class Timer : public ITimer {
 public:
     explicit Timer(asio::io_context& io);
     void start(std::chrono::milliseconds time, std::function<void()> callback) override;
@@ -24,5 +24,4 @@ private:
     asio::steady_timer timer_;
 };
 
-}
-
+} // namespace asyncgi::detail

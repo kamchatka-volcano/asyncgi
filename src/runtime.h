@@ -3,8 +3,8 @@
 #include <asio/io_context.hpp>
 #include <asio/signal_set.hpp>
 
-namespace asyncgi::detail{
-class Runtime : public IRuntime{
+namespace asyncgi::detail {
+class Runtime : public IRuntime {
 public:
     Runtime();
     asio::io_context& io() override;
@@ -23,4 +23,4 @@ private:
     asio::signal_set signals_;
 };
 
-}
+} // namespace asyncgi::detail

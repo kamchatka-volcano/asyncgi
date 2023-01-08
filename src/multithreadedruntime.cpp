@@ -1,11 +1,11 @@
 #include "multithreadedruntime.h"
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 
 MultithreadedRuntime::MultithreadedRuntime(std::size_t threadCount)
     : ioGuard_{defaultIO().get_executor()}
 {
-    for(auto i = 0u; i < threadCount; ++i){
+    for (auto i = 0u; i < threadCount; ++i) {
         auto io = std::make_shared<asio::io_context>();
         ioGuardPool_.emplace_back(std::make_shared<asio_work_guard>(io->get_executor()));
         ioPool_.emplace_back(std::move(io));
@@ -14,13 +14,14 @@ MultithreadedRuntime::MultithreadedRuntime(std::size_t threadCount)
 
 void MultithreadedRuntime::run()
 {
-    for(auto& io_context : ioPool_)
-        threadPool_.emplace_back([&]
-        {
-            io_context->run();
-        });
+    for (auto& io_context : ioPool_)
+        threadPool_.emplace_back(
+                [&]
+                {
+                    io_context->run();
+                });
     defaultIO().run();
-    for(auto& thread : threadPool_)
+    for (auto& thread : threadPool_)
         thread.join();
 }
 
@@ -38,4 +39,4 @@ asio::io_context& MultithreadedRuntime::nextIO()
     return *ioPool_[ioIndex_++ % ioPool_.size()];
 }
 
-}
+} // namespace asyncgi::detail

@@ -1,9 +1,9 @@
 #include "server.h"
-#include "connectionlistenerfactory.h"
 #include "connectionlistener.h"
+#include "connectionlistenerfactory.h"
 #include <asio/error_code.hpp>
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 
 namespace fs = std::filesystem;
 
@@ -21,7 +21,7 @@ void initUnixDomainSocket(const fs::path& path)
     chmod(path.c_str(), 0777);
     unlink(path.c_str());
 }
-}
+} // namespace
 
 void Server::listen(const fs::path& socketPath)
 {
@@ -38,4 +38,4 @@ void Server::listen(std::string_view ipAddress, uint16_t portNumber)
             asio::ip::tcp::endpoint{address, portNumber}));
 }
 
-}
+} // namespace asyncgi::detail

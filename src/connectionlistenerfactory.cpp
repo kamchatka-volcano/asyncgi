@@ -1,9 +1,9 @@
 #include "connectionlistenerfactory.h"
 #include "connectionfactory.h"
-#include <asio/local/stream_protocol.hpp>
 #include <asio/ip/tcp.hpp>
+#include <asio/local/stream_protocol.hpp>
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 
 ConnectionListenerFactory::ConnectionListenerFactory(
         asio::io_context& io,
@@ -12,11 +12,12 @@ ConnectionListenerFactory::ConnectionListenerFactory(
     : io_{io}
     , connectionFactory_{std::move(connectionFactory)}
     , errorHandler_{std::move(errorHandler)}
-{}
+{
+}
 
 ConnectionListenerFactory::~ConnectionListenerFactory() = default;
 
-template<typename TProtocol>
+template <typename TProtocol>
 std::unique_ptr<ConnectionListener<TProtocol>> ConnectionListenerFactory::makeConnectionListener(
         const typename TProtocol::endpoint& address)
 {
@@ -26,9 +27,8 @@ std::unique_ptr<ConnectionListener<TProtocol>> ConnectionListenerFactory::makeCo
             errorHandler_);
 }
 
-
-template std::unique_ptr<ConnectionListener<asio::local::stream_protocol>> ConnectionListenerFactory::makeConnectionListener(
-        const asio::local::stream_protocol::endpoint& address);
+template std::unique_ptr<ConnectionListener<asio::local::stream_protocol>> ConnectionListenerFactory::
+        makeConnectionListener(const asio::local::stream_protocol::endpoint& address);
 template std::unique_ptr<ConnectionListener<asio::ip::tcp>> ConnectionListenerFactory::makeConnectionListener(
         const asio::ip::tcp::endpoint& address);
-}
+} // namespace asyncgi::detail

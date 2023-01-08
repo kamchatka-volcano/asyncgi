@@ -2,8 +2,8 @@
 #include <functional>
 #include <system_error>
 
-namespace asyncgi{
-enum ErrorType{
+namespace asyncgi {
+enum ErrorType {
     ConnectionError,
     SocketReadError,
     SocketWriteError,
@@ -13,7 +13,7 @@ enum ErrorType{
 
 using ErrorHandlerFunc = std::function<void(ErrorType, int code, const std::string& msg)>;
 
-class ErrorHandler{
+class ErrorHandler {
 public:
     ErrorHandler(ErrorHandlerFunc func);
     void operator()(ErrorType, const std::error_code& errorCode);
@@ -22,4 +22,4 @@ public:
 private:
     ErrorHandlerFunc func_;
 };
-}
+} // namespace asyncgi

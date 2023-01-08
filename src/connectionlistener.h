@@ -1,15 +1,15 @@
 #pragma once
-#include <asyncgi/errors.h>
 #include <asio/basic_socket_acceptor.hpp>
+#include <asyncgi/errors.h>
 #include <string>
 
-namespace asyncgi::detail{
-template<typename TProtocol>
+namespace asyncgi::detail {
+template <typename TProtocol>
 class Connection;
 class ConnectionFactory;
 
-template<typename TProtocol>
-class ConnectionListener{
+template <typename TProtocol>
+class ConnectionListener {
 public:
     ConnectionListener(
             std::unique_ptr<asio::basic_socket_acceptor<TProtocol>> socketAcceptor,
@@ -26,5 +26,4 @@ private:
     ErrorHandler errorHandler_;
 };
 
-}
-
+} // namespace asyncgi::detail

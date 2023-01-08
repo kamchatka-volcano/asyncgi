@@ -1,12 +1,12 @@
 #pragma once
-#include <map>
-#include <string>
-#include <optional>
-#include <variant>
 #include <filesystem>
+#include <map>
+#include <optional>
+#include <string>
+#include <variant>
 
-namespace asyncgi{
-namespace http{
+namespace asyncgi {
+namespace http {
 class Request;
 }
 namespace detail {
@@ -14,15 +14,14 @@ class IRequestProcessor;
 }
 namespace fs = std::filesystem;
 
-class TestServer{
+class TestServer {
 public:
     explicit TestServer(detail::IRequestProcessor& requestProcessor);
-    std::string process(const std::map<std::string, std::string>& fcgiParams,
-                        const std::string& fcgiData);
+    std::string process(const std::map<std::string, std::string>& fcgiParams, const std::string& fcgiData);
     std::string process(const http::Request&);
 
 private:
     detail::IRequestProcessor& requestProcessor_;
 };
 
-}
+} // namespace asyncgi

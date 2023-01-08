@@ -1,10 +1,11 @@
 #include <asyncgi/errors.h>
 
-namespace asyncgi{
+namespace asyncgi {
 
 ErrorHandler::ErrorHandler(ErrorHandlerFunc func)
     : func_{std::move(func)}
-{}
+{
+}
 
 void ErrorHandler::operator()(ErrorType errorType, const std::error_code& errorCode)
 {
@@ -18,5 +19,4 @@ void ErrorHandler::operator()(ErrorType errorType, int code, const std::string& 
         func_(errorType, code, msg);
 }
 
-}
-
+} // namespace asyncgi

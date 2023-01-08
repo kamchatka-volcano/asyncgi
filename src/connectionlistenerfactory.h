@@ -3,12 +3,11 @@
 #include <asyncgi/errors.h>
 #include <memory>
 
-
-namespace asio{
-    class io_context;
+namespace asio {
+class io_context;
 }
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 class ConnectionFactory;
 
 class ConnectionListenerFactory {
@@ -16,7 +15,7 @@ public:
     ConnectionListenerFactory(asio::io_context&, std::unique_ptr<ConnectionFactory>, ErrorHandlerFunc);
     ~ConnectionListenerFactory();
 
-    template<typename TProtocol>
+    template <typename TProtocol>
     std::unique_ptr<ConnectionListener<TProtocol>> makeConnectionListener(const typename TProtocol::endpoint& address);
 
 private:
@@ -25,4 +24,4 @@ private:
     ErrorHandler errorHandler_;
 };
 
-}
+} // namespace asyncgi::detail

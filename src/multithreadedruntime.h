@@ -1,17 +1,16 @@
 #pragma once
 #include "runtime.h"
 #include <asio/io_context.hpp>
-#include <vector>
 #include <memory>
 #include <thread>
+#include <vector>
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 using asio_work_guard = asio::executor_work_guard<asio::io_context::executor_type>;
 
-class MultithreadedRuntime : public Runtime
-{
+class MultithreadedRuntime : public Runtime {
 public:
-    MultithreadedRuntime(std::size_t threadCount);    
+    MultithreadedRuntime(std::size_t threadCount);
     asio::io_context& nextIO() final;
     void run() final;
     void stop() final;
@@ -24,4 +23,4 @@ private:
     std::atomic<std::size_t> ioIndex_ = 0;
 };
 
-}
+} // namespace asyncgi::detail

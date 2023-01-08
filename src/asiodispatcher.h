@@ -1,13 +1,13 @@
 #pragma once
 #include <asyncgi/iasiodispatcher.h>
 
-namespace asio{
-    class io_context;
+namespace asio {
+class io_context;
 }
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 
-class AsioDispatcher : public IAsioDispatcher{
+class AsioDispatcher : public IAsioDispatcher {
 public:
     explicit AsioDispatcher(asio::io_context& io);
     void postTask(std::function<void(const TaskContext&)> task, std::function<void()> postTaskAction) override;
@@ -17,4 +17,4 @@ private:
     asio::io_context& io_;
 };
 
-}
+} // namespace asyncgi::detail

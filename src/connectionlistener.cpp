@@ -1,16 +1,17 @@
 #include "connectionlistener.h"
-#include "connectionfactory.h"
 #include "connection.h"
+#include "connectionfactory.h"
 #include "iruntime.h"
-#include <asio/local/stream_protocol.hpp>
 #include <asio/ip/tcp.hpp>
+#include <asio/local/stream_protocol.hpp>
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 
-template<typename TProtocol>
-ConnectionListener<TProtocol>::ConnectionListener(std::unique_ptr<asio::basic_socket_acceptor<TProtocol>> socketAcceptor,
-                                                  ConnectionFactory& connectionFactory,
-                                                  ErrorHandlerFunc errorHandler)
+template <typename TProtocol>
+ConnectionListener<TProtocol>::ConnectionListener(
+        std::unique_ptr<asio::basic_socket_acceptor<TProtocol>> socketAcceptor,
+        ConnectionFactory& connectionFactory,
+        ErrorHandlerFunc errorHandler)
     : socketAcceptor_{std::move(socketAcceptor)}
     , connectionFactory_{connectionFactory}
     , errorHandler_{std::move(errorHandler)}
@@ -19,20 +20,22 @@ ConnectionListener<TProtocol>::ConnectionListener(std::unique_ptr<asio::basic_so
     waitForConnection();
 }
 
-template<typename TProtocol>
+template <typename TProtocol>
 void ConnectionListener<TProtocol>::waitForConnection()
 {
     auto connection = connectionFactory_.makeConnection<TProtocol>();
-    socketAcceptor_->async_accept(connection->socket(),
-                                  [this, connection](auto error_code) {
-                                      onConnected(*connection, error_code);
-                                  });
+    socketAcceptor_->async_accept(
+            connection->socket(),
+            [this, connection](auto error_code)
+            {
+                onConnected(*connection, error_code);
+            });
 }
 
-template<typename TProtocol>
+template <typename TProtocol>
 void ConnectionListener<TProtocol>::onConnected(Connection<TProtocol>& connection, const std::error_code& error)
 {
-    if (error){
+    if (error) {
         errorHandler_(ErrorType::ConnectionError, error);
         return;
     }
@@ -43,4 +46,4 @@ void ConnectionListener<TProtocol>::onConnected(Connection<TProtocol>& connectio
 template class ConnectionListener<asio::local::stream_protocol>;
 template class ConnectionListener<asio::ip::tcp>;
 
-}
+} // namespace asyncgi::detail

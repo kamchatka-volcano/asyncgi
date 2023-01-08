@@ -1,19 +1,19 @@
 #pragma once
-#include <asyncgi/types.h>
-#include <asyncgi/itimer.h>
+#include <asio/basic_stream_socket.hpp>
 #include <asyncgi/errors.h>
+#include <asyncgi/itimer.h>
+#include <asyncgi/types.h>
+#include <fcgi_responder/fcgi_limits.h>
+#include <fcgi_responder/requester.h>
 #include <hot_teacup/request.h>
 #include <hot_teacup/response.h>
-#include <fcgi_responder/requester.h>
-#include <fcgi_responder/fcgi_limits.h>
-#include <asio/basic_stream_socket.hpp>
 #include <filesystem>
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 namespace fs = std::filesystem;
 class TimerProvider;
 
-template<typename TProtocol>
+template <typename TProtocol>
 class ClientConnection : public fcgi::Requester {
 public:
     ClientConnection(asio::io_context&, ErrorHandlerFunc);
@@ -34,13 +34,13 @@ private:
     void close();
 
 private:
-  asio::basic_stream_socket<TProtocol> socket_;
-  ErrorHandler errorHandler_;
-  std::array<char, fcgi::maxRecordSize> buffer_;
-  std::string writeBuffer_;
-  std::string nextWriteBuffer_;
-  std::size_t bytesToWrite_ = 0;
-  bool disconnectRequested_ = false;
+    asio::basic_stream_socket<TProtocol> socket_;
+    ErrorHandler errorHandler_;
+    std::array<char, fcgi::maxRecordSize> buffer_;
+    std::string writeBuffer_;
+    std::string nextWriteBuffer_;
+    std::size_t bytesToWrite_ = 0;
+    bool disconnectRequested_ = false;
 };
 
-}
+} // namespace asyncgi::detail

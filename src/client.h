@@ -1,20 +1,19 @@
 #pragma once
-#include "timerprovider.h"
 #include "clientconnection.h"
 #include "timerprovider.h"
+#include <asio/ip/tcp.hpp>
+#include <asio/local/stream_protocol.hpp>
+#include <asyncgi/errors.h>
 #include <asyncgi/iclient.h>
 #include <asyncgi/itimer.h>
-#include <asyncgi/errors.h>
+#include <fcgi_responder/requester.h>
 #include <hot_teacup/request.h>
 #include <hot_teacup/response_view.h>
-#include <fcgi_responder/requester.h>
-#include <asio/local/stream_protocol.hpp>
-#include <asio/ip/tcp.hpp>
 #include <filesystem>
 #include <memory>
 #include <vector>
 
-namespace asyncgi::detail{
+namespace asyncgi::detail {
 namespace fs = std::filesystem;
 class TimerProvider;
 
@@ -40,7 +39,7 @@ public:
             const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
             const std::chrono::milliseconds& timeout) override;
 
-     void makeRequest(
+    void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
             fastcgi::Request request,
@@ -73,4 +72,4 @@ private:
     std::vector<std::unique_ptr<ClientConnection<asio::ip::tcp>>> tcpClientConnections_;
 };
 
-}
+} // namespace asyncgi::detail
