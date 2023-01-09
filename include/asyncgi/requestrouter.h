@@ -49,22 +49,24 @@ private:
     };
 };
 
-} // namespace asyncgi
-
-template <typename TContext>
-struct asyncgi::config::
-        RouteSpecification<asyncgi::http::RequestMethod, asyncgi::Request, asyncgi::Response, TContext> {
-
-    template <typename T = TContext, std::enable_if_t<std::is_same_v<T, _>>* = nullptr>
+template <>
+struct config::RouteMatcher<asyncgi::http::RequestMethod> {
     bool operator()(asyncgi::http::RequestMethod value, const asyncgi::Request& request, asyncgi::Response&) const
     {
         return value == request.method();
     }
+};
 
-    template <typename T = TContext, std::enable_if_t<!std::is_same_v<T, _>>* = nullptr>
+template <typename TContext>
+struct config::RouteMatcher<asyncgi::http::RequestMethod, TContext> {
     bool operator()(asyncgi::http::RequestMethod value, const asyncgi::Request& request, asyncgi::Response&, TContext&)
             const
     {
         return value == request.method();
     }
 };
+
+} // namespace asyncgi
+
+
+
