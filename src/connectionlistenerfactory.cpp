@@ -17,7 +17,7 @@ ConnectionListenerFactory::ConnectionListenerFactory(
 
 ConnectionListenerFactory::~ConnectionListenerFactory() = default;
 
-template <typename TProtocol>
+template<typename TProtocol>
 std::unique_ptr<ConnectionListener<TProtocol>> ConnectionListenerFactory::makeConnectionListener(
         const typename TProtocol::endpoint& address)
 {

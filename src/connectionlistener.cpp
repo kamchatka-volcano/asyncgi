@@ -7,7 +7,7 @@
 
 namespace asyncgi::detail {
 
-template <typename TProtocol>
+template<typename TProtocol>
 ConnectionListener<TProtocol>::ConnectionListener(
         std::unique_ptr<asio::basic_socket_acceptor<TProtocol>> socketAcceptor,
         ConnectionFactory& connectionFactory,
@@ -20,7 +20,7 @@ ConnectionListener<TProtocol>::ConnectionListener(
     waitForConnection();
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 void ConnectionListener<TProtocol>::waitForConnection()
 {
     auto connection = connectionFactory_.makeConnection<TProtocol>();
@@ -32,7 +32,7 @@ void ConnectionListener<TProtocol>::waitForConnection()
             });
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 void ConnectionListener<TProtocol>::onConnected(Connection<TProtocol>& connection, const std::error_code& error)
 {
     if (error) {

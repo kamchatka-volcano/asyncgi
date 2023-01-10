@@ -6,20 +6,20 @@
 
 namespace asyncgi::detail {
 
-template <typename TProtocol>
+template<typename TProtocol>
 ClientConnection<TProtocol>::ClientConnection(asio::io_context& io, ErrorHandlerFunc errorHandler)
     : socket_{io}
     , errorHandler_{std::move(errorHandler)}
 {
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 ClientConnection<TProtocol>::~ClientConnection()
 {
     close();
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 void ClientConnection<TProtocol>::makeRequest(
         const typename TProtocol::endpoint& socketPath,
         fastcgi::Request request,
@@ -50,7 +50,7 @@ void ClientConnection<TProtocol>::makeRequest(
             });
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 void ClientConnection<TProtocol>::disconnect()
 {
     disconnectRequested_ = true;
@@ -59,7 +59,7 @@ void ClientConnection<TProtocol>::disconnect()
     close();
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 void ClientConnection<TProtocol>::processReading()
 {
     if (!socket_.is_open())
@@ -77,14 +77,14 @@ void ClientConnection<TProtocol>::processReading()
             });
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 void ClientConnection<TProtocol>::readData(std::size_t bytesRead)
 {
     fcgi::Requester::receiveData(buffer_.data(), bytesRead);
     processReading();
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 void ClientConnection<TProtocol>::sendData(const std::string& data)
 {
     if (bytesToWrite_) {
@@ -113,7 +113,7 @@ void ClientConnection<TProtocol>::sendData(const std::string& data)
             });
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 void ClientConnection<TProtocol>::onBytesWritten(std::size_t numOfBytes)
 {
     bytesToWrite_ -= numOfBytes;
@@ -126,13 +126,14 @@ void ClientConnection<TProtocol>::onBytesWritten(std::size_t numOfBytes)
         close();
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 void ClientConnection<TProtocol>::close()
 {
     try {
         socket_.shutdown(asio::basic_stream_socket<TProtocol>::shutdown_both);
         socket_.close();
-    } catch (const std::system_error& e) {
+    }
+    catch (const std::system_error& e) {
         errorHandler_(ErrorType::SocketCloseError, e.code());
     }
     disconnectRequested_ = false;

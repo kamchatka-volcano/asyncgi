@@ -15,7 +15,7 @@ public:
     ConnectionListenerFactory(asio::io_context&, std::unique_ptr<ConnectionFactory>, ErrorHandlerFunc);
     ~ConnectionListenerFactory();
 
-    template <typename TProtocol>
+    template<typename TProtocol>
     std::unique_ptr<ConnectionListener<TProtocol>> makeConnectionListener(const typename TProtocol::endpoint& address);
 
 private:

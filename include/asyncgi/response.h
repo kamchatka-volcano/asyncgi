@@ -13,14 +13,13 @@
 #include <memory>
 #include <optional>
 
-
 namespace asyncgi {
-template <typename TContext>
+template<typename TContext>
 class RequestRouter;
 
 namespace detail {
 
-template <class F>
+template<class F>
 auto make_copyable_function(F&& f)
 {
     using dF = std::decay_t<F>;
@@ -36,14 +35,14 @@ class Response {
 public:
     explicit Response(const detail::ResponseContext& responseContext);
 
-    template <typename... TArgs>
+    template<typename... TArgs>
     void send(TArgs... args)
     {
         auto response = http::Response{std::forward<TArgs>(args)...};
         responseContext_.responseSender().send(response.data(http::ResponseMode::CGI));
     }
 
-    template <typename T, typename TCallable>
+    template<typename T, typename TCallable>
     void waitFuture(
             std::future<T>&& future,
             TCallable callback,
@@ -106,7 +105,7 @@ public:
 
     void cancelRequest();
 
-    template <typename TRouteContext>
+    template<typename TRouteContext>
     void setRequestProcessorQueue(
             const std::shared_ptr<whaleroute::RequestProcessorQueue>& queue,
             sfun::AccessPermission<RequestRouter<TRouteContext>>)

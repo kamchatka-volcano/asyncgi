@@ -18,6 +18,7 @@ BraceWrapping:
   BeforeElse: true
   BeforeLambdaBody: true
   BeforeWhile: true
+  BeforeCatch: true
 BreakBeforeBraces: Custom
 BreakBeforeBinaryOperators: None
 BreakInheritanceList: AfterComma
@@ -31,6 +32,10 @@ PenaltyBreakAssignment: 10
 SpaceBeforeCpp11BracedList: false
 SpaceInEmptyBlock: false
 SpaceInEmptyParentheses: false
+SpaceAfterTemplateKeyword: false
+SpacesInLineCommentPrefix:
+  Minimum: 0
+  Maximum: -1
 FixNamespaceComments: true
 UseCRLF: false
 IncludeCategories:

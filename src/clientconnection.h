@@ -13,7 +13,7 @@ namespace asyncgi::detail {
 namespace fs = std::filesystem;
 class TimerProvider;
 
-template <typename TProtocol>
+template<typename TProtocol>
 class ClientConnection : public fcgi::Requester {
 public:
     ClientConnection(asio::io_context&, ErrorHandlerFunc);

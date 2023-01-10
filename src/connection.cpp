@@ -8,7 +8,7 @@
 
 namespace asyncgi::detail {
 
-template <typename TProtocol>
+template<typename TProtocol>
 Connection<TProtocol>::Connection(
         RequestProcessor requestProcessor,
         asio::io_context& io,
@@ -23,13 +23,13 @@ Connection<TProtocol>::Connection(
 {
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 asio::basic_socket<TProtocol>& Connection<TProtocol>::socket()
 {
     return socket_;
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 void Connection<TProtocol>::process()
 {
     socket_.async_read_some(
@@ -45,14 +45,14 @@ void Connection<TProtocol>::process()
             });
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 void Connection<TProtocol>::readData(std::size_t bytesRead)
 {
     fcgi::Responder::receiveData(buffer_.data(), bytesRead);
     process();
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 void Connection<TProtocol>::sendData(const std::string& data)
 {
     if (bytesToWrite_) {
@@ -81,7 +81,7 @@ void Connection<TProtocol>::sendData(const std::string& data)
             });
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 void Connection<TProtocol>::onBytesWritten(std::size_t numOfBytes)
 {
     bytesToWrite_ -= numOfBytes;
@@ -94,7 +94,7 @@ void Connection<TProtocol>::onBytesWritten(std::size_t numOfBytes)
         close();
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 void Connection<TProtocol>::disconnect()
 {
     disconnectRequested_ = true;
@@ -103,7 +103,7 @@ void Connection<TProtocol>::disconnect()
     close();
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 void Connection<TProtocol>::processRequest(fcgi::Request&& fcgiRequest, fcgi::Response&& fcgiResponse)
 {
     try {
@@ -112,18 +112,20 @@ void Connection<TProtocol>::processRequest(fcgi::Request&& fcgiRequest, fcgi::Re
         const auto request = Request{*fcgiRequest_};
         auto response = ResponseContext{*responseSender_, timerProvider_, client_, asioDispatcher_};
         requestProcessor_(request, response);
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e) {
         errorHandler_(ErrorType::RequestProcessingError, -1, e.what());
     }
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 void Connection<TProtocol>::close()
 {
     try {
         socket_.shutdown(TProtocol::socket::shutdown_both);
         socket_.close();
-    } catch (const std::system_error& e) {
+    }
+    catch (const std::system_error& e) {
         errorHandler_(ErrorType::SocketCloseError, e.code());
     }
     disconnectRequested_ = false;

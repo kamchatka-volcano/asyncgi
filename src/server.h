@@ -11,7 +11,7 @@
 
 namespace asyncgi::detail {
 class ConnectionListenerFactory;
-template <typename TProtocol>
+template<typename TProtocol>
 class ConnectionListener;
 
 class Server : public IServer {

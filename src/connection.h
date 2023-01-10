@@ -22,7 +22,7 @@ class io_context;
 namespace asyncgi::detail {
 class ConnectionFactory;
 
-template <typename TProtocol>
+template<typename TProtocol>
 class Connection : public std::enable_shared_from_this<Connection<TProtocol>>,
                    public fcgi::Responder {
 public:

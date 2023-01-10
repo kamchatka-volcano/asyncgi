@@ -8,7 +8,7 @@
 namespace asyncgi {
 namespace config = whaleroute::config;
 
-template <typename TRouteContext>
+template<typename TRouteContext>
 class RequestRouter : public whaleroute::RequestRouter<Request, Response, http::Response, TRouteContext> {
 public:
     void operator()(const Request& request, Response& response)
@@ -49,7 +49,7 @@ private:
     };
 };
 
-template <>
+template<>
 struct config::RouteMatcher<asyncgi::http::RequestMethod> {
     bool operator()(asyncgi::http::RequestMethod value, const asyncgi::Request& request, asyncgi::Response&) const
     {
@@ -57,7 +57,7 @@ struct config::RouteMatcher<asyncgi::http::RequestMethod> {
     }
 };
 
-template <typename TContext>
+template<typename TContext>
 struct config::RouteMatcher<asyncgi::http::RequestMethod, TContext> {
     bool operator()(asyncgi::http::RequestMethod value, const asyncgi::Request& request, asyncgi::Response&, TContext&)
             const
@@ -67,6 +67,3 @@ struct config::RouteMatcher<asyncgi::http::RequestMethod, TContext> {
 };
 
 } // namespace asyncgi
-
-
-

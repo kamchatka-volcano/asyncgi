@@ -4,14 +4,14 @@
 #include <memory>
 
 namespace asyncgi::detail {
-template <typename TProtocol>
+template<typename TProtocol>
 class Connection;
 class IRuntime;
 
 class ConnectionFactory {
 public:
     ConnectionFactory(RequestProcessor requestProcessor, IRuntime& runtime, ErrorHandlerFunc errorHandler);
-    template <typename TProtocol>
+    template<typename TProtocol>
     std::shared_ptr<Connection<TProtocol>> makeConnection();
 
 private:

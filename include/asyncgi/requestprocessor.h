@@ -8,7 +8,7 @@
 namespace asyncgi {
 
 namespace detail {
-template <typename TRequestProcessorArgs>
+template<typename TRequestProcessorArgs>
 constexpr void checkRequestProcessorSignature(const TRequestProcessorArgs&)
 {
     constexpr auto args = TRequestProcessorArgs{};
@@ -20,7 +20,7 @@ constexpr void checkRequestProcessorSignature(const TRequestProcessorArgs&)
 
 class RequestProcessor {
 public:
-    template <
+    template<
             typename TRequestProcessorFunc,
             typename std::enable_if_t<
                     !std::is_same_v<std::remove_reference_t<TRequestProcessorFunc>, RequestProcessor>>* = nullptr>

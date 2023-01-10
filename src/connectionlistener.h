@@ -4,11 +4,11 @@
 #include <string>
 
 namespace asyncgi::detail {
-template <typename TProtocol>
+template<typename TProtocol>
 class Connection;
 class ConnectionFactory;
 
-template <typename TProtocol>
+template<typename TProtocol>
 class ConnectionListener {
 public:
     ConnectionListener(

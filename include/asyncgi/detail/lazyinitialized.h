@@ -4,7 +4,7 @@
 
 namespace asyncgi::detail {
 
-template <typename T>
+template<typename T>
 class LazyInitialized {
 public:
     explicit LazyInitialized(std::function<T()> initializer)

@@ -18,7 +18,7 @@ ConnectionFactory::ConnectionFactory(
 {
 }
 
-template <typename TProtocol>
+template<typename TProtocol>
 std::shared_ptr<Connection<TProtocol>> ConnectionFactory::makeConnection()
 {
     return std::make_shared<Connection<TProtocol>>(
