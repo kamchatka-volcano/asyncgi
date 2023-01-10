@@ -1,6 +1,6 @@
 #pragma once
+#include "detail/external/whaleroute/types.h"
 #include "http/types.h"
-#include <whaleroute/types.h>
 #include <map>
 #include <string>
 

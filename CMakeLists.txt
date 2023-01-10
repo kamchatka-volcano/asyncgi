@@ -76,10 +76,6 @@ SealLake_SharedLibrary(
     COMPILE_FEATURES cxx_std_17
     PROPERTIES
         CXX_EXTENSIONS OFF
-    INTERFACE_INCLUDES
-        asyncgi/detail/external
-    INCLUDES
-        asyncgi/detail/external
     LIBRARIES
         asio
         asyncgi_fcgi_responder::asyncgi_fcgi_responder
