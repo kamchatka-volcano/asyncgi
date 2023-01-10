@@ -11,6 +11,8 @@ using rx = whaleroute::rx;
 namespace string_literals = whaleroute::string_literals;
 using RegexMode = whaleroute::RegexMode;
 using TrailingSlashMode = whaleroute::TrailingSlashMode;
+template<int minSize = 0>
+using RouteParameters = whaleroute::RouteParameters<minSize>;
 } // namespace asyncgi
 
 namespace fastcgi {
