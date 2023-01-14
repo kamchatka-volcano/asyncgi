@@ -1,6 +1,7 @@
 #pragma once
 #include "request.h"
 #include "response.h"
+#include "detail/external/sfun/functional.h"
 #include "detail/external/sfun/interface.h"
 #include "detail/external/whaleroute/requestrouter.h"
 #include "http/response.h"
@@ -43,9 +44,24 @@ private:
         response.send(httpResponse);
     }
 
-    void onRouteParametersError(const Request&, Response& response, const whaleroute::RouteParameterError&) override
+    void onRouteParametersError(const Request&, Response& response, const whaleroute::RouteParameterError& error)
+            override
     {
-        response.send(http::ResponseStatus::Code_500_Internal_Server_Error);
+        auto errorMessageVisitor = sfun::overloaded{
+                [](const whaleroute::RouteParameterCountMismatch& countMismatchError) -> std::string
+                {
+                    return "RouteParameterError: Parameter count mismatch, expected: " +
+                            std::to_string(countMismatchError.expectedNumber) +
+                            ", actual:" + std::to_string(countMismatchError.actualNumber);
+                },
+                [](const whaleroute::RouteParameterReadError& readError) -> std::string
+                {
+                    return "RouteParameterError: Couldn't read parameter#" + std::to_string(readError.index) +
+                            ", value:" + readError.value;
+                },
+
+        };
+        response.send(http::ResponseStatus::Code_500_Internal_Server_Error, std::visit(errorMessageVisitor, error));
     };
 };
 
