@@ -8,7 +8,7 @@ include(external/asio)
 SealLake_Bundle(
     NAME asyncgi_sfun
     GIT_REPOSITORY https://github.com/kamchatka-volcano/sfun.git
-    GIT_TAG v3
+    GIT_TAG v3.1.1
     DESTINATION include/asyncgi/detail/external
     DIRECTORIES include/sfun
     TEXT_REPLACEMENTS
@@ -39,7 +39,7 @@ set(ASYNCGI_HOT_TEACUP_OBJECT_LIB ON)
 SealLake_Bundle(
     NAME asyncgi_hot_teacup
     GIT_REPOSITORY https://github.com/kamchatka-volcano/hot_teacup.git
-    GIT_TAG v2.0.0
+    GIT_TAG v2.1.0
     WILDCARDS
         include/hot_teacup/*.h
     DESTINATION include/asyncgi/http
@@ -71,7 +71,7 @@ set(SRC
     src/response.cpp
 )
 
-SealLake_SharedLibrary(
+SealLake_StaticLibrary(
     SOURCES ${SRC}
     COMPILE_FEATURES cxx_std_17
     PROPERTIES
