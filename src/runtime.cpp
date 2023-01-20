@@ -4,7 +4,14 @@
 namespace asyncgi::detail {
 
 Runtime::Runtime()
-    : signals_{io_, SIGINT, SIGQUIT, SIGTERM}
+
+    : signals_{
+              io_,
+              SIGINT,
+#ifndef _WIN32
+              SIGQUIT,
+#endif
+              SIGTERM}
 {
     handleStopSignals();
 }

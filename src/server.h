@@ -18,6 +18,7 @@ class Server : public IServer {
 public:
     explicit Server(std::unique_ptr<ConnectionListenerFactory>);
     ~Server() override;
+
     void listen(const std::filesystem::path& socketPath) override;
     void listen(std::string_view ipAddress, uint16_t portNumber) override;
 
