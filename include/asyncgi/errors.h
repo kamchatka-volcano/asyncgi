@@ -1,8 +1,14 @@
 #pragma once
 #include <functional>
 #include <system_error>
+#include <stdexcept>
 
 namespace asyncgi {
+
+struct Error : public std::runtime_error{
+    using std::runtime_error::runtime_error;
+};
+
 enum ErrorType {
     ConnectionError,
     SocketReadError,

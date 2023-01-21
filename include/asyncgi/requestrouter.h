@@ -31,7 +31,7 @@ private:
 
     void processUnmatchedRequest(const Request&, Response& response) final
     {
-        response.send(http::ResponseStatus::Code_404_Not_Found);
+        response.send(http::ResponseStatus::_404_Not_Found);
     }
 
     bool isRouteProcessingFinished(const Request&, Response& response) const final
@@ -61,7 +61,7 @@ private:
                 },
 
         };
-        response.send(http::ResponseStatus::Code_500_Internal_Server_Error, std::visit(errorMessageVisitor, error));
+        response.send(http::ResponseStatus::_500_Internal_Server_Error, std::visit(errorMessageVisitor, error));
     };
 };
 

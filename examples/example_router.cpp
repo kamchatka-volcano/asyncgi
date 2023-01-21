@@ -68,9 +68,9 @@ int main()
     auto app = asyncgi::makeApp(4); //4 threads processing requests
     auto state = State{};
     auto router = asyncgi::makeRouter();
-    router.route("/", http::RequestMethod::GET).process<HelloPage>(state);
-    router.route("/settings", http::RequestMethod::POST).process<ChangeSettings>(state);
-    router.route("/settings", http::RequestMethod::GET).process(
+    router.route("/", http::RequestMethod::Get).process<HelloPage>(state);
+    router.route("/settings", http::RequestMethod::Post).process<ChangeSettings>(state);
+    router.route("/settings", http::RequestMethod::Get).process(
                     [](const asyncgi::Request&, asyncgi::Response& response)
                     {
                         response.send("<html>"
@@ -81,7 +81,7 @@ int main()
                                       "</form>"
                                       "</html>");
                     });
-    router.route().set(http::Response{http::ResponseStatus::Code_404_Not_Found, "Page not found"});
+    router.route().set(http::Response{http::ResponseStatus::_404_Not_Found, "Page not found"});
     //Alternatively, it's possible to pass arguments for creation of http::Response object to the set() method.
     //router.route().set(http::ResponseStatus::Code_404_Not_Found, "Page not found");
 

@@ -31,7 +31,7 @@ struct AdminPage{
         if (context.access == Access::Authorized)
             response.send("Welcome, admin " + name + "!");
         else
-            response.send(http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page.");
+            response.send(http::ResponseStatus::_401_Unauthorized, "You are not authorized to view this page.");
     }
 };
 
@@ -41,7 +41,7 @@ struct ModerationPage{
         if (context.access == Access::Authorized)
             response.send("Welcome, moderator!");
         else
-            response.send(http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page.");
+            response.send(http::ResponseStatus::_401_Unauthorized, "You are not authorized to view this page.");
     }
 };
 
@@ -50,13 +50,13 @@ int main()
     auto app = asyncgi::makeApp();
     auto router = asyncgi::makeRouter<RouteContext>();
     router.route(asyncgi::rx{".*"}).process<Authorizer>();
-    router.route(asyncgi::rx{"/admin/(.+)"}, http::RequestMethod::GET).process<AdminPage>();
-    router.route("/moderation", http::RequestMethod::GET).process<ModerationPage>();
+    router.route(asyncgi::rx{"/admin/(.+)"}, http::RequestMethod::Get).process<AdminPage>();
+    router.route("/moderation", http::RequestMethod::Get).process<ModerationPage>();
     //router.route().set(http::ResponseStatus::Code_404_Not_Found, "Page not found.");
     router.route().process(
             [](const asyncgi::Request&, asyncgi::Response& response, RouteContext&)
             {
-                response.send(http::ResponseStatus::Code_404_Not_Found, "Page not found.");
+                response.send(http::ResponseStatus::_404_Not_Found, "Page not found.");
             });
 
     auto server = app->makeServer(router);

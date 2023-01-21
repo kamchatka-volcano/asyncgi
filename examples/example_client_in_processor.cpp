@@ -9,7 +9,7 @@ struct RequestPage{
         response.makeRequest(
                 "127.0.0.1",
                 9000,
-                http::Request{http::RequestMethod::GET, "/"},
+                http::Request{http::RequestMethod::Get, "/"},
                 [response](const std::optional<http::ResponseView>& reqResponse) mutable
                 {
                     if (reqResponse)
@@ -24,8 +24,8 @@ int main()
 {
     auto app = asyncgi::makeApp();
     auto router = asyncgi::makeRouter();
-    router.route("/", http::RequestMethod::GET).process<RequestPage>();
-    router.route().set(http::ResponseStatus::Code_404_Not_Found);
+    router.route("/", http::RequestMethod::Get).process<RequestPage>();
+    router.route().set(http::ResponseStatus::_404_Not_Found);
     auto server = app->makeServer(router);
     server->listen("/tmp/fcgi.sock");
     app->exec();

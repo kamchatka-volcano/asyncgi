@@ -8,7 +8,7 @@ struct Greeter{
         if (request.path() == "/")
             response.send("Hello world");
         else
-            response.send(http::ResponseStatus::Code_404_Not_Found);
+            response.send(http::ResponseStatus::_404_Not_Found);
     }
 };
 

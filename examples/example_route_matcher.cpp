@@ -49,13 +49,13 @@ int main()
     auto app = asyncgi::makeApp();
     auto router = asyncgi::makeRouter<RouteContext>();
     router.route(asyncgi::rx{".*"}).process<Authorizer>();
-    router.route("/admin", http::RequestMethod::GET, Access::Authorized).process<AdminPage>();
+    router.route("/admin", http::RequestMethod::Get, Access::Authorized).process<AdminPage>();
     // Internally RequestMethod parameter is implemented using RouteMatcher as well.
     // As you can see below, the order of provided RouteMatcher parameters isn't important.
-    router.route("/moderation", Access::Authorized, http::RequestMethod::GET).process<ModerationPage>();
+    router.route("/moderation", Access::Authorized, http::RequestMethod::Get).process<ModerationPage>();
     router.route(asyncgi::rx{".*"}, Access::Forbidden)
-            .set(http::ResponseStatus::Code_401_Unauthorized, "You are not authorized to view this page.");
-    router.route().set(http::ResponseStatus::Code_404_Not_Found, "Page not found.");
+            .set(http::ResponseStatus::_401_Unauthorized, "You are not authorized to view this page.");
+    router.route().set(http::ResponseStatus::_404_Not_Found, "Page not found.");
 
     auto server = app->makeServer(router);
     server->listen("/tmp/fcgi.sock");

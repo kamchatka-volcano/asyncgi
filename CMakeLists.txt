@@ -39,7 +39,7 @@ set(ASYNCGI_HOT_TEACUP_OBJECT_LIB ON)
 SealLake_Bundle(
     NAME asyncgi_hot_teacup
     GIT_REPOSITORY https://github.com/kamchatka-volcano/hot_teacup.git
-    GIT_TAG v2.1.0
+    GIT_TAG v3.0.0
     WILDCARDS
         include/hot_teacup/*.h
     DESTINATION include/asyncgi/http

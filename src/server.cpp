@@ -2,6 +2,7 @@
 #include "connectionlistener.h"
 #include "connectionlistenerfactory.h"
 #include <asio/error_code.hpp>
+#include <asyncgi/errors.h>
 
 namespace asyncgi::detail {
 
@@ -34,6 +35,8 @@ void Server::listen(const fs::path& socketPath)
                     asio::local::stream_protocol::endpoint{socketPath}));
 #else
     [[maybe_unused]] auto& unused = socketPath;
+    throw Error{"Unix domain hosts aren't supported on Windows. Use a TCP host with Server::listen(std::string_view "
+                "ipAddress, uint16_t portNumber)."};
 #endif
 }
 

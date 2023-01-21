@@ -29,12 +29,12 @@ void Response::redirect(
         std::vector<http::Header> headers)
 {
     auto response = http::Response{std::move(path), redirectType, std::move(cookies), std::move(headers)};
-    responseContext_.responseSender().send(response.data(http::ResponseMode::CGI));
+    responseContext_.responseSender().send(response.data(http::ResponseMode::Cgi));
 }
 
 void Response::send(const http::Response& response)
 {
-    responseContext_.responseSender().send(response.data(http::ResponseMode::CGI));
+    responseContext_.responseSender().send(response.data(http::ResponseMode::Cgi));
 }
 
 void Response::send(fastcgi::Response response)

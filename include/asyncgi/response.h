@@ -39,7 +39,7 @@ public:
     void send(TArgs... args)
     {
         auto response = http::Response{std::forward<TArgs>(args)...};
-        responseContext_.responseSender().send(response.data(http::ResponseMode::CGI));
+        responseContext_.responseSender().send(response.data(http::ResponseMode::Cgi));
     }
 
     template<typename T, typename TCallable>

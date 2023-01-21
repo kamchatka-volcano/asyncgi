@@ -29,7 +29,7 @@ int main()
 
     auto router = asyncgi::makeRouter();
     router.route("/").process<Greeter>(secondsCounter);
-    router.route().set(http::ResponseStatus::Code_404_Not_Found);
+    router.route().set(http::ResponseStatus::_404_Not_Found);
 
     auto server = app->makeServer(router);
     server->listen("/tmp/fcgi.sock");
