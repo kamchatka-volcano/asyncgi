@@ -36,13 +36,13 @@ jobs:
             cxx: "clang++",
             flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused"
           }
-    #          - {
-    #            name: "Windows Latest MSVC",
-    #            os: windows-latest,
-    #            cc: "cl",
-    #            cxx: "cl",
-    #            flags: "/EHsc /W4 /WX"
-    #          }
+          - {
+            name: "Windows Latest MSVC",
+            os: windows-latest,
+            cc: "cl",
+            cxx: "cl",
+            flags: "/EHsc /W4 /WX"
+          }
 
     steps:
       - uses: actions/checkout@v3
