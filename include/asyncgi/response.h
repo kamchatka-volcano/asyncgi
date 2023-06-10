@@ -63,7 +63,7 @@ public:
             else
                 waitFuture(std::move(fut), std::move(func), checkPeriod);
         };
-        timer.start(checkPeriod, detail::make_copyable_function(std::move(timerCallback)), TimerMode::Once);
+        timer.start(checkPeriod, detail::make_copyable_function(std::move(timerCallback)));
     }
 
     void redirect(
@@ -81,27 +81,27 @@ public:
             const std::filesystem::path& socketPath,
             fastcgi::Request request,
             const std::function<void(std::optional<fastcgi::Response>)>& responseHandler,
-            const std::chrono::milliseconds timeout = std::chrono::seconds{3});
+            std::chrono::milliseconds timeout = std::chrono::seconds{3});
 
     void makeRequest(
             const std::filesystem::path& socketPath,
             const http::Request& request,
             const std::function<void(std::optional<http::ResponseView>)>& httpResponseHandler,
-            const std::chrono::milliseconds timeout = std::chrono::seconds{3});
+            std::chrono::milliseconds timeout = std::chrono::seconds{3});
 
     void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
             fastcgi::Request request,
             const std::function<void(std::optional<fastcgi::Response>)>& responseHandler,
-            const std::chrono::milliseconds timeout = std::chrono::seconds{3});
+            std::chrono::milliseconds timeout = std::chrono::seconds{3});
 
     void makeRequest(
             std::string_view ipAddress,
             uint16_t port,
             const http::Request& request,
             const std::function<void(std::optional<http::ResponseView>)>& httpResponseHandler,
-            const std::chrono::milliseconds timeout = std::chrono::seconds{3});
+            std::chrono::milliseconds timeout = std::chrono::seconds{3});
 
     void cancelRequest();
 

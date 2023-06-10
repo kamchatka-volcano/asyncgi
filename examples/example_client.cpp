@@ -8,13 +8,14 @@ int main()
     auto app = asyncgi::makeApp();
     auto client = app->makeClient();
     client->makeRequest("/tmp/fcgi.sock", http::Request{http::RequestMethod::Get, "/"},
-            [](const std::optional<http::ResponseView>& response){
+            [&app](const std::optional<http::ResponseView>& response)
+            {
                 if (response)
                     std::cout << response->body() << std::endl;
                 else
                     std::cout << "No response" << std::endl;
-            }
-    );
+                app->exit();
+            });
     app->exec();
     return 0;
 }

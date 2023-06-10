@@ -1,86 +1,82 @@
 #include <asyncgi/asyncgi.h>
 #include <mutex>
 
-using namespace asyncgi;
+namespace http = asyncgi::http;
+using namespace std::string_literals;
 
-class State {
+class GuestBookState {
 public:
-    std::string name()
+    std::vector<std::string> messages()
     {
         auto lock = std::scoped_lock{mutex_};
-        return name_;
+        return messages_;
     }
 
-    void setName(std::string name)
+    void addMessage(const std::string& msg)
     {
         auto lock = std::scoped_lock{mutex_};
-        name_ = std::move(name);
+        messages_.emplace_back(msg);
     }
 
 private:
-    std::string name_;
+    std::vector<std::string> messages_;
     std::mutex mutex_;
 };
 
-class HelloPage{
+class GuestBookPage {
 public:
-    HelloPage(State& state)
-        : state_(state)
-    {}
+    GuestBookPage(GuestBookState& state)
+        : state_(&state)
+    {
+    }
 
     void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
-        auto name = state_.name();
-        if (name.empty())
-            name = std::string{"world"};
+        auto messages = state_->messages();
+        auto page = "<h1>Guest book</h1>"s;
+        if (messages.empty())
+            page += "<p>No messages</p>";
+        else
+            for (const auto& msg : messages)
+                page += "<p>" + msg + "</p>";
 
-        response.send(
-                "<html>"
-                "<p>Hello, " +
-                name +
-                "</p>"
-                "<a href=\"/settings\">settings</a>"
-                "</html>");
+        page += "<hr>";
+        page += "<form method=\"post\" enctype=\"multipart/form-data\">"
+                "<label for=\"msg\">Message:</label>"
+                "<input id=\"msg\" name=\"msg\" value=\"\">"
+                "<input value=\"Submit\" data-popup=\"true\" type=\"submit\">"
+                "</form>";
+        response.send(page);
     }
 
 private:
-    State& state_;
+    GuestBookState* state_;
 };
 
-class ChangeSettings{
+class GuestBookAddMessage {
 public:
-    ChangeSettings(State& state)
-        : state_(state)
-    {}
+    GuestBookAddMessage(GuestBookState& state)
+        : state_(&state)
+    {
+    }
 
     void operator()(const asyncgi::Request& request, asyncgi::Response& response)
     {
-        state_.setName(std::string{request.formField("name")});
+        state_->addMessage(std::string{request.formField("msg")});
         response.redirect("/");
     }
 
 private:
-    State& state_;
+    GuestBookState* state_;
 };
 
 int main()
 {
     auto app = asyncgi::makeApp(4); //4 threads processing requests
-    auto state = State{};
+    auto state = GuestBookState{};
     auto router = asyncgi::makeRouter();
-    router.route("/", http::RequestMethod::Get).process<HelloPage>(state);
-    router.route("/settings", http::RequestMethod::Post).process<ChangeSettings>(state);
-    router.route("/settings", http::RequestMethod::Get).process(
-                    [](const asyncgi::Request&, asyncgi::Response& response)
-                    {
-                        response.send("<html>"
-                                      "<form method=\"post\" enctype=\"multipart/form-data\">"
-                                      "<label for=\"name\">Name:</label>"
-                                      "<input id=\"name\" name=\"name\" value=\"\">"
-                                      "<input value=\"Submit\" data-popup=\"true\" type=\"submit\">"
-                                      "</form>"
-                                      "</html>");
-                    });
+    router.route("/", http::RequestMethod::Get).process<GuestBookPage>(state);
+    router.route("/", http::RequestMethod::Post).process<GuestBookAddMessage>(state);
     router.route().set(http::Response{http::ResponseStatus::_404_Not_Found, "Page not found"});
     //Alternatively, it's possible to pass arguments for creation of http::Response object to the set() method.
     //router.route().set(http::ResponseStatus::Code_404_Not_Found, "Page not found");

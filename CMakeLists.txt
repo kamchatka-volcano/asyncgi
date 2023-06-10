@@ -19,7 +19,7 @@ SealLake_Bundle(
 SealLake_Bundle(
     NAME asyncgi_fcgi_responder
     GIT_REPOSITORY https://github.com/kamchatka-volcano/fcgi_responder.git
-    GIT_TAG v1.5.0
+    GIT_TAG v1.5.1
     TEXT_REPLACEMENTS
         "namespace fcgi" "namespace asyncgi::fcgi"
 )

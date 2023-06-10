@@ -16,7 +16,7 @@ class Timer : public ITimer {
 public:
     explicit Timer(asio::io_context& io);
     void start(std::chrono::milliseconds time, std::function<void()> callback) override;
-    void start(std::chrono::milliseconds time, std::function<void()> callback, TimerMode mode) override;
+    void startPeriodic(std::chrono::milliseconds time, std::function<void()> callback) override;
     void stop() override;
 
 private:

@@ -1,18 +1,12 @@
 #include <asyncgi/asyncgi.h>
 
-using namespace asyncgi;
+namespace http = asyncgi::http;
 
 int main()
 {
     auto app = asyncgi::makeApp();
     auto router = asyncgi::makeRouter();
     router.route("/", http::RequestMethod::Get).set("Hello world");
-    router.route(asyncgi::rx{"/(.+)"}, http::RequestMethod::Get)
-            .process(
-                    [](const std::string& name, const asyncgi::Request&, asyncgi::Response& response)
-                    {
-                        response.send("Hello " + name);
-                    });
     router.route().set(http::ResponseStatus::_404_Not_Found);
 
     auto server = app->makeServer(router);

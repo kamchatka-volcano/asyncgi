@@ -4,17 +4,17 @@ using namespace asyncgi;
 
 struct Greeter{
     Greeter(const int& secondsCounter)
-        : secondsCounter_{secondsCounter}
+        : secondsCounter_{&secondsCounter}
     {
     }
 
     void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
-        response.send("Hello world\n(alive for " + std::to_string(secondsCounter_) + " seconds)");
+        response.send("Hello world\n(alive for " + std::to_string(*secondsCounter_) + " seconds)");
     }
 
 private:
-    const int& secondsCounter_;
+    const int* secondsCounter_;
 };
 
 int main()
@@ -23,9 +23,12 @@ int main()
     int secondsCounter = 0;
 
     auto timer = app->makeTimer();
-    timer->start(std::chrono::seconds(1), [&secondsCounter](){
-        ++secondsCounter;
-    }, asyncgi::TimerMode::Repeatedly);
+    timer->startPeriodic(
+            std::chrono::seconds(1),
+            [&secondsCounter]()
+            {
+                ++secondsCounter;
+            });
 
     auto router = asyncgi::makeRouter();
     router.route("/").process<Greeter>(secondsCounter);

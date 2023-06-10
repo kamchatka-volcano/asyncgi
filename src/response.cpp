@@ -65,7 +65,7 @@ void Response::makeRequest(
         const std::filesystem::path& socketPath,
         fastcgi::Request request,
         const std::function<void(std::optional<fastcgi::Response>)>& responseHandler,
-        const std::chrono::milliseconds timeout)
+        std::chrono::milliseconds timeout)
 {
     if (requestProcessorQueue_)
         requestProcessorQueue_->stop();
@@ -89,7 +89,7 @@ void Response::makeRequest(
         const std::filesystem::path& socketPath,
         const http::Request& request,
         const std::function<void(std::optional<http::ResponseView>)>& httpResponseHandler,
-        const std::chrono::milliseconds timeout)
+        std::chrono::milliseconds timeout)
 {
     if (requestProcessorQueue_)
         requestProcessorQueue_->stop();
@@ -115,7 +115,7 @@ void Response::makeRequest(
         uint16_t port,
         fastcgi::Request request,
         const std::function<void(std::optional<fastcgi::Response>)>& responseHandler,
-        const std::chrono::milliseconds timeout)
+        std::chrono::milliseconds timeout)
 {
     if (requestProcessorQueue_)
         requestProcessorQueue_->stop();
@@ -141,7 +141,7 @@ void Response::makeRequest(
         uint16_t port,
         const http::Request& request,
         const std::function<void(std::optional<http::ResponseView>)>& httpResponseHandler,
-        const std::chrono::milliseconds timeout)
+        std::chrono::milliseconds timeout)
 {
     if (requestProcessorQueue_)
         requestProcessorQueue_->stop();

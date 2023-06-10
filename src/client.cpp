@@ -32,8 +32,7 @@ void Client::makeRequest(
             [=]
             {
                 (*cancelRequestOnTimeout)();
-            },
-            TimerMode::Once);
+            });
 
     auto onResponseReceived = [=, &responseTimeoutTimer](std::optional<fcgi::ResponseData> fcgiResponse)
     {
@@ -76,8 +75,7 @@ void Client::makeRequest(
             [=]
             {
                 (*cancelRequestOnTimeout)();
-            },
-            TimerMode::Once);
+            });
     auto onResponseReceived = [=, &responseTimeoutTimer](std::optional<fcgi::ResponseData> fcgiResponse)
     {
         responseTimeoutTimer.stop();
@@ -123,8 +121,7 @@ void Client::makeRequest(
             [=]
             {
                 (*cancelRequestOnTimeout)();
-            },
-            TimerMode::Once);
+            });
     auto onResponseReceived = [=, &responseTimeoutTimer](std::optional<fcgi::ResponseData> fcgiResponse)
     {
         responseTimeoutTimer.stop();
@@ -169,8 +166,7 @@ void Client::makeRequest(
             [=]
             {
                 (*cancelRequestOnTimeout)();
-            },
-            TimerMode::Once);
+            });
 
     auto onResponseReceived = [=, &responseTimeoutTimer](std::optional<fcgi::ResponseData> fcgiResponse)
     {

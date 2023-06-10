@@ -19,6 +19,7 @@ public:
     virtual std::unique_ptr<IClient> makeClient(ErrorHandlerFunc errorHandler) const = 0;
     virtual std::unique_ptr<IAsioDispatcher> makeAsioDispatcher() const = 0;
     virtual void exec() = 0;
+    virtual void exit() = 0;
 };
 
 } // namespace asyncgi

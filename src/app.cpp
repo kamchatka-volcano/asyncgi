@@ -21,6 +21,7 @@ public:
     std::unique_ptr<IClient> makeClient(ErrorHandlerFunc errorHandler) const override;
     std::unique_ptr<IAsioDispatcher> makeAsioDispatcher() const override;
     void exec() override;
+    void exit() override;
 
 private:
     std::unique_ptr<detail::IRuntime> runtime_;
@@ -65,6 +66,11 @@ std::unique_ptr<IClient> App::makeClient(ErrorHandlerFunc errorHandler) const
 void App::exec()
 {
     runtime_->run();
+}
+
+void App::exit()
+{
+    runtime_->stop();
 }
 
 std::unique_ptr<IAsioDispatcher> App::makeAsioDispatcher() const

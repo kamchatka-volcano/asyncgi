@@ -1,22 +1,37 @@
 #include <asyncgi/asyncgi.h>
 
-using namespace asyncgi;
+namespace http = asyncgi::http;
 
-struct Greeter{
+class GuestBookPage {
+public:
     void operator()(const asyncgi::Request& request, asyncgi::Response& response)
     {
         if (request.path() == "/")
-            response.send("Hello world");
+            response.send(R"(
+                <h1>Guest book</h1>
+                <p>No messages</p>
+            )");
         else
             response.send(http::ResponseStatus::_404_Not_Found);
     }
 };
 
+void showGuestBookPage(const asyncgi::Request& request, asyncgi::Response& response)
+{
+    if (request.path() == "/")
+        response.send(R"(
+                <h1>Guest book</h1>
+                <p>No messages</p>
+            )");
+    else
+        response.send(http::ResponseStatus::_404_Not_Found);
+}
+
 int main()
 {
     auto app = asyncgi::makeApp();
-    auto greeter = Greeter{};
-    auto server = app->makeServer(greeter);
+    //auto guestBookPage = GuestBookPage{};
+    auto server = app->makeServer(showGuestBookPage);
     //Listen for FastCGI connections on UNIX domain socket
     server->listen("/tmp/fcgi.sock");
     //or over TCP

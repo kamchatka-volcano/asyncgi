@@ -9,29 +9,30 @@ Timer::Timer(asio::io_context& io)
 {
 }
 
-void Timer::start(std::chrono::milliseconds time, std::function<void()> callback, TimerMode mode)
+void Timer::start(std::chrono::milliseconds time, std::function<void()> callback)
 {
     timer_.expires_after(time);
     timer_.async_wait(
-            [this, time, task = std::move(callback), mode](auto& ec) mutable
+            [this, task = std::move(callback)](auto& ec) mutable
             {
                 if (ec)
                     return;
-
-                if (mode == TimerMode::Repeatedly) {
-                    task();
-                    start(time, std::move(task), mode);
-                }
-                else {
-                    stop();
-                    task();
-                }
+                stop();
+                task();
             });
 }
 
-void Timer::start(std::chrono::milliseconds time, std::function<void()> callback)
+void Timer::startPeriodic(std::chrono::milliseconds time, std::function<void()> callback)
 {
-    start(time, std::move(callback), TimerMode::Repeatedly);
+    timer_.expires_after(time);
+    timer_.async_wait(
+            [this, time, task = std::move(callback)](auto& ec) mutable
+            {
+                if (ec)
+                    return;
+                task();
+                startPeriodic(time, std::move(task));
+            });
 }
 
 void Timer::stop()

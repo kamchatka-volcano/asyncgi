@@ -1,61 +1,81 @@
 #include <asyncgi/asyncgi.h>
+#include <mutex>
 
-using namespace asyncgi;
+namespace http = asyncgi::http;
+using namespace std::string_literals;
 
-enum class Access{
-    Authorized,
-    Forbidden
+enum class AccessRole {
+    Admin,
+    Guest
 };
 
-struct RouteContext{
-    Access access = Access::Forbidden;
+struct RouteContext {
+    AccessRole role = AccessRole::Guest;
 };
 
-struct Authorizer{
+struct AdminAuthorizer {
     void operator()(const asyncgi::Request& request, asyncgi::Response&, RouteContext& context)
     {
         if (request.cookie("admin_id") == "ADMIN_SECRET")
-            context.access = Access::Authorized;
+            context.role = AccessRole::Admin;
+    }
+};
+
+struct LoginPage {
+    void operator()(const asyncgi::Request&, asyncgi::Response& response, RouteContext&)
+    {
+        response.send(R"(
+                <html>
+                <form method="post" enctype="multipart/form-data">
+                <label for="msg">Login:</label>
+                <input id="login" name="login" value="">
+                <label for="msg">Password:</label>
+                <input id="passwd" name="passwd" value="">
+                <input value="Submit" data-popup="true" type="submit">
+                </form></html>)");
+    }
+};
+
+struct LoginPageAuthorize {
+    void operator()(const asyncgi::Request& request, asyncgi::Response& response, RouteContext&)
+    {
+        if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
+            response.redirect(
+                    "/",
+                    asyncgi::http::RedirectType::Found,
+                    {asyncgi::http::Cookie("admin_id", "ADMIN_SECRET")});
         else
-            context.access = Access::Forbidden;
-    }
-};
-
-struct AdminPage{
-    void operator()(const asyncgi::Request&, asyncgi::Response& response)
-    {
-        response.send("Welcome, admin!");
-    }
-};
-
-struct ModerationPage{
-    void operator()(const asyncgi::Request&, asyncgi::Response& response)
-    {
-        response.send("Welcome, moderator!");
+            response.redirect("/login");
     }
 };
 
 template<>
-struct asyncgi::config::RouteMatcher<Access, RouteContext> {
-    bool operator()(Access value, const asyncgi::Request&, asyncgi::Response&, RouteContext& context) const
+struct asyncgi::config::RouteMatcher<AccessRole, RouteContext> {
+    bool operator()(AccessRole value, const asyncgi::Request&, asyncgi::Response&, RouteContext& context) const
     {
-        return value == context.access;
+        return value == context.role;
     }
 };
 
-
 int main()
 {
-    auto app = asyncgi::makeApp();
+    auto app = asyncgi::makeApp(4);
     auto router = asyncgi::makeRouter<RouteContext>();
-    router.route(asyncgi::rx{".*"}).process<Authorizer>();
-    router.route("/admin", http::RequestMethod::Get, Access::Authorized).process<AdminPage>();
-    // Internally RequestMethod parameter is implemented using RouteMatcher as well.
-    // As you can see below, the order of provided RouteMatcher parameters isn't important.
-    router.route("/moderation", Access::Authorized, http::RequestMethod::Get).process<ModerationPage>();
-    router.route(asyncgi::rx{".*"}, Access::Forbidden)
-            .set(http::ResponseStatus::_401_Unauthorized, "You are not authorized to view this page.");
-    router.route().set(http::ResponseStatus::_404_Not_Found, "Page not found.");
+    router.route(asyncgi::rx{".*"}).process<AdminAuthorizer>();
+    router.route("/").process(
+            [](const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)
+            {
+                if (context.role == AccessRole::Admin)
+                    response.send("<p>Hello admin</p>");
+                else
+                    response.send(R"(<p>Hello guest</p><p><a href="/login">login</a>)");
+            });
+
+    router.route("/login", http::RequestMethod::Get, AccessRole::Guest).process<LoginPage>();
+    router.route("/login", http::RequestMethod::Post, AccessRole::Guest).process<LoginPageAuthorize>();
+    router.route("/login", http::RequestMethod::Get, AccessRole::Admin).set("/", http::RedirectType::Found);
+    router.route("/login", http::RequestMethod::Post, AccessRole::Admin).set("/", http::RedirectType::Found);
+    router.route().set(http::ResponseStatus::_404_Not_Found, "Page not found");
 
     auto server = app->makeServer(router);
     server->listen("/tmp/fcgi.sock");

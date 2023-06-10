@@ -4,6 +4,18 @@
 using namespace asyncgi;
 using namespace std::string_literals;
 
+struct MessageNumber {
+    int value;
+};
+
+template<>
+struct asyncgi::config::StringConverter<MessageNumber> {
+    static std::optional<MessageNumber> fromString(const std::string& data)
+    {
+        return MessageNumber{std::stoi(data)};
+    }
+};
+
 class GuestBookState {
 public:
     std::vector<std::string> messages()
@@ -91,9 +103,9 @@ public:
     {
     }
 
-    void operator()(int index, const asyncgi::Request&, asyncgi::Response& response)
+    void operator()(MessageNumber msgNumber, const asyncgi::Request&, asyncgi::Response& response)
     {
-        state_->removeMessage(index);
+        state_->removeMessage(msgNumber.value);
         response.redirect("/");
     }
 

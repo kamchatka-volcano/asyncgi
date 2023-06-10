@@ -1,55 +1,78 @@
 #include <asyncgi/asyncgi.h>
+#include <mutex>
 
-using namespace asyncgi;
+namespace http = asyncgi::http;
+using namespace std::string_literals;
 
-enum class Access{
-    Authorized,
-    Forbidden
+enum class AccessRole {
+    Admin,
+    Guest
 };
 
-struct RouteContext{
-    Access access = Access::Forbidden;
+struct RouteContext {
+    AccessRole role = AccessRole::Guest;
 };
 
-struct Authorizer{
+struct AdminAuthorizer {
     void operator()(const asyncgi::Request& request, asyncgi::Response&, RouteContext& context)
     {
         if (request.cookie("admin_id") == "ADMIN_SECRET")
-            context.access = Access::Authorized;
-        else
-            context.access = Access::Forbidden;
+            context.role = AccessRole::Admin;
     }
 };
 
-struct AdminPage{
+struct LoginPage {
     void operator()(const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)
     {
-        if (context.access == Access::Authorized)
-            response.send("Welcome, admin!");
-        else
-            response.send(http::ResponseStatus::_401_Unauthorized, "You are not authorized to view this page.");
+        if (context.role == AccessRole::Guest)
+            response.send(R"(
+                    <html>
+                    <form method="post" enctype="multipart/form-data">
+                    <label for="msg">Login:</label>
+                    <input id="login" name="login" value="">
+                    <label for="msg">Password:</label>
+                    <input id="passwd" name="passwd" value="">
+                    <input value="Submit" data-popup="true" type="submit">
+                    </form></html>)");
+        else //We are already logged in as the administrator
+            response.redirect("/");
     }
 };
 
-struct ModerationPage{
-    void operator()(const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)
+struct LoginPageAuthorize {
+    void operator()(const asyncgi::Request& request, asyncgi::Response& response, RouteContext& context)
     {
-        if (context.access == Access::Authorized)
-            response.send("Welcome, moderator!");
-        else
-            response.send(http::ResponseStatus::_401_Unauthorized, "You are not authorized to view this page.");
+        if (context.role == AccessRole::Guest) {
+            if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
+                response.redirect(
+                        "/",
+                        asyncgi::http::RedirectType::Found,
+                        {asyncgi::http::Cookie("admin_id", "ADMIN_SECRET")});
+            else
+                response.redirect("/login");
+        }
+        else //We are already logged in as the administrator
+            response.redirect("/");
     }
 };
-
 
 int main()
 {
-    auto app = asyncgi::makeApp();
+    auto app = asyncgi::makeApp(4); //4 threads processing requests
     auto router = asyncgi::makeRouter<RouteContext>();
-    router.route(asyncgi::rx{".*"}).process<Authorizer>();
-    router.route("/admin", http::RequestMethod::Get).process<AdminPage>();
-    router.route("/moderation", http::RequestMethod::Get).process<ModerationPage>();
-    router.route().set(http::ResponseStatus::_404_Not_Found, "Page not found.");
+    router.route(asyncgi::rx{".*"}).process<AdminAuthorizer>();
+    router.route("/").process(
+            [](const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)
+            {
+                if (context.role == AccessRole::Admin)
+                    response.send("<p>Hello admin</p>");
+                else
+                    response.send(R"(<p>Hello guest</p><p><a href="/login">login</a>)");
+            });
+
+    router.route("/login", http::RequestMethod::Get).process<LoginPage>();
+    router.route("/login", http::RequestMethod::Post).process<LoginPageAuthorize>();
+    router.route().set(http::ResponseStatus::_404_Not_Found, "Page not found");
 
     auto server = app->makeServer(router);
     server->listen("/tmp/fcgi.sock");
