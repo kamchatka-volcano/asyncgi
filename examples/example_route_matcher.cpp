@@ -78,7 +78,11 @@ int main()
     router.route().set(http::ResponseStatus::_404_Not_Found, "Page not found");
 
     auto server = app->makeServer(router);
+#ifndef _WIN32
     server->listen("/tmp/fcgi.sock");
+#else
+    server->listen("127.0.0.1", 9088);
+#endif
     app->exec();
     return 0;
 }

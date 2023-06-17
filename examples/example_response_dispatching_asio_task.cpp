@@ -25,7 +25,11 @@ int main()
     router.route("/", http::RequestMethod::Get).process<DelayedPage>();
     router.route().set(http::ResponseStatus::_404_Not_Found);
     auto server = app->makeServer(router);
+#ifndef _WIN32
     server->listen("/tmp/fcgi.sock");
+#else
+    server->listen("127.0.0.1", 9088);
+#endif
     app->exec();
     return 0;
 }

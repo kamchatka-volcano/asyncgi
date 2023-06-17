@@ -1,0 +1,5 @@
+-Launch: ../../build/examples/example_asio_dispatcher
+-Expect output:
+Hello world
+
+---

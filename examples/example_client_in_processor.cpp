@@ -7,7 +7,11 @@ struct RequestPage{
     {
         // making request to FastCgi application listening on /tmp/fcgi.sock and showing the received response
         response.makeRequest(
+#ifndef _WIN32
                 "/tmp/fcgi.sock",
+#else
+                "127.0.0.1", 9088,
+#endif
                 http::Request{http::RequestMethod::Get, "/"},
                 [response](const std::optional<http::ResponseView>& reqResponse) mutable
                 {
@@ -26,7 +30,11 @@ int main()
     router.route("/", http::RequestMethod::Get).process<RequestPage>();
     router.route().set(http::ResponseStatus::_404_Not_Found);
     auto server = app->makeServer(router);
+#ifndef _WIN32
     server->listen("/tmp/fcgi_client.sock");
+#else
+    server->listen("127.0.0.1", 9089);
+#endif
     app->exec();
     return 0;
 }

@@ -1,0 +1,16 @@
+-Launch detached: ../../build/examples/example_timer
+-Wait: 1100 msec
+
+-Expect response from "/":
+Hello world
+(alive for 1 seconds)
+---
+
+-Wait: 1 sec
+
+-Expect response from "/":
+Hello world
+(alive for 2 seconds)
+---
+
+-Expect status from "/foo": 404

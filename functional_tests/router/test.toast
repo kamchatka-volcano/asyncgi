@@ -1,0 +1,20 @@
+-Launch detached: ../../build/examples/example_router
+-Wait: 1 sec
+
+-Expect status from "/foo": 404
+
+-Expect response from "/":
+<h1>Guest book</h1><p>No messages</p><hr><form method="post" enctype="multipart/form-data"><label for="msg">Message:</label><input id="msg" name="msg" value=""><input value="Submit" data-popup="true" type="submit"></form>
+---
+
+-Expect status from "/" with form param "msg=Hello world!": 302
+
+-Expect response from "/":
+<h1>Guest book</h1><p>Hello world!</p><hr><form method="post" enctype="multipart/form-data"><label for="msg">Message:</label><input id="msg" name="msg" value=""><input value="Submit" data-popup="true" type="submit"></form>
+---
+
+-Expect status from "/" with form param "msg=Hello moon!": 302
+
+-Expect response from "/":
+<h1>Guest book</h1><p>Hello world!</p><p>Hello moon!</p><hr><form method="post" enctype="multipart/form-data"><label for="msg">Message:</label><input id="msg" name="msg" value=""><input value="Submit" data-popup="true" type="submit"></form>
+---

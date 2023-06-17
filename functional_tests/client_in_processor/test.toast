@@ -1,0 +1,9 @@
+-Launch detached: ../../build/examples/example_hello_world
+-Launch detached: ../../build/examples/example_client_in_processor
+-Wait: 1 sec
+
+-Expect response from "/" on port 8089:
+Hello world
+---
+
+-Expect status from "/foo" on port 8089: 404

@@ -1,0 +1,26 @@
+-Launch detached: ../../build/examples/example_route_params_user_defined_types
+-Wait: 1 sec
+
+-Expect status from "/foo": 404
+
+-Expect response from "/":
+<h1>Guest book</h1><p>No messages</p><hr><form method="post" enctype="multipart/form-data"><label for="msg">Message:</label><input id="msg" name="msg" value=""><input value="Submit" data-popup="true" type="submit"></form>
+---
+
+-Expect status from "/" with form param "msg=Hello world!": 302
+
+-Expect response from "/":
+<h1>Guest book</h1><p>Hello world!<form action="/delete/0" method="post"> <input value="Delete" type="submit"> </form></div></p><hr><form method="post" enctype="multipart/form-data"><label for="msg">Message:</label><input id="msg" name="msg" value=""><input value="Submit" data-popup="true" type="submit"></form>
+---
+
+-Expect status from "/" with form param "msg=Hello moon!": 302
+
+-Expect response from "/":
+<h1>Guest book</h1><p>Hello world!<form action="/delete/0" method="post"> <input value="Delete" type="submit"> </form></div></p><p>Hello moon!<form action="/delete/1" method="post"> <input value="Delete" type="submit"> </form></div></p><hr><form method="post" enctype="multipart/form-data"><label for="msg">Message:</label><input id="msg" name="msg" value=""><input value="Submit" data-popup="true" type="submit"></form>
+---
+
+-Expect status from post request "/delete/0": 302
+-Expect response from "/":
+<h1>Guest book</h1><p>Hello moon!<form action="/delete/0" method="post"> <input value="Delete" type="submit"> </form></div></p><hr><form method="post" enctype="multipart/form-data"><label for="msg">Message:</label><input id="msg" name="msg" value=""><input value="Submit" data-popup="true" type="submit"></form>
+---
+

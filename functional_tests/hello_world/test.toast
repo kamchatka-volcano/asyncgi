@@ -1,0 +1,8 @@
+-Launch detached: ../../build/examples/example_hello_world
+-Wait: 1 sec
+
+-Expect response from "/":
+Hello world
+---
+
+-Expect status from "/foo": 404

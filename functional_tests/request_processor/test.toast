@@ -1,0 +1,9 @@
+-Launch detached: ../../build/examples/example_request_processor
+-Wait: 1 sec
+
+-Expect response from "/":
+<h1>Guest book</h1>
+<p>No messages</p>
+---
+
+-Expect status from "/foo": 404

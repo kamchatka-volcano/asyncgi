@@ -609,10 +609,10 @@ int main()
 
 ### Route matchers
 
-Any parameter of request, response and context objects can be registered to be used for route matching
-in `asyncgi::Router::route()` method. To do this, it's necessary to provide the specialization of the class
-template `asyncgi::traits::RouteSpecification` and implement a comparator `bool operator()` inside it. See how to
-register `enum class Access` from the previous example as a route specification:
+Any parameter of request, response and context objects can be registered for route matching
+in `asyncgi::Router::route()` method. To achieve this, it is required to provide a specialization of
+the `asyncgi::config::RouteMatcher` class template and implement a comparator bool operator() within it. Let's see how
+to register the enum class Access from the previous example as a route matcher:
 
 <details>
   <summary>Example</summary>
@@ -1066,16 +1066,25 @@ timer to periodically check the state of the future.
 ///examples/response_wait_future.cpp
 ///
 #include <asyncgi/asyncgi.h>
+#include <thread>
 
-struct DelayedPage : asyncgi::RequestProcessor<>{
-    void process(const asyncgi::Request&, asyncgi::Response<>& response) override
+using namespace asyncgi;
+
+struct DelayedPage{
+    void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
         response.waitFuture(
-            std::async(std::launch::async, []{std::this_thread::sleep_for(std::chrono::seconds(3)); return "World";}),
-            [response](const std::string& result) mutable
-            {
-                response.send(http::Response{"Hello " + result});
-            });
+                std::async(
+                        std::launch::async,
+                        []
+                        {
+                            std::this_thread::sleep_for(std::chrono::seconds(3));
+                            return "world";
+                        }),
+                [response](const std::string& result) mutable
+                {
+                    response.send(http::Response{"Hello " + result});
+                });
     }
 };
 
@@ -1083,8 +1092,9 @@ int main()
 {
     auto app = asyncgi::makeApp();
     auto router = asyncgi::makeRouter();
-    router.route("/", http::RequestMethod::GET).process<DelayedPage>();
-    router.route().set(http::ResponseStatus::Code_404_Not_Found);
+    auto delayedPage = DelayedPage{};
+    router.route("/", http::RequestMethod::Get).process(delayedPage);
+    router.route().set(http::ResponseStatus::_404_Not_Found);
     auto server = app->makeServer(router);
     server->listen("/tmp/fcgi.sock");
     app->exec();
@@ -1112,13 +1122,15 @@ int main()
 {
     auto app = asyncgi::makeApp();
     auto disp = app->makeAsioDispatcher();
-    disp->postTask([](const asyncgi::TaskContext& ctx) mutable
+    disp->postTask([&app](const asyncgi::TaskContext& ctx) mutable
                 {
                     auto timer = std::make_shared<asio::steady_timer>(ctx.io());
                     timer->expires_after(std::chrono::seconds{3});
-                    timer->async_wait([timer, ctx](auto& ec) mutable{
+                    timer->async_wait([timer, ctx, &app](auto&) mutable{
                         std::cout << "Hello world" << std::endl;
+                        app->exit();
                     });
+
                 });
     app->exec();
     return 0;

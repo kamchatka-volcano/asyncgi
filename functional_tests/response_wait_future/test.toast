@@ -1,0 +1,8 @@
+-Launch detached: ../../build/examples/example_response_dispatching_asio_task
+-Wait: 1 sec
+
+-Expect response from "/":
+Hello world
+---
+
+-Expect status from "/foo": 404

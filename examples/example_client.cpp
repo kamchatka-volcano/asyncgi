@@ -7,7 +7,14 @@ int main()
 {
     auto app = asyncgi::makeApp();
     auto client = app->makeClient();
-    client->makeRequest("/tmp/fcgi.sock", http::Request{http::RequestMethod::Get, "/"},
+    client->makeRequest(
+#ifndef _WIN32
+            "/tmp/fcgi.sock",
+#else
+            "127.0.0.1",
+            9088,
+#endif
+            http::Request{http::RequestMethod::Get, "/"},
             [&app](const std::optional<http::ResponseView>& response)
             {
                 if (response)
