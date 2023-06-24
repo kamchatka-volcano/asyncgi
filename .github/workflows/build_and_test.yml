@@ -27,33 +27,117 @@ jobs:
             os: ubuntu-latest,
             cc: "gcc",
             cxx: "g++",
-            flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused"
+            flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused",
+            artifacts-path: "build/examples"
           }
           - {
             name: "Ubuntu Latest clang",
             os: ubuntu-latest,
             cc: "clang",
             cxx: "clang++",
-            flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused"
+            flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused",
+            artifacts-path: "build/examples"
           }
           - {
             name: "Windows Latest MSVC",
             os: windows-latest,
             cc: "cl",
             cxx: "cl",
-            flags: "/EHsc /W4 /WX"
+            flags: "/EHsc /W4 /WX",
+            artifacts-path: "build/examples/Release"
           }
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Git checkout
+        uses: actions/checkout@v3
 
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DENABLE_EXAMPLES=ON -DCMAKE_CXX_FLAGS="${{ matrix.config.flags }}"
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DENABLE_EXAMPLES=ON -DCMAKE_CXX_FLAGS="${{ matrix.config.flags }}"
 
       - name: Build
-        run: cmake --build ${{github.workspace}}/build
+        run: cmake --build ${{github.workspace}}/build --config Release
 
-#    - name: Test
-#      working-directory: ${{github.workspace}}/build
-#      run: ctest
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: asyncgi-examples-${{ matrix.config.os }}
+          path: ${{ matrix.config.artifacts-path }}
 
+  functional_tests:
+    name: Functional testing (${{ matrix.config.name }}
+    needs: build
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {
+            name: "Windows",
+            os: "windows-latest",
+            lunchtoast_exec: "lunchtoast.exe",
+            shell_command: -shell="msys2 -c",
+            tags: -skip=linux,
+            nginx_exec: "C:/tools/nginx-1.25.0/nginx.exe",
+            nginx_cfg: "nginx_windows.conf"
+          }
+          - {
+            name: "Linux",
+            os: "ubuntu-latest",
+            lunchtoast_exec: "lunchtoast",
+            shell_command: "",
+            tags: "",
+            nginx_exec: "nginx",
+            nginx_cfg: "nginx_linux.conf"
+          }
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+
+      - if: matrix.config.name == 'Windows'
+        name: Install MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          path-type: inherit
+
+      - name: Download lunchtoast
+        uses: robinraju/release-downloader@v1.7
+        with:
+          repository: "kamchatka-volcano/lunchtoast"
+          latest: true
+          filename: ${{ matrix.config.lunchtoast_exec }}
+          out-file-path: "lunchtoast/"
+
+      - name: Set lunchtoast execute permissions
+        if: matrix.config.name == 'Linux'
+        shell: sh
+        working-directory: ${{github.workspace}}/lunchtoast
+        run: chmod +x lunchtoast
+
+      - name: Download asyncgi examples build
+        id: pre_launch_tests
+        uses: actions/download-artifact@v3
+        with:
+          name: asyncgi-examples-${{ matrix.config.os }}
+          path: build/examples
+
+      - name: Set artifacts execute permissions
+        if: matrix.config.name == 'Linux'
+        shell: sh
+        working-directory: ${{github.workspace}}/build/examples
+        run: chmod +x example_*
+
+      - name: Make temp dir for NGINX
+        run: mkdir ${{github.workspace}}/temp
+
+      - name: Launch tests
+        uses: BerniWittmann/background-server-action@v1
+        with:
+          command: lunchtoast/lunchtoast functional_tests ${{ matrix.config.shell_command }} ${{ matrix.config.tags }} -collectFailedTests=failed_tests
+          start: ${{ matrix.config.nginx_exec }} -c '${{github.workspace}}'/functional_tests/${{ matrix.config.nginx_cfg }}
+
+      - name: Upload failed tests
+        if: failure() && steps.launch_tests.outcome != 'success' && steps.pre_launch_tests.outcome == 'success'
+        uses: actions/upload-artifact@v3
+        with:
+          name: asyncgi-failed-tests-${{ matrix.config.os }}
+          path: failed_tests
