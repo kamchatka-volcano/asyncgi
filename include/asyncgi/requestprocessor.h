@@ -1,4 +1,6 @@
-#pragma once
+#ifndef ASYNCGI_REQUESTPROCESSOR_H
+#define ASYNCGI_REQUESTPROCESSOR_H
+
 #include "request.h"
 #include "response.h"
 #include "detail/external/sfun/functional.h"
@@ -58,3 +60,5 @@ private:
 };
 
 } // namespace asyncgi
+
+#endif //ASYNCGI_REQUESTPROCESSOR_H

@@ -5,9 +5,9 @@ using namespace asyncgi;
 
 int main()
 {
-    auto app = asyncgi::makeApp();
-    auto client = app->makeClient();
-    client->makeRequest(
+    auto io = asyncgi::IO{};
+    auto client = asyncgi::Client{io};
+    client.makeRequest(
 #ifndef _WIN32
             "/tmp/fcgi.sock",
 #else
@@ -15,14 +15,14 @@ int main()
             9088,
 #endif
             http::Request{http::RequestMethod::Get, "/"},
-            [&app](const std::optional<http::ResponseView>& response)
+            [&io](const std::optional<http::ResponseView>& response)
             {
                 if (response)
                     std::cout << response->body() << std::endl;
                 else
                     std::cout << "No response" << std::endl;
-                app->exit();
+                io.stop();
             });
-    app->exec();
+    io.run();
     return 0;
 }

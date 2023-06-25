@@ -1,4 +1,4 @@
-#include "client.h"
+#include "clientservice.h"
 #include "timerprovider.h"
 #include <asio/ip/tcp.hpp>
 #include <asio/local/stream_protocol.hpp>
@@ -7,9 +7,9 @@
 namespace asyncgi::detail {
 
 template<typename TProtocol>
-ClientConnection<TProtocol>::ClientConnection(asio::io_context& io, ErrorHandlerFunc errorHandler)
+ClientConnection<TProtocol>::ClientConnection(asio::io_context& io, ErrorHandler& errorHandler)
     : socket_{io}
-    , errorHandler_{std::move(errorHandler)}
+    , errorHandler_{errorHandler}
 {
 }
 

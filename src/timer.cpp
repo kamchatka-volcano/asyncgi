@@ -1,43 +1,31 @@
-#include "timer.h"
-#include <asio/io_context.hpp>
+#include "ioservice.h"
+#include "timerservice.h"
+#include <asyncgi/detail/external/sfun/interface.h>
+#include <asyncgi/io.h>
+#include <asyncgi/timer.h>
 
-namespace asyncgi::detail {
+namespace asyncgi {
 
-Timer::Timer(asio::io_context& io)
-    : io_{io}
-    , timer_{io_}
+Timer::Timer(IO& io)
+    : timerService_{std::make_unique<detail::TimerService>(io.ioService(sfun::access_token<Timer>{}).io())}
 {
 }
 
+Timer::~Timer() = default;
+
 void Timer::start(std::chrono::milliseconds time, std::function<void()> callback)
 {
-    timer_.expires_after(time);
-    timer_.async_wait(
-            [this, task = std::move(callback)](auto& ec) mutable
-            {
-                if (ec)
-                    return;
-                stop();
-                task();
-            });
+    timerService_->start(time, callback);
 }
 
 void Timer::startPeriodic(std::chrono::milliseconds time, std::function<void()> callback)
 {
-    timer_.expires_after(time);
-    timer_.async_wait(
-            [this, time, task = std::move(callback)](auto& ec) mutable
-            {
-                if (ec)
-                    return;
-                task();
-                startPeriodic(time, std::move(task));
-            });
+    timerService_->startPeriodic(time, callback);
 }
 
 void Timer::stop()
 {
-    timer_.cancel();
+    timerService_->stop();
 }
 
-} // namespace asyncgi::detail
+} //namespace asyncgi

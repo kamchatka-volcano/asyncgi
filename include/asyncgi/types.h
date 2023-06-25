@@ -1,4 +1,6 @@
-#pragma once
+#ifndef ASYNCGI_TYPES_H
+#define ASYNCGI_TYPES_H
+
 #include "detail/external/whaleroute/types.h"
 #include "http/types.h"
 #include <map>
@@ -9,7 +11,6 @@ using _ = whaleroute::_;
 
 using rx = whaleroute::rx;
 namespace string_literals = whaleroute::string_literals;
-using RegexMode = whaleroute::RegexMode;
 using TrailingSlashMode = whaleroute::TrailingSlashMode;
 template<int minSize = 0>
 using RouteParameters = whaleroute::RouteParameters<minSize>;
@@ -26,3 +27,5 @@ struct Request {
     std::string stdIn;
 };
 } // namespace fastcgi
+
+#endif //ASYNCGI_TYPES_H

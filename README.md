@@ -11,15 +11,14 @@ namespace http = asyncgi::http;
 
 int main()
 {
-    auto app = asyncgi::makeApp();
-    auto router = asyncgi::makeRouter();
+    auto io = asyncgi::IO{};
+    auto router = asyncgi::Router{};
     router.route("/", http::RequestMethod::Get).set("Hello world");
     router.route().set(http::ResponseStatus::_404_Not_Found);
-
-    auto server = app->makeServer(router);
-    server->listen("/tmp/fcgi.sock");
-    app->exec();
-    return 0;
+    
+    auto server = asyncgi::Server{io, router};
+    server.listen("/tmp/fcgi.sock");
+    io.run();
 }
 ```
 
@@ -83,30 +82,26 @@ arguments `const asyncgi::Request&, asyncgi::Response&`, and have a `void` retur
 
 namespace http = asyncgi::http;
 
-class GuestBookPage{
-public:
-    void operator()(const asyncgi::Request& request, asyncgi::Response& response)
-    {
-        if (request.path() == "/")
-            response.send(R"(
+void guestBookPage(const asyncgi::Request& request, asyncgi::Response& response)
+{
+    if (request.path() == "/")
+        response.send(R"(
                 <h1>Guest book</h1>
                 <p>No messages</p>
             )");
-        else
-            response.send(http::ResponseStatus::_404_Not_Found);
-    }
-};
+    else
+        response.send(http::ResponseStatus::_404_Not_Found);
+}
 
 int main()
 {
-    auto app = asyncgi::makeApp();
-    auto guestBookPage = GuestBookPage{};
-    auto server = app->makeServer(guestBookPage);
+    auto io = asyncgi::IO{};
+    auto server = asyncgi::Server{io, guestBookPage};
     //Listen for FastCGI connections on UNIX domain socket
-    server->listen("/tmp/fcgi.sock");
+    server.listen("/tmp/fcgi.sock");
     //or over TCP
-    //server->listen("127.0.0.1", 9000);
-    app->exec();
+    //server.listen("127.0.0.1", 9088);
+    io.run();
     return 0;
 }
 ```
@@ -119,7 +114,7 @@ Multiple request processors can be registered in the `asyncgi::Router` object, w
 specified in requests. The `asyncgi::Router` itself satisfies the `RequestProcessor` requirement.
 
 If multiple threads are required for request processing, the desired number of workers can be passed to
-the `asyncgi::makeApp()` factory function. In such cases, the user must ensure that any shared data in the request
+the `asyncgi::IO` object's constructor. In such cases, the user must ensure that any shared data in the request
 processors is protected from concurrent read/write access.
 
 <details>
@@ -153,11 +148,12 @@ private:
     std::mutex mutex_;
 };
 
-class GuestBookPage{
+class GuestBookPage {
 public:
     GuestBookPage(GuestBookState& state)
         : state_(&state)
-    {}
+    {
+    }
 
     void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
@@ -182,11 +178,12 @@ private:
     GuestBookState* state_;
 };
 
-class GuestBookAddMessage{
+class GuestBookAddMessage {
 public:
     GuestBookAddMessage(GuestBookState& state)
         : state_(&state)
-    {}
+    {
+    }
 
     void operator()(const asyncgi::Request& request, asyncgi::Response& response)
     {
@@ -200,19 +197,18 @@ private:
 
 int main()
 {
-    auto app = asyncgi::makeApp(4); //4 threads processing requests
+    auto io = asyncgi::IO{4}; //4 threads processing requests
     auto state = GuestBookState{};
-    auto router = asyncgi::makeRouter();
+    auto router = asyncgi::Router{};
     router.route("/", http::RequestMethod::Get).process<GuestBookPage>(state);
     router.route("/", http::RequestMethod::Post).process<GuestBookAddMessage>(state);
     router.route().set(http::Response{http::ResponseStatus::_404_Not_Found, "Page not found"});
     //Alternatively, it's possible to pass arguments for creation of http::Response object to the set() method.
     //router.route().set(http::ResponseStatus::Code_404_Not_Found, "Page not found");
 
-    auto server = app->makeServer(router);
-    server->listen("/tmp/fcgi.sock");
-    app->exec();
-    return 0;
+    auto server = asyncgi::Server{io, router};
+    server.listen("/tmp/fcgi.sock");
+    io.run();
 }
 ```
 
@@ -223,7 +219,7 @@ int main()
 When using `asyncgi::Router` with regular expressions, request processors must satisfy
 the `ParametrizedRequestProcessor` requirement. That means that a function object must be callable with the
 arguments `const TRouteParams&..., const asyncgi::Request&, asyncgi::Response&`, and have a return type of `void`.
-The `TRouteParams` represents zero or more parameters generated from the capture groups of the regular expression. For
+The `TRouteParams` represents zero or more parameters generated from the capturing groups of the regular expression. For
 example, `void (int age, string name, const asyncgi::Request&, asyncgi::Response&)` signature can be used to process
 requests matched by `asyncgi::rx{"/person/(\\w+)/age/(\\d+)"}`.
 
@@ -276,11 +272,12 @@ std::string makeMessage(int index, const std::string& msg)
             R"(" method="post"> <input value="Delete" type="submit"> </form></div>)";
 }
 
-class GuestBookPage{
+class GuestBookPage {
 public:
     explicit GuestBookPage(GuestBookState& state)
-    : state_{&state}
-    {}
+        : state_{&state}
+    {
+    }
 
     void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
@@ -322,7 +319,7 @@ private:
     GuestBookState* state_;
 };
 
-class GuestBookRemoveMessage{
+class GuestBookRemoveMessage {
 public:
     explicit GuestBookRemoveMessage(GuestBookState& state)
         : state_{&state}
@@ -341,18 +338,17 @@ private:
 
 int main()
 {
-    auto app = asyncgi::makeApp(4);
+    auto io = asyncgi::IO{4};
     auto state = GuestBookState{};
-    auto router = asyncgi::makeRouter();
+    auto router = asyncgi::Router{};
     router.route("/", http::RequestMethod::Get).process<GuestBookPage>(state);
     router.route("/", http::RequestMethod::Post).process<GuestBookAddMessage>(state);
     router.route(asyncgi::rx{"/delete/(.+)"}, http::RequestMethod::Post).process<GuestBookRemoveMessage>(state);
     router.route().set(http::ResponseStatus::_404_Not_Found, "Page not found");
 
-    auto server = app->makeServer(router);
-    server->listen("/tmp/fcgi.sock");
-    app->exec();
-    return 0;
+    auto server = asyncgi::Server{io, router};
+    server.listen("/tmp/fcgi.sock");
+    io.run();
 }
 ```
 
@@ -375,10 +371,9 @@ the `GuestBookRemoveMessage` request processor to use the `MessageNumber` struct
 using namespace asyncgi;
 using namespace std::string_literals;
 
-struct MessageNumber{
+struct MessageNumber {
     int value;
 };
-
 
 template<>
 struct asyncgi::config::StringConverter<MessageNumber> {
@@ -387,7 +382,6 @@ struct asyncgi::config::StringConverter<MessageNumber> {
         return MessageNumber{std::stoi(data)};
     }
 };
-
 
 class GuestBookState {
 public:
@@ -422,11 +416,12 @@ std::string makeMessage(int index, const std::string& msg)
             R"(" method="post"> <input value="Delete" type="submit"> </form></div>)";
 }
 
-class GuestBookPage{
+class GuestBookPage {
 public:
     explicit GuestBookPage(GuestBookState& state)
-    : state_{&state}
-    {}
+        : state_{&state}
+    {
+    }
 
     void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
@@ -468,7 +463,7 @@ private:
     GuestBookState* state_;
 };
 
-class GuestBookRemoveMessage{
+class GuestBookRemoveMessage {
 public:
     explicit GuestBookRemoveMessage(GuestBookState& state)
         : state_{&state}
@@ -487,18 +482,17 @@ private:
 
 int main()
 {
-    auto app = asyncgi::makeApp(4);
+    auto io = asyncgi::IO{4};
     auto state = GuestBookState{};
-    auto router = asyncgi::makeRouter();
+    auto router = asyncgi::Router{};
     router.route("/", http::RequestMethod::Get).process<GuestBookPage>(state);
     router.route("/", http::RequestMethod::Post).process<GuestBookAddMessage>(state);
     router.route(asyncgi::rx{"/delete/(.+)"}, http::RequestMethod::Post).process<GuestBookRemoveMessage>(state);
     router.route().set(http::ResponseStatus::_404_Not_Found, "Page not found");
 
-    auto server = app->makeServer(router);
-    server->listen("/tmp/fcgi.sock");
-    app->exec();
-    return 0;
+    auto server = asyncgi::Server{io, router};
+    server.listen("/tmp/fcgi.sock");
+    io.run();
 }
 ```
 
@@ -506,7 +500,7 @@ int main()
 
 ### Route context
 
-When using `asyncgi::makeRouter`, it is possible to specify a template argument for a context structure type. This
+When using `asyncgi::Router`, it is possible to specify a template argument for a context structure type. This
 structure is then passed to the `ContextualRequestProcessor` functions and can be accessed and modified throughout the
 request processing for multiple routes. The `ContextualRequestProcessor` is a `RequestProcessor` that takes an
 additional argument referring to the context object.  
@@ -582,8 +576,8 @@ struct LoginPageAuthorize {
 
 int main()
 {
-    auto app = asyncgi::makeApp(4); //4 threads processing requests
-    auto router = asyncgi::makeRouter<RouteContext>();
+    auto io = asyncgi::IO{4}; //4 threads processing requests
+    auto router = asyncgi::Router<RouteContext>{};
     router.route(asyncgi::rx{".*"}).process<AdminAuthorizer>();
     router.route("/").process(
             [](const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)
@@ -598,10 +592,9 @@ int main()
     router.route("/login", http::RequestMethod::Post).process<LoginPageAuthorize>();
     router.route().set(http::ResponseStatus::_404_Not_Found, "Page not found");
 
-    auto server = app->makeServer(router);
-    server->listen("/tmp/fcgi.sock");
-    app->exec();
-    return 0;
+    auto server = asyncgi::Server{io, router};
+    server.listen("/tmp/fcgi.sock");
+    io.run();
 }
 ```
 
@@ -612,7 +605,7 @@ int main()
 Any parameter of request, response and context objects can be registered for route matching
 in `asyncgi::Router::route()` method. To achieve this, it is required to provide a specialization of
 the `asyncgi::config::RouteMatcher` class template and implement a comparator bool operator() within it. Let's see how
-to register the enum class Access from the previous example as a route matcher:
+to register the enum class `Access` from the previous example as a route matcher:
 
 <details>
   <summary>Example</summary>
@@ -681,8 +674,8 @@ struct asyncgi::config::RouteMatcher<AccessRole, RouteContext> {
 
 int main()
 {
-    auto app = asyncgi::makeApp(4);
-    auto router = asyncgi::makeRouter<RouteContext>();
+    auto io = asyncgi::IO{4};
+    auto router = asyncgi::Router<RouteContext>{};
     router.route(asyncgi::rx{".*"}).process<AdminAuthorizer>();
     router.route("/").process(
             [](const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)
@@ -699,10 +692,9 @@ int main()
     router.route("/login", http::RequestMethod::Post, AccessRole::Admin).set("/", http::RedirectType::Found);
     router.route().set(http::ResponseStatus::_404_Not_Found, "Page not found");
 
-    auto server = app->makeServer(router);
-    server->listen("/tmp/fcgi.sock");
-    app->exec();
-    return 0;
+    auto server = asyncgi::Server{io, router};
+    server.listen("/tmp/fcgi.sock");
+    io.run();
 }
 ```
 
@@ -726,12 +718,12 @@ ability to delete posts.
 using namespace asyncgi;
 using namespace std::string_literals;
 
-enum class AccessRole{
+enum class AccessRole {
     Admin,
     Guest
 };
 
-struct RouteContext{
+struct RouteContext {
     AccessRole role = AccessRole::Guest;
 };
 
@@ -743,13 +735,11 @@ struct asyncgi::config::RouteMatcher<AccessRole, RouteContext> {
     }
 };
 
-
 void authorizeAdmin(const asyncgi::Request& request, asyncgi::Response&, RouteContext& context)
 {
     if (request.cookie("admin_id") == "ADMIN_SECRET")
         context.role = AccessRole::Admin;
 }
-
 
 void showLoginPage(const asyncgi::Request&, asyncgi::Response& response)
 {
@@ -764,28 +754,20 @@ void showLoginPage(const asyncgi::Request&, asyncgi::Response& response)
             </form>)");
 }
 
-
 void loginAdmin(const asyncgi::Request& request, asyncgi::Response& response)
 {
     if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
-        response.redirect(
-                "/",
-                asyncgi::http::RedirectType::Found,
-                {asyncgi::http::Cookie("admin_id", "ADMIN_SECRET")});
+        response.redirect("/", asyncgi::http::RedirectType::Found, {asyncgi::http::Cookie("admin_id", "ADMIN_SECRET")});
     else
         response.redirect("/login");
 }
 
-
 void logoutAdmin(const asyncgi::Request&, asyncgi::Response& response)
 {
-    response.redirect(
-                "/",
-                asyncgi::http::RedirectType::Found,
-                {asyncgi::http::Cookie("admin_id", "")});
+    response.redirect("/", asyncgi::http::RedirectType::Found, {asyncgi::http::Cookie("admin_id", "")});
 }
 
-struct GuestBookMessage{
+struct GuestBookMessage {
     std::string name;
     std::string text;
 };
@@ -808,7 +790,8 @@ public:
         messages_.emplace_back(GuestBookMessage{name.empty() ? "Guest" : name, msg});
     }
 
-    void removeMessage(int index){
+    void removeMessage(int index)
+    {
         auto lock = std::scoped_lock{mutex_};
         if (index < 0 || index >= static_cast<int>(messages_.size()))
             return;
@@ -829,8 +812,8 @@ std::string makeMessagesDiv(const std::vector<GuestBookMessage>& messages, Acces
     for (auto i = 0; i < static_cast<int>(messages.size()); ++i) {
         messagesDiv += "<h4>" + messages.at(i).name + " says:</hr><pre>" + messages.at(i).text + "</pre>";
         if (role == AccessRole::Admin)
-            messagesDiv +=
-                    R"(<form action="/delete/)" + std::to_string(i) + R"(" method="post"> <input value="Delete" type="submit"></form>)";
+            messagesDiv += R"(<form action="/delete/)" + std::to_string(i) +
+                    R"(" method="post"> <input value="Delete" type="submit"></form>)";
     }
     return messagesDiv;
 }
@@ -842,7 +825,8 @@ std::string makeLinksDiv(AccessRole role)
     return R"(<a href="/login">login</a>&nbsp;<a href="https://github.com/kamchatka-volcano/asyncgi/examples">source</a></div>)";
 }
 
-auto showGuestBookPage(GuestBookState& state){
+auto showGuestBookPage(GuestBookState& state)
+{
     return [&state](const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)
     {
         auto page = R"(<head><link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css"></head>
@@ -893,23 +877,24 @@ auto removeMessage(GuestBookState& state)
 
 int main()
 {
-    auto app = asyncgi::makeApp(4);
+    auto io = asyncgi::IO{4};
     auto state = GuestBookState{};
-    auto router = asyncgi::makeRouter<RouteContext>();
+    auto router = asyncgi::Router<RouteContext>{};
     router.route(asyncgi::rx{".*"}).process(authorizeAdmin);
     router.route("/", http::RequestMethod::Get).process(showGuestBookPage(state));
     router.route("/", http::RequestMethod::Post).process(addMessage(state));
-    router.route(asyncgi::rx{"/delete/(.+)"}, http::RequestMethod::Post, AccessRole::Admin).process(removeMessage(state));
-    router.route(asyncgi::rx{"/delete/(.+)"}, http::RequestMethod::Post, AccessRole::Guest).set(http::ResponseStatus::_401_Unauthorized);
+    router.route(asyncgi::rx{"/delete/(.+)"}, http::RequestMethod::Post, AccessRole::Admin)
+            .process(removeMessage(state));
+    router.route(asyncgi::rx{"/delete/(.+)"}, http::RequestMethod::Post, AccessRole::Guest)
+            .set(http::ResponseStatus::_401_Unauthorized);
     router.route("/login", http::RequestMethod::Get, AccessRole::Guest).process(showLoginPage);
     router.route("/login", http::RequestMethod::Post, AccessRole::Guest).process(loginAdmin);
     router.route("/logout").process(logoutAdmin);
     router.route().set(http::ResponseStatus::_404_Not_Found, "Page not found");
 
-    auto server = app->makeServer(router);
-    server->listen("/tmp/fcgi.sock");
-    app->exec();
-    return 0;
+    auto server = asyncgi::Server{io, router};
+    server.listen("/tmp/fcgi.sock");
+    io.run();
 }
 ```
 
@@ -919,7 +904,7 @@ The live demo can be accessed [here](https://asyncgi-guestbook.eelnet.org).
 
 ### Timer
 
-A timer object implementing the interface `asyncgi::ITimer` can be created to change or check some state periodically.
+A timer object `asyncgi::Timer` can be created to change or check some state periodically.
 
 <details>
   <summary>Example</summary>
@@ -929,39 +914,43 @@ A timer object implementing the interface `asyncgi::ITimer` can be created to ch
 ///
 #include <asyncgi/asyncgi.h>
 
-struct Greeter : asyncgi::RequestProcessor<>{
+namespace http = asyncgi::http;
+
+struct Greeter{
     Greeter(const int& secondsCounter)
-        : secondsCounter_{secondsCounter}
+        : secondsCounter_{&secondsCounter}
     {
     }
 
-    void process(const asyncgi::Request&, asyncgi::Response<>& response) override
+    void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
-        response.send("Hello world\n(alive for " + std::to_string(secondsCounter_) + " seconds)");
+        response.send("Hello world\n(alive for " + std::to_string(*secondsCounter_) + " seconds)");
     }
 
 private:
-    const int& secondsCounter_;
+    const int* secondsCounter_;
 };
 
 int main()
 {
-    auto app = asyncgi::makeApp();
+    auto io = asyncgi::IO{};
     int secondsCounter = 0;
 
-    auto timer = app->makeTimer();
-    timer->start(std::chrono::seconds(1), [&secondsCounter](){
-        ++secondsCounter;
-    }, asyncgi::TimerMode::Repeatedly);
+    auto timer = asyncgi::Timer{io};
+    timer.startPeriodic(
+            std::chrono::seconds(1),
+            [&secondsCounter]()
+            {
+                ++secondsCounter;
+            });
 
-    auto router = asyncgi::makeRouter();
+    auto router = asyncgi::Router{};
     router.route("/").process<Greeter>(secondsCounter);
-    router.route().set(http::ResponseStatus::Code_404_Not_Found);
+    router.route().set(http::ResponseStatus::_404_Not_Found);
 
-    auto server = app->makeServer(router);
-    server->listen("/tmp/fcgi.sock");
-    app->exec();
-    return 0;
+    auto server = asyncgi::Server{io, router};
+    server.listen("/tmp/fcgi.sock");
+    io.run();
 }
 ```
 
@@ -969,7 +958,7 @@ int main()
 
 ### Client
 
-By implementing the `asyncgi::IClient` interface, it's possible to make direct requests to `FastCGI` applications. This
+With `asyncgi::Client` it's possible to make direct requests to `FastCGI` applications. This
 enables multiple `asyncgi`-based applications to communicate with each other without the need for other inter-process
 communication solutions.
 
@@ -986,19 +975,20 @@ using namespace asyncgi;
 
 int main()
 {
-    auto app = asyncgi::makeApp();
-    auto client = app->makeClient();
-    client->makeRequest("/tmp/fcgi.sock", http::Request{http::RequestMethod::Get, "/"},
-            [&app](const std::optional<http::ResponseView>& response){
+    auto io = asyncgi::IO{};
+    auto client = asyncgi::Client{io};
+    client.makeRequest(
+            "/tmp/fcgi.sock",
+            http::Request{http::RequestMethod::Get, "/"},
+            [&io](const std::optional<http::ResponseView>& response)
+            {
                 if (response)
                     std::cout << response->body() << std::endl;
                 else
                     std::cout << "No response" << std::endl;
-                app->exit();
-            }
-    );
-    app->exec();
-    return 0;
+                io.stop();
+            });
+    io.run();
 }
 ```
 </details>
@@ -1035,23 +1025,17 @@ struct RequestPage{
 
 int main()
 {
-    auto app = asyncgi::makeApp();
-    auto router = asyncgi::makeRouter();
+    auto io = asyncgi::IO{};
+    auto router = asyncgi::Router{};
     router.route("/", http::RequestMethod::Get).process<RequestPage>();
     router.route().set(http::ResponseStatus::_404_Not_Found);
-    auto server = app->makeServer(router);
-    server->listen("/tmp/fcgi_client.sock");
-    app->exec();
-    return 0;
+    auto server = asyncgi::Server{io, router};
+    server.listen("/tmp/fcgi_client.sock");
+    io.run();
 }
 ```
 
 </details>
-
----
-*The next features were implemented for possible interoperability with other libraries and extension of `asyncgi`
-functionality, but they aren't well-thought-out, and currently there's no much confidence in their applicability.
-They're the first contenders to be changed significantly or even be removed.*
 
 ### Waiting for future
 
@@ -1090,23 +1074,23 @@ struct DelayedPage{
 
 int main()
 {
-    auto app = asyncgi::makeApp();
-    auto router = asyncgi::makeRouter();
+    auto io = asyncgi::IO{};
+    auto router = asyncgi::Router{};
     auto delayedPage = DelayedPage{};
     router.route("/", http::RequestMethod::Get).process(delayedPage);
     router.route().set(http::ResponseStatus::_404_Not_Found);
-    auto server = app->makeServer(router);
-    server->listen("/tmp/fcgi.sock");
-    app->exec();
-    return 0;
+    auto server = asyncgi::Server{io, router};
+    server.listen("/tmp/fcgi.sock");
+    io.run();
 }
 ```
+
 </details>
 
 ### Executing an asio task
 
-`asyncgi` internally uses the `asio` library. A dispatcher object, implementing the `asyncgi::IAsioDispatcher`
-interface, can be created to invoke callable objects that require access to the `asio::io_context` object.
+`asyncgi` internally uses the `asio` library. A dispatcher object `asyncgi::AsioDispatcher` can be created to invoke
+callable objects that require access to the `asio::io_context` object.
 
 <details>
   <summary>Example</summary>
@@ -1120,20 +1104,21 @@ interface, can be created to invoke callable objects that require access to the 
 
 int main()
 {
-    auto app = asyncgi::makeApp();
-    auto disp = app->makeAsioDispatcher();
-    disp->postTask([&app](const asyncgi::TaskContext& ctx) mutable
-                {
-                    auto timer = std::make_shared<asio::steady_timer>(ctx.io());
-                    timer->expires_after(std::chrono::seconds{3});
-                    timer->async_wait([timer, ctx, &app](auto&) mutable{
-                        std::cout << "Hello world" << std::endl;
-                        app->exit();
-                    });
-
-                });
-    app->exec();
-    return 0;
+    auto io = asyncgi::IO{};
+    auto disp = asyncgi::AsioDispatcher{io};
+    disp.postTask(
+            [&io](const asyncgi::TaskContext& ctx) mutable
+            {
+                auto timer = std::make_shared<asio::steady_timer>(ctx.io());
+                timer->expires_after(std::chrono::seconds{3});
+                timer->async_wait(
+                        [timer, ctx, &io](auto&) mutable
+                        {
+                            std::cout << "Hello world" << std::endl;
+                            io.stop();
+                        });
+            });
+    io.run();
 }
 ```
 
@@ -1152,49 +1137,57 @@ method instead of directly using a dispatcher object.
 #include <asyncgi/asyncgi.h>
 #include <asio/steady_timer.hpp>
 
-struct DelayedPage : asyncgi::RequestProcessor<>{
-    void process(const asyncgi::Request&, asyncgi::Response<>& response) override
+namespace http = asyncgi::http;
+
+struct DelayedPage{
+    void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
         response.executeTask(
                 [response](const asyncgi::TaskContext& ctx) mutable
                 {
                     auto timer = std::make_shared<asio::steady_timer>(ctx.io());
                     timer->expires_after(std::chrono::seconds{3});
-                    timer->async_wait([timer, response, ctx](auto&) mutable{ //Note how we capture ctx object here,
-                        response.send("Hello world");                       //it's necessary to keep it (or its copy) alive
-                    });                                                      //before the end of request processing
+                    timer->async_wait([timer, response, ctx](auto&) mutable { // Note how we capture ctx object here,
+                        response.send("Hello world"); // it's necessary to keep it (or its copy) alive
+                    }); // before the end of request processing
                 });
     }
 };
 
 int main()
 {
-    auto app = asyncgi::makeApp();
-    auto router = asyncgi::makeRouter();
-    router.route("/", http::RequestMethod::GET).process<DelayedPage>();
-    router.route().set(http::ResponseStatus::Code_404_Not_Found);
-    auto server = app->makeServer(router);
-    server->listen("/tmp/fcgi.sock");
-    app->exec();
-    return 0;
+    auto io = asyncgi::IO{};
+    auto router = asyncgi::Router{};
+    router.route("/", http::RequestMethod::Get).process<DelayedPage>();
+    router.route().set(http::ResponseStatus::_404_Not_Found);
+    auto server = asyncgi::Server{io, router};
+    server.listen("/tmp/fcgi.sock");
+    io.run();
 }
 ```
+
 </details>
 
-## Development status 
+## Development status
 
-`asyncgi` can be considered to be in the open beta stage - the all planed features are completed, but there are many areas of improvement. Until it gets the non-zero major version number, the backwards incompatible changes may be introduced quite often.  
+`asyncgi` is currently in the open beta stage, with all planned features complete, until it reaches a non-zero major
+version number, there may be frequent introductions of backward-incompatible changes.
 
-There are currently no tests, and there are no plans of adding unit tests so far, because most of `asyncgi` functionality comes from the following libraries already covered with unit tests:
+Unit tests are not included because most of the functionality in `asyncgi` is derived from the following libraries,
+which already have their own test coverage:
+
 * [asio](https://github.com/chriskohlhoff/asio) - used for establishing connections, sending and receiving data.
 * [fcgi_responder](https://github.com/kamchatka-volcano/fcgi_responder/) - implementation of the `FastCGI` protocol.
 * [whaleroute](https://github.com/kamchatka-volcano/whaleroute/) - implementation of the request router.
-* [hot_teacup](https://github.com/kamchatka-volcano/hot_teacup/) - parsing of HTTP data received over `FastCGI` connections, forming HTTP responses.
+* [hot_teacup](https://github.com/kamchatka-volcano/hot_teacup/) - parsing of HTTP data received over `FastCGI`
+  connections, forming HTTP responses.
 
-Basically `asyncgi` is glue code holding all these libraries together behind a convenient interface. It makes more sense to provide functionality tests based on the `examples` directory to check overall expected behaviour, and it probably will be done in the future.
-
+Instead of mocking code that integrates the functionality of these libraries, `asyncgi` is tested using functional
+tests. These tests check the behavior of the executables found in the `examples/` directory when running with the NGINX
+server. You can find these tests in the `functional_tests/` directory.
 
 ## Installation
+
 Download and link the library from your project's CMakeLists.txt:
 ```
 cmake_minimum_required(VERSION 3.14)
@@ -1213,7 +1206,7 @@ add_executable(${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME} PRIVATE asyncgi::asyncgi)
 ```
 
-For the system-wide installation use these commands:
+To install the library system-wide, use the following commands:
 ```
 git clone https://github.com/kamchatka-volcano/asyncgi.git
 cd asyncgi
@@ -1222,14 +1215,14 @@ cmake --build build
 cmake --install build
 ```
 
-Afterwards, you can use find_package() command to make installed library available inside your project:
+After installation, you can use the find_package() command to make the installed library available inside your project:
 ```
 find_package(asyncgi 0.1.0 REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE asyncgi::asyncgi)   
 ```
 
-
 ## Building examples
+
 ```
 cd asyncgi
 cmake -S . -B build -DENABLE_EXAMPLES=ON
@@ -1237,7 +1230,37 @@ cmake --build build
 cd build/examples
 ```
 
+## Running functional tests
+
+Download [`lunchtoast`](https://github.com/kamchatka-volcano/lunchtoast/releases) executable, build `asyncgi` examples
+and start NGINX with `functional_tests/nginx_*.conf` config file.
+Launch tests with the following command:
+
+* Linux command:
+
+```
+lunchtoast functional_tests
+```
+
+* Windows command:
+
+```
+lunchtoast.exe functional_tests -shell="msys2 -c" -skip=linux
+```
+
+To run functional tests on Windows, it's recommended to use the bash shell from the `msys2` project. After installing
+it, add the following script `msys2.cmd` to your system `PATH`:
+
+```bat
+@echo off
+setlocal
+IF NOT DEFINED MSYS2_PATH_TYPE set MSYS2_PATH_TYPE=inherit
+set CHERE_INVOKING=1
+C:\\msys64\\usr\\bin\\bash.exe -leo pipefail %*
+```
+
 ## License
+
 **asyncgi** is licensed under the [MS-PL license](/LICENSE.md)  
 
 

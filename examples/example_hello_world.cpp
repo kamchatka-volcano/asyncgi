@@ -4,17 +4,17 @@ namespace http = asyncgi::http;
 
 int main()
 {
-    auto app = asyncgi::makeApp();
-    auto router = asyncgi::makeRouter();
+    auto io = asyncgi::IO{};
+    auto router = asyncgi::Router{};
     router.route("/", http::RequestMethod::Get).set("Hello world");
     router.route().set(http::ResponseStatus::_404_Not_Found);
 
-    auto server = app->makeServer(router);
+    auto server = asyncgi::Server{io, router};
 #ifndef _WIN32
-    server->listen("/tmp/fcgi.sock");
+    server.listen("/tmp/fcgi.sock");
 #else
-    server->listen("127.0.0.1", 9088);
+    server.listen("127.0.0.1", 9088);
 #endif
-    app->exec();
+    io.run();
     return 0;
 }

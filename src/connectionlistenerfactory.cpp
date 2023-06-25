@@ -8,10 +8,10 @@ namespace asyncgi::detail {
 ConnectionListenerFactory::ConnectionListenerFactory(
         asio::io_context& io,
         std::unique_ptr<ConnectionFactory> connectionFactory,
-        ErrorHandlerFunc errorHandler)
+        ErrorHandler& errorHandler)
     : io_{io}
     , connectionFactory_{std::move(connectionFactory)}
-    , errorHandler_{std::move(errorHandler)}
+    , errorHandler_{errorHandler}
 {
 }
 
@@ -22,7 +22,7 @@ std::unique_ptr<ConnectionListener<TProtocol>> ConnectionListenerFactory::makeCo
         const typename TProtocol::endpoint& address)
 {
     return std::make_unique<ConnectionListener<TProtocol>>(
-            std::make_unique<typename TProtocol::acceptor>(io_, address),
+            std::make_unique<typename TProtocol::acceptor>(io_.get(), address),
             *connectionFactory_,
             errorHandler_);
 }

@@ -1,4 +1,6 @@
 #pragma once
+#include "ioservice.h"
+#include <asyncgi/detail/external/sfun/member.h>
 #include <asyncgi/errors.h>
 #include <asyncgi/requestprocessor.h>
 #include <memory>
@@ -6,17 +8,16 @@
 namespace asyncgi::detail {
 template<typename TProtocol>
 class Connection;
-class IRuntime;
 
 class ConnectionFactory {
 public:
-    ConnectionFactory(RequestProcessor requestProcessor, IRuntime& runtime, ErrorHandlerFunc errorHandler);
+    ConnectionFactory(RequestProcessor requestProcessor, IOService& ioService, ErrorHandler& errorHandler);
     template<typename TProtocol>
     std::shared_ptr<Connection<TProtocol>> makeConnection();
 
 private:
     RequestProcessor requestProcessor_;
-    IRuntime& runtime_;
-    ErrorHandlerFunc errorHandler_;
+    sfun::member<IOService&> ioService_;
+    sfun::member<ErrorHandler&> errorHandler_;
 };
 } // namespace asyncgi::detail

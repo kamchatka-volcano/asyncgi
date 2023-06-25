@@ -1,5 +1,5 @@
 #include "timerprovider.h"
-#include "timer.h"
+#include "timerservice.h"
 #include <asio/io_context.hpp>
 
 namespace asyncgi::detail {
@@ -9,9 +9,9 @@ TimerProvider::TimerProvider(asio::io_context& io)
 {
 }
 
-ITimer& TimerProvider::emplaceTimer()
+ITimerService& TimerProvider::emplaceTimer()
 {
-    return *timers_.emplace_back(std::make_unique<Timer>(io_));
+    return *timers_.emplace_back(std::make_unique<TimerService>(io_));
 }
 
 } // namespace asyncgi::detail

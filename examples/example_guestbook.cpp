@@ -164,9 +164,9 @@ auto removeMessage(GuestBookState& state)
 
 int main()
 {
-    auto app = asyncgi::makeApp(4);
+    auto io = asyncgi::IO{4};
     auto state = GuestBookState{};
-    auto router = asyncgi::makeRouter<RouteContext>();
+    auto router = asyncgi::Router<RouteContext>{};
     router.route(asyncgi::rx{".*"}).process(authorizeAdmin);
     router.route("/", http::RequestMethod::Get).process(showGuestBookPage(state));
     router.route("/", http::RequestMethod::Post).process(addMessage(state));
@@ -179,12 +179,12 @@ int main()
     router.route("/logout").process(logoutAdmin);
     router.route().set(http::ResponseStatus::_404_Not_Found, "Page not found");
 
-    auto server = app->makeServer(router);
+    auto server = asyncgi::Server{io, router};
 #ifndef _WIN32
-    server->listen("/tmp/fcgi.sock");
+    server.listen("/tmp/fcgi.sock");
 #else
-    server->listen("127.0.0.1", 9088);
+    server.listen("127.0.0.1", 9088);
 #endif
-    app->exec();
+    io.run();
     return 0;
 }

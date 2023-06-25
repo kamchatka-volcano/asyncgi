@@ -1,3 +1,4 @@
+-Tags: linux
 -Launch detached: ../../build/examples/example_timer
 -Wait: 1100 msec
 

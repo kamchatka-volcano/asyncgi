@@ -4,20 +4,20 @@
 
 int main()
 {
-    auto app = asyncgi::makeApp();
-    auto disp = app->makeAsioDispatcher();
-    disp->postTask(
-            [&app](const asyncgi::TaskContext& ctx) mutable
+    auto io = asyncgi::IO{};
+    auto disp = asyncgi::AsioDispatcher{io};
+    disp.postTask(
+            [&io](const asyncgi::TaskContext& ctx) mutable
             {
                 auto timer = std::make_shared<asio::steady_timer>(ctx.io());
                 timer->expires_after(std::chrono::seconds{3});
                 timer->async_wait(
-                        [timer, ctx, &app](auto&) mutable
+                        [timer, ctx, &io](auto&) mutable
                         {
                             std::cout << "Hello world" << std::endl;
-                            app->exit();
+                            io.stop();
                         });
             });
-    app->exec();
+    io.run();
     return 0;
 }

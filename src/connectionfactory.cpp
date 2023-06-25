@@ -1,6 +1,5 @@
 #include "connectionfactory.h"
 #include "connection.h"
-#include "iruntime.h"
 #include <asio/ip/tcp.hpp>
 #include <asio/local/stream_protocol.hpp>
 #include <asyncgi/detail/external/sfun/interface.h>
@@ -10,11 +9,11 @@ namespace asyncgi::detail {
 
 ConnectionFactory::ConnectionFactory(
         RequestProcessor requestProcessor,
-        IRuntime& runtime,
-        ErrorHandlerFunc errorHandler)
+        IOService& ioService,
+        ErrorHandler& errorHandler)
     : requestProcessor_{std::move(requestProcessor)}
-    , runtime_{runtime}
-    , errorHandler_{std::move(errorHandler)}
+    , ioService_{ioService}
+    , errorHandler_{errorHandler}
 {
 }
 
@@ -23,9 +22,9 @@ std::shared_ptr<Connection<TProtocol>> ConnectionFactory::makeConnection()
 {
     return std::make_shared<Connection<TProtocol>>(
             requestProcessor_,
-            runtime_.nextIO(),
+            ioService_.get().nextIO(),
             errorHandler_,
-            sfun::AccessToken<ConnectionFactory>{});
+            sfun::access_token<ConnectionFactory>{});
 }
 
 template class std::shared_ptr<Connection<asio::local::stream_protocol>> ConnectionFactory::makeConnection<

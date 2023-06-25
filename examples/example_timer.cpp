@@ -1,6 +1,6 @@
 #include <asyncgi/asyncgi.h>
 
-using namespace asyncgi;
+namespace http = asyncgi::http;
 
 struct Greeter{
     Greeter(const int& secondsCounter)
@@ -19,27 +19,27 @@ private:
 
 int main()
 {
-    auto app = asyncgi::makeApp();
+    auto io = asyncgi::IO{};
     int secondsCounter = 0;
 
-    auto timer = app->makeTimer();
-    timer->startPeriodic(
+    auto timer = asyncgi::Timer{io};
+    timer.startPeriodic(
             std::chrono::seconds(1),
             [&secondsCounter]()
             {
                 ++secondsCounter;
             });
 
-    auto router = asyncgi::makeRouter();
+    auto router = asyncgi::Router{};
     router.route("/").process<Greeter>(secondsCounter);
     router.route().set(http::ResponseStatus::_404_Not_Found);
 
-    auto server = app->makeServer(router);
+    auto server = asyncgi::Server{io, router};
 #ifndef _WIN32
-    server->listen("/tmp/fcgi.sock");
+    server.listen("/tmp/fcgi.sock");
 #else
-    server->listen("127.0.0.1", 9088);
+    server.listen("127.0.0.1", 9088);
 #endif
-    app->exec();
+    io.run();
     return 0;
 }

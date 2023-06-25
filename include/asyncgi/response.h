@@ -1,13 +1,15 @@
-#pragma once
-#include "iasiodispatcher.h"
-#include "iclient.h"
-#include "itimer.h"
+#ifndef ASYNCGI_RESPONSE_H
+#define ASYNCGI_RESPONSE_H
+
+#include "taskcontext.h"
 #include "types.h"
 #include "detail/external/whaleroute/requestprocessorqueue.h"
 #include "detail/iresponsesender.h"
+#include "detail/itimerservice.h"
 #include "detail/responsecontext.h"
 #include "http/request.h"
 #include "http/response.h"
+#include <filesystem>
 #include <functional>
 #include <future>
 #include <memory>
@@ -15,7 +17,7 @@
 
 namespace asyncgi {
 template<typename TContext>
-class RequestRouter;
+class Router;
 
 namespace detail {
 
@@ -108,7 +110,7 @@ public:
     template<typename TRouteContext>
     void setRequestProcessorQueue(
             const std::shared_ptr<whaleroute::RequestProcessorQueue>& queue,
-            sfun::AccessPermission<RequestRouter<TRouteContext>>)
+            sfun::access_permission<Router<TRouteContext>>)
     {
         requestProcessorQueue_ = queue;
     }
@@ -119,3 +121,5 @@ private:
 };
 
 } // namespace asyncgi
+
+#endif //ASYNCGI_RESPONSE_H

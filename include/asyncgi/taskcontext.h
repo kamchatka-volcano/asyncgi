@@ -1,4 +1,7 @@
-#pragma once
+#ifndef ASYNCGI_TASKCONTEXT_H
+#define ASYNCGI_TASKCONTEXT_H
+
+#include "detail/external/sfun/member.h"
 #include <functional>
 #include <memory>
 
@@ -23,8 +26,10 @@ public:
     asio::io_context& io() const;
 
 private:
-    std::reference_wrapper<asio::io_context> io_;
+    sfun::member<asio::io_context&> io_;
     std::shared_ptr<PostAction> postTaskAction_;
 };
 
 } // namespace asyncgi
+
+#endif //ASYNCGI_TASKCONTEXT_H

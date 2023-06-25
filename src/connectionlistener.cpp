@@ -1,7 +1,6 @@
 #include "connectionlistener.h"
 #include "connection.h"
 #include "connectionfactory.h"
-#include "iruntime.h"
 #include <asio/ip/tcp.hpp>
 #include <asio/local/stream_protocol.hpp>
 
@@ -11,10 +10,10 @@ template<typename TProtocol>
 ConnectionListener<TProtocol>::ConnectionListener(
         std::unique_ptr<asio::basic_socket_acceptor<TProtocol>> socketAcceptor,
         ConnectionFactory& connectionFactory,
-        ErrorHandlerFunc errorHandler)
+        ErrorHandler& errorHandler)
     : socketAcceptor_{std::move(socketAcceptor)}
     , connectionFactory_{connectionFactory}
-    , errorHandler_{std::move(errorHandler)}
+    , errorHandler_{errorHandler}
 
 {
     waitForConnection();
@@ -23,7 +22,7 @@ ConnectionListener<TProtocol>::ConnectionListener(
 template<typename TProtocol>
 void ConnectionListener<TProtocol>::waitForConnection()
 {
-    auto connection = connectionFactory_.makeConnection<TProtocol>();
+    auto connection = connectionFactory_.get().makeConnection<TProtocol>();
     socketAcceptor_->async_accept(
             connection->socket(),
             [this, connection](auto error_code)

@@ -1,17 +1,12 @@
-#pragma once
+#ifndef ASYNCGI_H
+#define ASYNCGI_H
+
+#include "asiodispatcher.h"
+#include "client.h"
 #include "errors.h"
-#include "iapp.h"
-#include "requestrouter.h"
-#include <memory>
-#include <string>
+#include "io.h"
+#include "router.h"
+#include "server.h"
+#include "timer.h"
 
-namespace asyncgi {
-std::unique_ptr<IApp> makeApp(std::size_t workerThreadCount = 1);
-
-template<typename TRouteContext = _>
-RequestRouter<TRouteContext> makeRouter()
-{
-    return RequestRouter<TRouteContext>{};
-}
-
-} // namespace asyncgi
+#endif //ASYNCGI_H

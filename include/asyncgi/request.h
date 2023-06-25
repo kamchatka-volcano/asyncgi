@@ -1,4 +1,7 @@
-#pragma once
+#ifndef ASYNCGI_REQUEST_H
+#define ASYNCGI_REQUEST_H
+
+#include "detail/external/sfun/member.h"
 #include "detail/lazyinitialized.h"
 #include "http/cookie_view.h"
 #include "http/query_view.h"
@@ -58,8 +61,10 @@ private:
     const http::RequestView& httpRequest() const;
 
 private:
-    std::reference_wrapper<const fcgi::Request> fcgiRequest_;
+    sfun::member<const fcgi::Request&> fcgiRequest_;
     detail::LazyInitialized<http::RequestView> httpRequest_;
 };
 
 } // namespace asyncgi
+
+#endif //ASYNCGI_REQUEST_H

@@ -1,6 +1,6 @@
 #pragma once
+#include "asyncgi/detail/itimerservice.h"
 #include <asio/steady_timer.hpp>
-#include <asyncgi/itimer.h>
 #include <chrono>
 #include <functional>
 #include <future>
@@ -12,9 +12,11 @@ class io_context;
 
 namespace asyncgi::detail {
 
-class Timer : public ITimer {
+class IOService;
+
+class TimerService : public ITimerService {
 public:
-    explicit Timer(asio::io_context& io);
+    explicit TimerService(asio::io_context& io);
     void start(std::chrono::milliseconds time, std::function<void()> callback) override;
     void startPeriodic(std::chrono::milliseconds time, std::function<void()> callback) override;
     void stop() override;

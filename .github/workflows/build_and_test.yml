@@ -77,7 +77,7 @@ jobs:
             lunchtoast_exec: "lunchtoast.exe",
             shell_command: -shell="msys2 -c",
             tags: -skip=linux,
-            nginx_exec: "C:/tools/nginx-1.25.0/nginx.exe",
+            nginx_exec: "c:/tools/nginx-1.25.1/nginx.exe",
             nginx_cfg: "nginx_windows.conf"
           }
           - {

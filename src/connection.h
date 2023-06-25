@@ -1,6 +1,6 @@
 #pragma once
-#include "asiodispatcher.h"
-#include "client.h"
+#include "asiodispatcherservice.h"
+#include "clientservice.h"
 #include "responsesender.h"
 #include "timerprovider.h"
 #include <asio/basic_stream_socket.hpp>
@@ -26,7 +26,7 @@ template<typename TProtocol>
 class Connection : public std::enable_shared_from_this<Connection<TProtocol>>,
                    public fcgi::Responder {
 public:
-    Connection(RequestProcessor, asio::io_context&, ErrorHandlerFunc, sfun::AccessPermission<ConnectionFactory>);
+    Connection(RequestProcessor, asio::io_context&, ErrorHandler&, sfun::access_permission<ConnectionFactory>);
     asio::basic_socket<TProtocol>& socket();
     void process();
     void readData(std::size_t bytesRead);
@@ -42,16 +42,16 @@ private:
     std::optional<fcgi::Request> fcgiRequest_;
     std::optional<ResponseSender> responseSender_;
     RequestProcessor requestProcessor_;
-    AsioDispatcher asioDispatcher_;
+    AsioDispatcherService asioDispatcher_;
     TimerProvider timerProvider_;
-    Client client_;
+    ClientService client_;
     asio::basic_stream_socket<TProtocol> socket_;
     std::array<char, fcgi::maxRecordSize> buffer_;
     std::string writeBuffer_;
     std::string nextWriteBuffer_;
     std::size_t bytesToWrite_ = 0;
     bool disconnectRequested_ = false;
-    ErrorHandler errorHandler_;
+    sfun::member<ErrorHandler&> errorHandler_;
 };
 
 } // namespace asyncgi::detail

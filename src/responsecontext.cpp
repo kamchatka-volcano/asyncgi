@@ -1,4 +1,7 @@
+#include "asiodispatcherservice.h"
+#include "clientservice.h"
 #include "timerprovider.h"
+#include <asyncgi/detail/iresponsesender.h>
 #include <asyncgi/detail/responsecontext.h>
 
 namespace asyncgi::detail {
@@ -6,8 +9,8 @@ namespace asyncgi::detail {
 ResponseContext::ResponseContext(
         IResponseSender& responseSender,
         TimerProvider& timerProvider,
-        IClient& client,
-        IAsioDispatcher& asioDispatcher)
+        ClientService& client,
+        AsioDispatcherService& asioDispatcher)
     : responseSender_{responseSender}
     , timerProvider_{timerProvider}
     , client_{client}
@@ -20,17 +23,17 @@ IResponseSender& ResponseContext::responseSender() const
     return responseSender_;
 }
 
-ITimer& ResponseContext::makeTimer() const
+ITimerService& ResponseContext::makeTimer() const
 {
     return timerProvider_.get().emplaceTimer();
 }
 
-IClient& ResponseContext::client() const
+ClientService& ResponseContext::client() const
 {
     return client_;
 }
 
-IAsioDispatcher& ResponseContext::asioDispatcher() const
+AsioDispatcherService& ResponseContext::asioDispatcher() const
 {
     return asioDispatcher_;
 }

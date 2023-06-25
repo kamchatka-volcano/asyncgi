@@ -25,16 +25,16 @@ struct RequestPage{
 
 int main()
 {
-    auto app = asyncgi::makeApp();
-    auto router = asyncgi::makeRouter();
+    auto io = asyncgi::IO{};
+    auto router = asyncgi::Router{};
     router.route("/", http::RequestMethod::Get).process<RequestPage>();
     router.route().set(http::ResponseStatus::_404_Not_Found);
-    auto server = app->makeServer(router);
+    auto server = asyncgi::Server{io, router};
 #ifndef _WIN32
-    server->listen("/tmp/fcgi_client.sock");
+    server.listen("/tmp/fcgi_client.sock");
 #else
-    server->listen("127.0.0.1", 9089);
+    server.listen("127.0.0.1", 9089);
 #endif
-    app->exec();
+    io.run();
     return 0;
 }

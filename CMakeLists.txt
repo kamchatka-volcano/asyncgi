@@ -8,7 +8,7 @@ include(external/asio)
 SealLake_Bundle(
     NAME asyncgi_sfun
     GIT_REPOSITORY https://github.com/kamchatka-volcano/sfun.git
-    GIT_TAG v3.1.1
+    GIT_TAG v4.0.1
     DESTINATION include/asyncgi/detail/external
     DIRECTORIES include/sfun
     TEXT_REPLACEMENTS
@@ -27,7 +27,7 @@ SealLake_Bundle(
 SealLake_Bundle(
     NAME asyncgi_whaleroute
     GIT_REPOSITORY https://github.com/kamchatka-volcano/whaleroute.git
-    GIT_TAG dev
+    GIT_TAG v2.0.0
     DESTINATION include/asyncgi/detail/external
     DIRECTORIES include/whaleroute
     TEXT_REPLACEMENTS
@@ -49,20 +49,23 @@ SealLake_Bundle(
 )
 
 set(SRC
-    src/app.cpp
     src/asiodispatcher.cpp
+    src/io.cpp
+    src/client.cpp
+    src/server.cpp
+    src/timer.cpp
+    src/asiodispatcherservice.cpp
     src/connection.cpp
     src/connectionfactory.cpp
     src/errors.cpp
-    src/multithreadedruntime.cpp
     src/responsecontext.cpp
     src/responsesender.cpp
-    src/runtime.cpp
-    src/server.cpp
+    src/ioservice.cpp
+    src/serverservice.cpp
     src/testserver.cpp
-    src/client.cpp
+    src/clientservice.cpp
     src/taskcontext.cpp
-    src/timer.cpp
+    src/timerservice.cpp
     src/timerprovider.cpp
     src/connectionlistener.cpp
     src/connectionlistenerfactory.cpp

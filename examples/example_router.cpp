@@ -72,21 +72,21 @@ private:
 
 int main()
 {
-    auto app = asyncgi::makeApp(4); //4 threads processing requests
+    auto io = asyncgi::IO{4}; //4 threads processing requests
     auto state = GuestBookState{};
-    auto router = asyncgi::makeRouter();
+    auto router = asyncgi::Router{};
     router.route("/", http::RequestMethod::Get).process<GuestBookPage>(state);
     router.route("/", http::RequestMethod::Post).process<GuestBookAddMessage>(state);
     router.route().set(http::Response{http::ResponseStatus::_404_Not_Found, "Page not found"});
     //Alternatively, it's possible to pass arguments for creation of http::Response object to the set() method.
     //router.route().set(http::ResponseStatus::Code_404_Not_Found, "Page not found");
 
-    auto server = app->makeServer(router);
+    auto server = asyncgi::Server{io, router};
 #ifndef _WIN32
-    server->listen("/tmp/fcgi.sock");
+    server.listen("/tmp/fcgi.sock");
 #else
-    server->listen("127.0.0.1", 9088);
+    server.listen("127.0.0.1", 9088);
 #endif
-    app->exec();
+    io.run();
     return 0;
 }

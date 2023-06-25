@@ -12,8 +12,8 @@ template<typename TProtocol>
 Connection<TProtocol>::Connection(
         RequestProcessor requestProcessor,
         asio::io_context& io,
-        ErrorHandlerFunc errorHandler,
-        sfun::AccessPermission<ConnectionFactory>)
+        ErrorHandler& errorHandler,
+        sfun::access_permission<ConnectionFactory>)
     : requestProcessor_{std::move(requestProcessor)}
     , asioDispatcher_{io}
     , timerProvider_{io}

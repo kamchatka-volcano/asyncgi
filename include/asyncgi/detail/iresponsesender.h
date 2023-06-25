@@ -4,7 +4,7 @@
 
 namespace asyncgi::detail {
 
-class IResponseSender : private sfun::Interface<IResponseSender> {
+class IResponseSender : private sfun::interface<IResponseSender> {
 public:
     virtual void send(std::string data) = 0;
     virtual void send(std::string data, std::string errorMsg) = 0;

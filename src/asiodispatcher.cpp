@@ -1,26 +1,26 @@
-#include "asiodispatcher.h"
-#include <asio/io_context.hpp>
+#include "asiodispatcherservice.h"
+#include "ioservice.h"
+#include <asyncgi/asiodispatcher.h>
+#include <asyncgi/detail/external/sfun/interface.h>
+#include <asyncgi/io.h>
 
-namespace asyncgi::detail {
+namespace asyncgi {
 
-AsioDispatcher::AsioDispatcher(asio::io_context& io)
-    : io_{io}
+AsioDispatcher::AsioDispatcher(IO& io)
+    : asioDispatcherService_{
+              std::make_unique<detail::AsioDispatcherService>(io.ioService(sfun::access_token<AsioDispatcher>{}).io())}
 {
 }
 
-void AsioDispatcher::postTask(std::function<void(const TaskContext& ctx)> task, std::function<void()> postTaskAction)
+AsioDispatcher::~AsioDispatcher() = default;
+
+void AsioDispatcher::postTask(std::function<void(const TaskContext&)> task, std::function<void()> postTaskAction)
 {
-    auto taskContext = TaskContext{io_, std::move(postTaskAction)};
-    io_.post(
-            [task = std::move(task), taskContext = std::move(taskContext)]
-            {
-                task(taskContext);
-            });
+    asioDispatcherService_->postTask(std::move(task), std::move(postTaskAction));
+}
+void AsioDispatcher::postTask(std::function<void(const TaskContext&)> task)
+{
+    asioDispatcherService_->postTask(std::move(task));
 }
 
-void AsioDispatcher::postTask(std::function<void(const TaskContext& ctx)> task)
-{
-    postTask(std::move(task), {});
-}
-
-} // namespace asyncgi::detail
+} //namespace asyncgi

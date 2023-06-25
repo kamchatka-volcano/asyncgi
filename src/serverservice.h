@@ -2,7 +2,6 @@
 #include <asio/ip/tcp.hpp>
 #include <asio/local/stream_protocol.hpp>
 #include <asyncgi/errors.h>
-#include <asyncgi/iserver.h>
 #include <asyncgi/types.h>
 #include <filesystem>
 #include <memory>
@@ -14,13 +13,13 @@ class ConnectionListenerFactory;
 template<typename TProtocol>
 class ConnectionListener;
 
-class Server : public IServer {
+class ServerService {
 public:
-    explicit Server(std::unique_ptr<ConnectionListenerFactory>);
-    ~Server() override;
+    explicit ServerService(std::unique_ptr<ConnectionListenerFactory>);
+    ~ServerService();
 
-    void listen(const std::filesystem::path& socketPath) override;
-    void listen(std::string_view ipAddress, uint16_t portNumber) override;
+    void listen(const std::filesystem::path& socketPath);
+    void listen(std::string_view ipAddress, int portNumber);
 
 private:
     std::unique_ptr<ConnectionListenerFactory> connectionListenerFactory_;

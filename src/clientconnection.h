@@ -1,7 +1,7 @@
 #pragma once
 #include <asio/basic_stream_socket.hpp>
+#include <asyncgi/detail/external/sfun/member.h>
 #include <asyncgi/errors.h>
-#include <asyncgi/itimer.h>
 #include <asyncgi/types.h>
 #include <fcgi_responder/fcgi_limits.h>
 #include <fcgi_responder/requester.h>
@@ -16,7 +16,7 @@ class TimerProvider;
 template<typename TProtocol>
 class ClientConnection : public fcgi::Requester {
 public:
-    ClientConnection(asio::io_context&, ErrorHandlerFunc);
+    ClientConnection(asio::io_context&, ErrorHandler&);
     ~ClientConnection() override;
 
     void makeRequest(
@@ -35,7 +35,7 @@ private:
 
 private:
     asio::basic_stream_socket<TProtocol> socket_;
-    ErrorHandler errorHandler_;
+    sfun::member<ErrorHandler&> errorHandler_;
     std::array<char, fcgi::maxRecordSize> buffer_;
     std::string writeBuffer_;
     std::string nextWriteBuffer_;

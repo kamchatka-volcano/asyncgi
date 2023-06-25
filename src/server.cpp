@@ -1,50 +1,50 @@
-#include "server.h"
-#include "connectionlistener.h"
+#include "connectionfactory.h"
 #include "connectionlistenerfactory.h"
-#include <asio/error_code.hpp>
-#include <asyncgi/errors.h>
+#include "serverservice.h"
+#include <asyncgi/detail/external/sfun/interface.h>
+#include <asyncgi/io.h>
+#include <asyncgi/requestprocessor.h>
+#include <asyncgi/server.h>
 
-namespace asyncgi::detail {
+namespace asyncgi {
 
-namespace fs = std::filesystem;
+namespace detail {
+auto makeConnectionListenerFactory(
+        RequestProcessor requestProcessor,
+        IO& io,
+        const sfun::access_token<Server>& accessToken)
+{
+    auto connectionFactory = std::make_unique<detail::ConnectionFactory>(
+            std::move(requestProcessor),
+            io.ioService(accessToken),
+            io.errorHandler());
 
-Server::Server(std::unique_ptr<ConnectionListenerFactory> connectionListenerFactory)
-    : connectionListenerFactory_{std::move(connectionListenerFactory)}
+    return std::make_unique<detail::ConnectionListenerFactory>(
+            io.ioService(accessToken).io(),
+            std::move(connectionFactory),
+            io.errorHandler());
+}
+} //namespace detail
+
+Server::Server(IO& io, RequestProcessor requestProcessor)
+    : serverService_{std::make_unique<detail::ServerService>(
+              detail::makeConnectionListenerFactory(std::move(requestProcessor), io, sfun::access_token<Server>{}))}
 {
 }
 
 Server::~Server() = default;
 
-#ifndef _WIN32
-namespace {
-void initUnixDomainSocket(const fs::path& path)
+void Server::listen(std::string_view ipAddress, int port)
 {
-    umask(0);
-    chmod(path.c_str(), 0777);
-    unlink(path.c_str());
-}
-} // namespace
-#endif
+    if (port < 0 || port > 65535)
+        throw Error{"port's value must be in range [0, 65535]"};
 
-void Server::listen(const fs::path& socketPath)
-{
-#ifndef _WIN32
-    initUnixDomainSocket(socketPath);
-    localConnectionProcessors_.emplace_back(
-            connectionListenerFactory_->makeConnectionListener<asio::local::stream_protocol>(
-                    asio::local::stream_protocol::endpoint{socketPath}));
-#else
-    [[maybe_unused]] auto& unused = socketPath;
-    throw Error{"Unix domain hosts aren't supported on Windows. Use a TCP host with Server::listen(std::string_view "
-                "ipAddress, uint16_t portNumber)."};
-#endif
+    serverService_->listen(ipAddress, port);
 }
 
-void Server::listen(std::string_view ipAddress, uint16_t portNumber)
+void Server::listen(const std::filesystem::path& unixDomainSocket)
 {
-    auto address = asio::ip::make_address(ipAddress.data());
-    tcpConnectionProcessors_.emplace_back(connectionListenerFactory_->makeConnectionListener<asio::ip::tcp>(
-            asio::ip::tcp::endpoint{address, portNumber}));
+    serverService_->listen(unixDomainSocket);
 }
 
-} // namespace asyncgi::detail
+} //namespace asyncgi

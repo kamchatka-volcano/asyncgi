@@ -1,6 +1,9 @@
-#pragma once
+#ifndef ASYNCGI_ROUTER_H
+#define ASYNCGI_ROUTER_H
+
 #include "request.h"
 #include "response.h"
+#include "types.h"
 #include "detail/external/sfun/functional.h"
 #include "detail/external/sfun/interface.h"
 #include "detail/external/whaleroute/requestrouter.h"
@@ -9,13 +12,13 @@
 namespace asyncgi {
 namespace config = whaleroute::config;
 
-template<typename TRouteContext>
-class RequestRouter : public whaleroute::RequestRouter<Request, Response, http::Response, TRouteContext> {
+template<typename TRouteContext = _>
+class Router : public whaleroute::RequestRouter<Request, Response, http::Response, TRouteContext> {
 public:
     void operator()(const Request& request, Response& response)
     {
         auto requestProcessorQueuePtr = std::make_shared<whaleroute::RequestProcessorQueue>();
-        response.setRequestProcessorQueue<TRouteContext>(requestProcessorQueuePtr, sfun::AccessToken{*this});
+        response.setRequestProcessorQueue<TRouteContext>(requestProcessorQueuePtr, sfun::access_token{*this});
         auto requestProcessorQueue =
                 whaleroute::RequestRouter<asyncgi::Request, asyncgi::Response, http::Response, TRouteContext>::
                         makeRequestProcessorQueue(request, response);
@@ -83,3 +86,5 @@ struct config::RouteMatcher<asyncgi::http::RequestMethod, TContext> {
 };
 
 } // namespace asyncgi
+
+#endif //ASYNCGI_ROUTER_H

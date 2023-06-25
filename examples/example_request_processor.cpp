@@ -2,30 +2,26 @@
 
 namespace http = asyncgi::http;
 
-class GuestBookPage {
-public:
-    void operator()(const asyncgi::Request& request, asyncgi::Response& response)
-    {
-        if (request.path() == "/")
-            response.send(R"(
+void guestBookPage(const asyncgi::Request& request, asyncgi::Response& response)
+{
+    if (request.path() == "/")
+        response.send(R"(
                 <h1>Guest book</h1>
                 <p>No messages</p>
             )");
-        else
-            response.send(http::ResponseStatus::_404_Not_Found);
-    }
-};
+    else
+        response.send(http::ResponseStatus::_404_Not_Found);
+}
 
 int main()
 {
-    auto app = asyncgi::makeApp();
-    auto guestBookPage = GuestBookPage{};
-    auto server = app->makeServer(guestBookPage);
+    auto io = asyncgi::IO{};
+    auto server = asyncgi::Server{io, guestBookPage};
 #ifndef _WIN32
-    server->listen("/tmp/fcgi.sock");
+    server.listen("/tmp/fcgi.sock");
 #else
-    server->listen("127.0.0.1", 9088);
+    server.listen("127.0.0.1", 9088);
 #endif
-    app->exec();
+    io.run();
     return 0;
 }

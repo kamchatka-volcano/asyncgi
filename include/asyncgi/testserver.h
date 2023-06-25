@@ -1,4 +1,6 @@
-#pragma once
+#ifndef ASYNCGI_TESTSERVER_H
+#define ASYNCGI_TESTSERVER_H
+
 #include <filesystem>
 #include <map>
 #include <optional>
@@ -25,3 +27,5 @@ private:
 };
 
 } // namespace asyncgi
+
+#endif //ASYNCGI_TESTSERVER_H

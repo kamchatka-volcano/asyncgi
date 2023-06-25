@@ -59,8 +59,8 @@ struct asyncgi::config::RouteMatcher<AccessRole, RouteContext> {
 
 int main()
 {
-    auto app = asyncgi::makeApp(4);
-    auto router = asyncgi::makeRouter<RouteContext>();
+    auto io = asyncgi::IO{4};
+    auto router = asyncgi::Router<RouteContext>{};
     router.route(asyncgi::rx{".*"}).process<AdminAuthorizer>();
     router.route("/").process(
             [](const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)
@@ -77,12 +77,12 @@ int main()
     router.route("/login", http::RequestMethod::Post, AccessRole::Admin).set("/", http::RedirectType::Found);
     router.route().set(http::ResponseStatus::_404_Not_Found, "Page not found");
 
-    auto server = app->makeServer(router);
+    auto server = asyncgi::Server{io, router};
 #ifndef _WIN32
-    server->listen("/tmp/fcgi.sock");
+    server.listen("/tmp/fcgi.sock");
 #else
-    server->listen("127.0.0.1", 9088);
+    server.listen("127.0.0.1", 9088);
 #endif
-    app->exec();
+    io.run();
     return 0;
 }

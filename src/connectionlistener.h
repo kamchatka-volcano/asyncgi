@@ -1,5 +1,6 @@
 #pragma once
 #include <asio/basic_socket_acceptor.hpp>
+#include <asyncgi/detail/external/sfun/member.h>
 #include <asyncgi/errors.h>
 #include <string>
 
@@ -14,7 +15,7 @@ public:
     ConnectionListener(
             std::unique_ptr<asio::basic_socket_acceptor<TProtocol>> socketAcceptor,
             ConnectionFactory& connectionFactory,
-            ErrorHandlerFunc errorHandler);
+            ErrorHandler& errorHandler);
 
 private:
     void waitForConnection();
@@ -22,8 +23,8 @@ private:
 
 private:
     std::unique_ptr<asio::basic_socket_acceptor<TProtocol>> socketAcceptor_;
-    ConnectionFactory& connectionFactory_;
-    ErrorHandler errorHandler_;
+    sfun::member<ConnectionFactory&> connectionFactory_;
+    sfun::member<ErrorHandler&> errorHandler_;
 };
 
 } // namespace asyncgi::detail
