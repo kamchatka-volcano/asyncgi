@@ -1,16 +1,18 @@
 #include <asyncgi/asyncgi.h>
 
-using namespace asyncgi;
+namespace http = asyncgi::http;
 
 struct RequestPage{
     void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
         // making request to FastCgi application listening on /tmp/fcgi.sock and showing the received response
-        response.makeRequest(
+        auto client = asyncgi::Client{response};
+        client.makeRequest(
 #ifndef _WIN32
                 "/tmp/fcgi.sock",
 #else
-                "127.0.0.1", 9088,
+                "127.0.0.1",
+                9088,
 #endif
                 http::Request{http::RequestMethod::Get, "/"},
                 [response](const std::optional<http::ResponseView>& reqResponse) mutable

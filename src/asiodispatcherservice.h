@@ -1,8 +1,13 @@
 #pragma once
+#include <asyncgi/detail/external/sfun/member.h>
 #include <asyncgi/taskcontext.h>
 
 namespace asio {
 class io_context;
+}
+
+namespace asyncgi::whaleroute {
+class RequestProcessorQueue;
 }
 
 namespace asyncgi::detail {
@@ -10,11 +15,12 @@ namespace asyncgi::detail {
 class AsioDispatcherService {
 public:
     explicit AsioDispatcherService(asio::io_context& io);
-    void postTask(std::function<void(const TaskContext&)> task, std::function<void()> postTaskAction);
     void postTask(std::function<void(const TaskContext&)> task);
+    void setRequestProcessorQueue(whaleroute::RequestProcessorQueue* queue);
 
 private:
-    asio::io_context& io_;
+    sfun::member<asio::io_context&> io_;
+    whaleroute::RequestProcessorQueue* requestProcessorQueue_ = nullptr;
 };
 
 } // namespace asyncgi::detail

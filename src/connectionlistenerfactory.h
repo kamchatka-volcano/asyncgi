@@ -15,6 +15,10 @@ class ConnectionListenerFactory {
 public:
     ConnectionListenerFactory(asio::io_context&, std::unique_ptr<ConnectionFactory>, ErrorHandler&);
     ~ConnectionListenerFactory();
+    ConnectionListenerFactory(const ConnectionListenerFactory&) = delete;
+    ConnectionListenerFactory& operator=(const ConnectionListenerFactory&) = delete;
+    ConnectionListenerFactory(ConnectionListenerFactory&&) noexcept = default;
+    ConnectionListenerFactory& operator=(ConnectionListenerFactory&&) noexcept = default;
 
     template<typename TProtocol>
     std::unique_ptr<ConnectionListener<TProtocol>> makeConnectionListener(const typename TProtocol::endpoint& address);

@@ -9,8 +9,11 @@
 #include <hot_teacup/request.h>
 #include <hot_teacup/response_view.h>
 #include <filesystem>
-#include <memory>
 #include <vector>
+
+namespace asyncgi::whaleroute {
+class RequestProcessorQueue;
+}
 
 namespace asyncgi::detail {
 
@@ -45,12 +48,15 @@ public:
 
     void disconnect();
 
+    void setRequestProcessorQueue(whaleroute::RequestProcessorQueue* queue);
+
 private:
     sfun::member<asio::io_context&> io_;
     sfun::member<ErrorHandler&> errorHandler_;
     TimerProvider timerProvider_;
     std::vector<std::unique_ptr<ClientConnection<asio::local::stream_protocol>>> localClientConnections_;
     std::vector<std::unique_ptr<ClientConnection<asio::ip::tcp>>> tcpClientConnections_;
+    whaleroute::RequestProcessorQueue* requestProcessorQueue_ = nullptr;
 };
 
 } // namespace asyncgi::detail

@@ -17,6 +17,10 @@ class ServerService {
 public:
     explicit ServerService(std::unique_ptr<ConnectionListenerFactory>);
     ~ServerService();
+    ServerService(const ServerService&) = delete;
+    ServerService& operator=(const ServerService&) = delete;
+    ServerService(ServerService&&) noexcept = default;
+    ServerService& operator=(ServerService&&) noexcept = default;
 
     void listen(const std::filesystem::path& socketPath);
     void listen(std::string_view ipAddress, int portNumber);

@@ -1,19 +1,24 @@
 #include "clientservice.h"
 #include "ioservice.h"
+#include "responsecontext.h"
 #include <asyncgi/client.h>
 #include <asyncgi/detail/external/sfun/interface.h>
 #include <asyncgi/io.h>
+#include <asyncgi/response.h>
 
 namespace asyncgi {
 
 Client::Client(IO& io)
     : clientService_{std::make_unique<detail::ClientService>(
               io.ioService(sfun::access_token<Client>{}).io(),
-              io.errorHandler())}
+              io.errorHandler(sfun::access_token<Client>{}))}
 {
 }
 
-Client::~Client() = default;
+Client::Client(Response& response)
+    : clientService_{response.context(sfun::access_token<Client>{}).client()}
+{
+}
 
 void Client::makeRequest(
         const std::filesystem::path& socketPath,
@@ -21,7 +26,7 @@ void Client::makeRequest(
         std::function<void(std::optional<fastcgi::Response>)> responseHandler,
         std::chrono::milliseconds timeout)
 {
-    clientService_->makeRequest(socketPath, std::move(request), std::move(responseHandler), timeout);
+    clientService_.get().makeRequest(socketPath, std::move(request), std::move(responseHandler), timeout);
 }
 
 void Client::makeRequest(
@@ -30,7 +35,7 @@ void Client::makeRequest(
         const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
         std::chrono::milliseconds timeout)
 {
-    clientService_->makeRequest(socketPath, request, responseHandler, timeout);
+    clientService_.get().makeRequest(socketPath, request, responseHandler, timeout);
 }
 
 void Client::makeRequest(
@@ -40,7 +45,7 @@ void Client::makeRequest(
         std::function<void(std::optional<fastcgi::Response>)> responseHandler,
         std::chrono::milliseconds timeout)
 {
-    clientService_->makeRequest(ipAddress, port, std::move(request), std::move(responseHandler), timeout);
+    clientService_.get().makeRequest(ipAddress, port, std::move(request), std::move(responseHandler), timeout);
 }
 
 void Client::makeRequest(
@@ -50,12 +55,12 @@ void Client::makeRequest(
         const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
         std::chrono::milliseconds timeout)
 {
-    clientService_->makeRequest(ipAddress, port, request, responseHandler, timeout);
+    clientService_.get().makeRequest(ipAddress, port, request, responseHandler, timeout);
 }
 
 void Client::disconnect()
 {
-    clientService_->disconnect();
+    clientService_.get().disconnect();
 }
 
 } //namespace asyncgi

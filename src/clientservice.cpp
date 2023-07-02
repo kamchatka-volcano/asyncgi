@@ -2,6 +2,7 @@
 #include "ioservice.h"
 #include "timerprovider.h"
 #include <asio/write.hpp>
+#include <asyncgi/detail/external/whaleroute/requestprocessorqueue.h>
 
 namespace asyncgi::detail {
 
@@ -18,6 +19,9 @@ void ClientService::makeRequest(
         std::function<void(std::optional<fastcgi::Response>)> responseHandler,
         std::chrono::milliseconds timeout)
 {
+    if (requestProcessorQueue_)
+        requestProcessorQueue_->stop();
+
     auto cancelRequestOnTimeout = std::make_shared<std::function<void()>>([] {});
     auto& responseTimeoutTimer = timerProvider_.emplaceTimer();
     responseTimeoutTimer.start(
@@ -37,6 +41,9 @@ void ClientService::makeRequest(
         }
         else
             responseHandler(std::nullopt);
+
+        if (requestProcessorQueue_)
+            requestProcessorQueue_->launch();
     };
     auto& clientConnection = localClientConnections_.emplace_back(
             std::make_unique<ClientConnection<asio::local::stream_protocol>>(io_, errorHandler_));
@@ -53,6 +60,8 @@ void ClientService::makeRequest(
         const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
         std::chrono::milliseconds timeout)
 {
+    if (requestProcessorQueue_)
+        requestProcessorQueue_->stop();
     auto cancelRequestOnTimeout = std::make_shared<std::function<void()>>([] {});
     auto& responseTimeoutTimer = timerProvider_.emplaceTimer();
     responseTimeoutTimer.start(
@@ -71,6 +80,8 @@ void ClientService::makeRequest(
         }
         else
             responseHandler(std::nullopt);
+        if (requestProcessorQueue_)
+            requestProcessorQueue_->launch();
     };
     auto& clientConnection = localClientConnections_.emplace_back(
             std::make_unique<ClientConnection<asio::local::stream_protocol>>(io_, errorHandler_));
@@ -90,6 +101,8 @@ void ClientService::makeRequest(
         std::function<void(std::optional<fastcgi::Response>)> responseHandler,
         std::chrono::milliseconds timeout)
 {
+    if (requestProcessorQueue_)
+        requestProcessorQueue_->stop();
     auto cancelRequestOnTimeout = std::make_shared<std::function<void()>>([] {});
     auto& responseTimeoutTimer = timerProvider_.emplaceTimer();
     responseTimeoutTimer.start(
@@ -108,6 +121,8 @@ void ClientService::makeRequest(
         }
         else
             responseHandler(std::nullopt);
+        if (requestProcessorQueue_)
+            requestProcessorQueue_->launch();
     };
     auto& clientConnection =
             tcpClientConnections_.emplace_back(std::make_unique<ClientConnection<asio::ip::tcp>>(io_, errorHandler_));
@@ -126,6 +141,8 @@ void ClientService::makeRequest(
         const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
         std::chrono::milliseconds timeout)
 {
+    if (requestProcessorQueue_)
+        requestProcessorQueue_->stop();
     auto cancelRequestOnTimeout = std::make_shared<std::function<void()>>([] {});
     auto& responseTimeoutTimer = timerProvider_.emplaceTimer();
     responseTimeoutTimer.start(
@@ -145,6 +162,8 @@ void ClientService::makeRequest(
         }
         else
             responseHandler(std::nullopt);
+        if (requestProcessorQueue_)
+            requestProcessorQueue_->launch();
     };
     auto& clientConnection =
             tcpClientConnections_.emplace_back(std::make_unique<ClientConnection<asio::ip::tcp>>(io_, errorHandler_));
@@ -161,6 +180,11 @@ void ClientService::makeRequest(
 void ClientService::disconnect()
 {
     localClientConnections_.clear();
+}
+
+void ClientService::setRequestProcessorQueue(whaleroute::RequestProcessorQueue* queue)
+{
+    requestProcessorQueue_ = queue;
 }
 
 } // namespace asyncgi::detail

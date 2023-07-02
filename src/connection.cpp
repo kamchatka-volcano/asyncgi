@@ -1,4 +1,5 @@
 #include "connection.h"
+#include "responsecontext.h"
 #include <asio/ip/tcp.hpp>
 #include <asio/local/stream_protocol.hpp>
 #include <asio/write.hpp>
@@ -22,6 +23,9 @@ Connection<TProtocol>::Connection(
     , errorHandler_{errorHandler}
 {
 }
+
+template<typename TProtocol>
+Connection<TProtocol>::~Connection() = default;
 
 template<typename TProtocol>
 asio::basic_socket<TProtocol>& Connection<TProtocol>::socket()
@@ -110,8 +114,9 @@ void Connection<TProtocol>::processRequest(fcgi::Request&& fcgiRequest, fcgi::Re
         fcgiRequest_ = std::move(fcgiRequest);
         responseSender_.emplace(std::move(fcgiResponse));
         const auto request = Request{*fcgiRequest_};
-        auto response = ResponseContext{*responseSender_, timerProvider_, client_, asioDispatcher_};
-        requestProcessor_(request, response);
+        responseContext_ =
+                std::make_unique<ResponseContext>(*responseSender_, timerProvider_, client_, asioDispatcher_);
+        requestProcessor_(request, *responseContext_);
     }
     catch (const std::exception& e) {
         errorHandler_(ErrorType::RequestProcessingError, -1, e.what());

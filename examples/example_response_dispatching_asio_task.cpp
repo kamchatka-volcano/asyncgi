@@ -6,7 +6,8 @@ namespace http = asyncgi::http;
 struct DelayedPage{
     void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
-        response.executeTask(
+        auto disp = asyncgi::AsioDispatcher{response};
+        disp.postTask(
                 [response](const asyncgi::TaskContext& ctx) mutable
                 {
                     auto timer = std::make_shared<asio::steady_timer>(ctx.io());

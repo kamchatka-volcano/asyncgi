@@ -33,12 +33,12 @@ int main()
      * [Complete guest book example](#complete-guest-book-example)
      * [Timer](#timer)
      * [Client](#client)
-     * [Waiting for future](#waiting-for-future)
      * [Executing an asio task](#executing-an-asio-task)
 *    [Development status](#development-status)     
 *    [Installation](#installation)
-*    [Building examples](#building-examples)
-*    [License](#license)
+* [Building examples](#building-examples)
+* [Running functional tests](#running-functional-tests)
+* [License](#license)
 
 ## Usage
 
@@ -956,6 +956,58 @@ int main()
 
 </details>
 
+
+The `asyncgi::Timer::waitFuture` method can accept an `std::future` object and invoke a provided callable object with
+its result when the future object becomes ready. This function does not block while waiting and uses an internal timer
+to periodically check the state of the future. To use it during request processing, a timer object created from
+an `asyncgi::Response` reference must be used. It is important to avoid using this timer after the response has already
+been sent.
+
+<details>
+  <summary>Example</summary>
+
+```c++
+///examples/response_wait_future.cpp
+///
+#include <asyncgi/asyncgi.h>
+#include <thread>
+
+using namespace asyncgi;
+
+struct DelayedPage{
+    void operator()(const asyncgi::Request&, asyncgi::Response& response)
+    {
+        auto timer = asyncgi::Timer{response};
+        timer.waitFuture(
+                std::async(
+                        std::launch::async,
+                        []
+                        {
+                            std::this_thread::sleep_for(std::chrono::seconds(3));
+                            return "world";
+                        }),
+                [response](const std::string& result) mutable
+                {
+                    response.send(http::Response{"Hello " + result});
+                });
+    }
+};
+
+int main()
+{
+    auto io = asyncgi::IO{};
+    auto router = asyncgi::Router{};
+    auto delayedPage = DelayedPage{};
+    router.route("/", http::RequestMethod::Get).process(delayedPage);
+    router.route().set(http::ResponseStatus::_404_Not_Found);
+    auto server = asyncgi::Server{io, router};
+    server.listen("/tmp/fcgi.sock");
+    io.run();
+}
+```
+
+</details>
+
 ### Client
 
 With `asyncgi::Client` it's possible to make direct requests to `FastCGI` applications. This
@@ -993,8 +1045,8 @@ int main()
 ```
 </details>
 
-To make FastCGI requests during request processing, the `asyncgi::Response::makeRequest()` method must be used instead
-of a client object.
+To make FastCGI requests during request processing, a client object created from an `asyncgi::Response` reference must
+be used. It is important to avoid using this client object after the response has already been sent.
 
 <details>
   <summary>Example</summary>
@@ -1004,13 +1056,14 @@ of a client object.
 ///
 #include <asyncgi/asyncgi.h>
 
-using namespace asyncgi;
+namespace http = asyncgi::http;
 
 struct RequestPage{
     void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
         // making request to FastCgi application listening on /tmp/fcgi.sock and showing the received response
-        response.makeRequest(
+        auto client = asyncgi::Client{response};
+        client.makeRequest(
                 "/tmp/fcgi.sock",
                 http::Request{http::RequestMethod::Get, "/"},
                 [response](const std::optional<http::ResponseView>& reqResponse) mutable
@@ -1037,55 +1090,6 @@ int main()
 
 </details>
 
-### Waiting for future
-
-The `asyncgi::Response::waitFuture` function can accept an `std::future` object and invoke a provided callable object
-with its result when the future object becomes ready. This function does not block while waiting and uses an internal
-timer to periodically check the state of the future.
-
-<details>
-  <summary>Example</summary>
-
-```c++
-///examples/response_wait_future.cpp
-///
-#include <asyncgi/asyncgi.h>
-#include <thread>
-
-using namespace asyncgi;
-
-struct DelayedPage{
-    void operator()(const asyncgi::Request&, asyncgi::Response& response)
-    {
-        response.waitFuture(
-                std::async(
-                        std::launch::async,
-                        []
-                        {
-                            std::this_thread::sleep_for(std::chrono::seconds(3));
-                            return "world";
-                        }),
-                [response](const std::string& result) mutable
-                {
-                    response.send(http::Response{"Hello " + result});
-                });
-    }
-};
-
-int main()
-{
-    auto io = asyncgi::IO{};
-    auto router = asyncgi::Router{};
-    auto delayedPage = DelayedPage{};
-    router.route("/", http::RequestMethod::Get).process(delayedPage);
-    router.route().set(http::ResponseStatus::_404_Not_Found);
-    auto server = asyncgi::Server{io, router};
-    server.listen("/tmp/fcgi.sock");
-    io.run();
-}
-```
-
-</details>
 
 ### Executing an asio task
 
@@ -1124,9 +1128,8 @@ int main()
 
 </details>
 
-
-To invoke such a callable object during request processing, it is required to use the `asyncgi::Response::executeTask()`
-method instead of directly using a dispatcher object.
+To invoke such a callable object during request processing, a dispatcher created from an `asyncgi::Response` reference
+must be used. It is important to avoid using this dispatcher after the response has already been sent.
 
 <details>
   <summary>Example</summary>
@@ -1142,7 +1145,8 @@ namespace http = asyncgi::http;
 struct DelayedPage{
     void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
-        response.executeTask(
+        auto disp = asyncgi::AsioDispatcher{response};
+        disp.postTask(
                 [response](const asyncgi::TaskContext& ctx) mutable
                 {
                     auto timer = std::make_shared<asio::steady_timer>(ctx.io());
@@ -1170,7 +1174,7 @@ int main()
 
 ## Development status
 
-`asyncgi` is currently in the open beta stage, with all planned features complete, until it reaches a non-zero major
+`asyncgi` is currently in the open beta stage, with all planned features complete. Until it reaches a non-zero major
 version number, there may be frequent introductions of backward-incompatible changes.
 
 Unit tests are not included because most of the functionality in `asyncgi` is derived from the following libraries,

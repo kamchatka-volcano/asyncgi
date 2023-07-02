@@ -2,6 +2,7 @@
 #define ASYNCGI_ASIODISPATCHER_H
 
 #include "taskcontext.h"
+#include "detail/serviceholder.h"
 #include <functional>
 #include <memory>
 
@@ -11,21 +12,17 @@ class AsioDispatcherService;
 }
 
 class IO;
+class Response;
 
 class AsioDispatcher {
 public:
-    AsioDispatcher(IO&);
-    ~AsioDispatcher();
-    AsioDispatcher(const AsioDispatcher&) = delete;
-    AsioDispatcher(AsioDispatcher&&) = default;
-    AsioDispatcher& operator=(const AsioDispatcher&) = delete;
-    AsioDispatcher& operator=(AsioDispatcher&&) = default;
+    explicit AsioDispatcher(IO&);
+    explicit AsioDispatcher(Response&);
 
-    void postTask(std::function<void(const TaskContext&)> task, std::function<void()> postTaskAction);
     void postTask(std::function<void(const TaskContext&)> task);
 
 private:
-    std::unique_ptr<detail::AsioDispatcherService> asioDispatcherService_;
+    detail::ServiceHolder<detail::AsioDispatcherService> asioDispatcherService_;
 };
 
 } //namespace asyncgi

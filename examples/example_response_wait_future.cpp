@@ -6,7 +6,8 @@ using namespace asyncgi;
 struct DelayedPage{
     void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
-        response.waitFuture(
+        auto timer = asyncgi::Timer{response};
+        timer.waitFuture(
                 std::async(
                         std::launch::async,
                         []

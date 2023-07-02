@@ -4,12 +4,13 @@
 #include "request.h"
 #include "response.h"
 #include "detail/external/sfun/functional.h"
-#include "detail/responsecontext.h"
 #include <functional>
 
 namespace asyncgi {
 
 namespace detail {
+class ResponseContext;
+
 template<typename TRequestProcessorArgs>
 constexpr void checkRequestProcessorSignature(const TRequestProcessorArgs&)
 {

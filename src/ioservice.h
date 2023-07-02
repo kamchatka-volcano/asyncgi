@@ -12,7 +12,7 @@ using asio_work_guard = asio::executor_work_guard<asio::io_context::executor_typ
 
 class IOService {
 public:
-    IOService(int threadCount);
+    explicit IOService(int threadCount);
     asio::io_context& io() const;
     asio::io_context& nextIO();
     void run();

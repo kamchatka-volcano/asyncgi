@@ -1,24 +1,28 @@
 #pragma once
-#include <asyncgi/detail/itimerservice.h>
-#include <memory>
-#include <vector>
+#include "timerservice.h"
+#include <asyncgi/detail/external/sfun/member.h>
+#include <deque>
 
 namespace asio {
 class io_context;
 }
 
-namespace asyncgi::detail {
+namespace asyncgi::whaleroute {
+class RequestProcessorQueue;
+}
 
-class ITimerService;
+namespace asyncgi::detail {
 
 class TimerProvider {
 public:
     explicit TimerProvider(asio::io_context& io);
-    ITimerService& emplaceTimer();
+    TimerService& emplaceTimer();
+    void setRequestProcessorQueue(whaleroute::RequestProcessorQueue* queue);
 
 private:
-    asio::io_context& io_;
-    std::vector<std::unique_ptr<ITimerService>> timers_;
+    sfun::member<asio::io_context&> io_;
+    std::deque<TimerService> timers_;
+    whaleroute::RequestProcessorQueue* requestProcessorQueue_ = nullptr;
 };
 
 } // namespace asyncgi::detail

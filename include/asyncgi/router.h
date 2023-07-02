@@ -7,6 +7,7 @@
 #include "detail/external/sfun/functional.h"
 #include "detail/external/sfun/interface.h"
 #include "detail/external/whaleroute/requestrouter.h"
+#include "detail/routeresponsecontextaccessor.h"
 #include "http/response.h"
 
 namespace asyncgi {
@@ -18,7 +19,7 @@ public:
     void operator()(const Request& request, Response& response)
     {
         auto requestProcessorQueuePtr = std::make_shared<whaleroute::RequestProcessorQueue>();
-        response.setRequestProcessorQueue<TRouteContext>(requestProcessorQueuePtr, sfun::access_token{*this});
+        detail::RouterResponseContextAccessor::setRequestProcessorQueue(response, requestProcessorQueuePtr);
         auto requestProcessorQueue =
                 whaleroute::RequestRouter<asyncgi::Request, asyncgi::Response, http::Response, TRouteContext>::
                         makeRequestProcessorQueue(request, response);

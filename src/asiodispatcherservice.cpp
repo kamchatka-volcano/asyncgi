@@ -1,5 +1,6 @@
 #include "asiodispatcherservice.h"
 #include <asio/io_context.hpp>
+#include <asyncgi/detail/external/whaleroute/requestprocessorqueue.h>
 
 namespace asyncgi::detail {
 
@@ -8,21 +9,27 @@ AsioDispatcherService::AsioDispatcherService(asio::io_context& io)
 {
 }
 
-void AsioDispatcherService::postTask(
-        std::function<void(const TaskContext& ctx)> task,
-        std::function<void()> postTaskAction)
+void AsioDispatcherService::postTask(std::function<void(const TaskContext& ctx)> task)
 {
+    if (requestProcessorQueue_)
+        requestProcessorQueue_->stop();
+
+    auto postTaskAction = [this]
+    {
+        if (requestProcessorQueue_)
+            requestProcessorQueue_->launch();
+    };
     auto taskContext = TaskContext{io_, std::move(postTaskAction)};
-    io_.post(
+    io_.get().post(
             [task = std::move(task), taskContext = std::move(taskContext)]
             {
                 task(taskContext);
             });
 }
 
-void AsioDispatcherService::postTask(std::function<void(const TaskContext& ctx)> task)
+void AsioDispatcherService::setRequestProcessorQueue(whaleroute::RequestProcessorQueue* queue)
 {
-    postTask(std::move(task), {});
+    requestProcessorQueue_ = queue;
 }
 
 } // namespace asyncgi::detail

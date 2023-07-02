@@ -62,7 +62,6 @@ set(SRC
     src/responsesender.cpp
     src/ioservice.cpp
     src/serverservice.cpp
-    src/testserver.cpp
     src/clientservice.cpp
     src/taskcontext.cpp
     src/timerservice.cpp
@@ -72,7 +71,9 @@ set(SRC
     src/clientconnection.cpp
     src/request.cpp
     src/response.cpp
-)
+    src/routeresponsecontextaccessor.cpp
+    src/serviceholder.cpp
+    )
 
 SealLake_StaticLibrary(
     SOURCES ${SRC}

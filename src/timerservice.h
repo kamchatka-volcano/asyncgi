@@ -1,6 +1,6 @@
 #pragma once
-#include "asyncgi/detail/itimerservice.h"
 #include <asio/steady_timer.hpp>
+#include <asyncgi/detail/external/sfun/member.h>
 #include <chrono>
 #include <functional>
 #include <future>
@@ -10,20 +10,23 @@ namespace asio {
 class io_context;
 }
 
+namespace asyncgi::whaleroute {
+class RequestProcessorQueue;
+}
+
 namespace asyncgi::detail {
 
-class IOService;
-
-class TimerService : public ITimerService {
+class TimerService {
 public:
-    explicit TimerService(asio::io_context& io);
-    void start(std::chrono::milliseconds time, std::function<void()> callback) override;
-    void startPeriodic(std::chrono::milliseconds time, std::function<void()> callback) override;
-    void stop() override;
+    explicit TimerService(asio::io_context& io, whaleroute::RequestProcessorQueue* requestProcessorQueue_ = nullptr);
+    void start(std::chrono::milliseconds time, std::function<void()> callback);
+    void startPeriodic(std::chrono::milliseconds time, std::function<void()> callback);
+    void stop();
 
 private:
-    asio::io_context& io_;
+    sfun::member<asio::io_context&> io_;
     asio::steady_timer timer_;
+    whaleroute::RequestProcessorQueue* requestProcessorQueue_ = nullptr;
 };
 
 } // namespace asyncgi::detail

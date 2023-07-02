@@ -3,6 +3,7 @@
 
 #include "errors.h"
 #include "types.h"
+#include "detail/serviceholder.h"
 #include "http/request.h"
 #include "http/response_view.h"
 #include <filesystem>
@@ -13,6 +14,7 @@
 
 namespace asyncgi {
 class IO;
+class Response;
 
 namespace detail {
 class ClientService;
@@ -20,12 +22,8 @@ class ClientService;
 
 class Client {
 public:
-    Client(IO&);
-    ~Client();
-    Client(const Client&) = delete;
-    Client(Client&&) = default;
-    Client& operator=(const Client&) = delete;
-    Client& operator=(Client&&) = default;
+    explicit Client(IO&);
+    explicit Client(Response&);
 
     void makeRequest(
             const std::filesystem::path& socketPath,
@@ -54,7 +52,7 @@ public:
     void disconnect();
 
 private:
-    std::unique_ptr<detail::ClientService> clientService_;
+    detail::ServiceHolder<detail::ClientService> clientService_;
 };
 
 } //namespace asyncgi

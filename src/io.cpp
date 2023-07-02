@@ -11,12 +11,12 @@ IO::IO(int threadsNumber, ErrorHandlerFunc errorHandler)
 
 IO::~IO() = default;
 
-detail::IOService& IO::ioService(detail::AccessPermission)
+detail::IOService& IO::ioService(detail::IOAccessPermission)
 {
     return *ioService_;
 }
 
-ErrorHandler& IO::errorHandler()
+ErrorHandler& IO::errorHandler(detail::IOAccessPermission)
 {
     return errorHandler_;
 }

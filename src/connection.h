@@ -21,12 +21,19 @@ class io_context;
 
 namespace asyncgi::detail {
 class ConnectionFactory;
+class ResponseContext;
 
 template<typename TProtocol>
 class Connection : public std::enable_shared_from_this<Connection<TProtocol>>,
                    public fcgi::Responder {
 public:
     Connection(RequestProcessor, asio::io_context&, ErrorHandler&, sfun::access_permission<ConnectionFactory>);
+    ~Connection() override;
+    Connection(const Connection<TProtocol>&) = delete;
+    Connection& operator=(const Connection<TProtocol>&) = delete;
+    Connection(Connection<TProtocol>&&) noexcept = default;
+    Connection& operator=(Connection<TProtocol>&&) noexcept = default;
+
     asio::basic_socket<TProtocol>& socket();
     void process();
     void readData(std::size_t bytesRead);
@@ -39,6 +46,7 @@ private:
     void close();
 
 private:
+    std::unique_ptr<ResponseContext> responseContext_;
     std::optional<fcgi::Request> fcgiRequest_;
     std::optional<ResponseSender> responseSender_;
     RequestProcessor requestProcessor_;

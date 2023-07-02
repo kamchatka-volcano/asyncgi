@@ -13,7 +13,7 @@ class AsioDispatcher;
 
 namespace detail {
 class IOService;
-using AccessPermission = sfun::access_permission<Server, Client, Timer, AsioDispatcher>;
+using IOAccessPermission = sfun::access_permission<Server, Client, Timer, AsioDispatcher>;
 } //namespace detail
 
 class IO {
@@ -26,10 +26,12 @@ public:
     IO& operator=(const IO&) = delete;
     IO& operator=(IO&&) = delete;
 
-    ErrorHandler& errorHandler();
-    detail::IOService& ioService(detail::AccessPermission);
     void run();
     void stop();
+
+    /// detail
+    ErrorHandler& errorHandler(detail::IOAccessPermission);
+    detail::IOService& ioService(detail::IOAccessPermission);
 
 private:
     std::unique_ptr<detail::IOService> ioService_;

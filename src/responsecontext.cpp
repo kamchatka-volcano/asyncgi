@@ -1,13 +1,12 @@
+#include "responsecontext.h"
 #include "asiodispatcherservice.h"
 #include "clientservice.h"
 #include "timerprovider.h"
-#include <asyncgi/detail/iresponsesender.h>
-#include <asyncgi/detail/responsecontext.h>
 
 namespace asyncgi::detail {
 
 ResponseContext::ResponseContext(
-        IResponseSender& responseSender,
+        ResponseSender& responseSender,
         TimerProvider& timerProvider,
         ClientService& client,
         AsioDispatcherService& asioDispatcher)
@@ -18,14 +17,9 @@ ResponseContext::ResponseContext(
 {
 }
 
-IResponseSender& ResponseContext::responseSender() const
+ResponseSender& ResponseContext::responseSender() const
 {
     return responseSender_;
-}
-
-ITimerService& ResponseContext::makeTimer() const
-{
-    return timerProvider_.get().emplaceTimer();
 }
 
 ClientService& ResponseContext::client() const
@@ -38,14 +32,17 @@ AsioDispatcherService& ResponseContext::asioDispatcher() const
     return asioDispatcher_;
 }
 
-const std::vector<std::string>& ResponseContext::routeParams() const
+TimerProvider& ResponseContext::timerProvider() const
 {
-    return routeParams_;
+    return timerProvider_;
 }
 
-void ResponseContext::setRouteParams(const std::vector<std::string>& params)
+void ResponseContext::setRequestProcessorQueue(const std::shared_ptr<whaleroute::RequestProcessorQueue>& queue)
 {
-    routeParams_ = params;
+    requestProcessorQueue_ = queue;
+    client_.get().setRequestProcessorQueue(requestProcessorQueue_.get());
+    asioDispatcher_.get().setRequestProcessorQueue(requestProcessorQueue_.get());
+    timerProvider_.get().setRequestProcessorQueue(requestProcessorQueue_.get());
 }
 
 } // namespace asyncgi::detail
