@@ -1,9 +1,14 @@
 #include <asyncgi/asyncgi.h>
+#ifdef ASYNCGI_USE_BOOST_ASIO
+namespace asio = boost::asio;
+#include <boost/asio/steady_timer.hpp>
+#else
 #include <asio/steady_timer.hpp>
+#endif
 
 namespace http = asyncgi::http;
 
-struct DelayedPage{
+struct DelayedPage {
     void operator()(const asyncgi::Request&, asyncgi::Response& response)
     {
         auto disp = asyncgi::AsioDispatcher{response};

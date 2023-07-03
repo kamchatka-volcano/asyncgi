@@ -1,5 +1,10 @@
 #include "asiodispatcherservice.h"
+#ifdef ASYNCGI_USE_BOOST_ASIO
+#include <boost/asio/io_context.hpp>
+#else
 #include <asio/io_context.hpp>
+#endif
+#include <asyncgi/detail/asio_namespace.h>
 #include <asyncgi/detail/external/whaleroute/requestprocessorqueue.h>
 
 namespace asyncgi::detail {

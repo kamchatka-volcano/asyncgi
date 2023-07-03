@@ -1,7 +1,12 @@
 #include "clientservice.h"
 #include "ioservice.h"
 #include "timerprovider.h"
+#include <asyncgi/detail/asio_namespace.h>
+#ifdef ASYNCGI_USE_BOOST_ASIO
+#include <boost/asio/write.hpp>
+#else
 #include <asio/write.hpp>
+#endif
 #include <asyncgi/detail/external/whaleroute/requestprocessorqueue.h>
 
 namespace asyncgi::detail {

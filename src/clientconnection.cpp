@@ -1,8 +1,17 @@
+#include "clientconnection.h"
+#include "asio_error.h"
 #include "clientservice.h"
 #include "timerprovider.h"
+#include <asyncgi/detail/asio_namespace.h>
+#ifdef ASYNCGI_USE_BOOST_ASIO
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/local/stream_protocol.hpp>
+#include <boost/asio/write.hpp>
+#else
 #include <asio/ip/tcp.hpp>
 #include <asio/local/stream_protocol.hpp>
 #include <asio/write.hpp>
+#endif
 
 namespace asyncgi::detail {
 
@@ -129,12 +138,11 @@ void ClientConnection<TProtocol>::onBytesWritten(std::size_t numOfBytes)
 template<typename TProtocol>
 void ClientConnection<TProtocol>::close()
 {
-    try {
-        socket_.shutdown(asio::basic_stream_socket<TProtocol>::shutdown_both);
-        socket_.close();
-    }
-    catch (const std::system_error& e) {
-        errorHandler_(ErrorType::SocketCloseError, e.code());
+    auto error = asio_error{};
+    socket_.shutdown(asio::basic_stream_socket<TProtocol>::shutdown_both, error);
+    socket_.close(error);
+    if (error) {
+        errorHandler_(ErrorType::SocketCloseError, error);
     }
     disconnectRequested_ = false;
 }

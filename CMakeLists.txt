@@ -3,7 +3,11 @@ project(asyncgi VERSION 0.1.0 DESCRIPTION "asyncgi - asynchronous FastCGI web ap
 
 include(GNUInstallDirs)
 include(external/seal_lake)
-include(external/asio)
+if (ASYNCGI_USE_BOOST_ASIO)
+    find_package(Boost REQUIRED COMPONENTS system)
+else()
+    include(external/asio)
+endif()
 
 SealLake_Bundle(
     NAME asyncgi_sfun
@@ -81,10 +85,19 @@ SealLake_StaticLibrary(
     PROPERTIES
         CXX_EXTENSIONS OFF
     LIBRARIES
-        asio
         asyncgi_fcgi_responder::asyncgi_fcgi_responder
         asyncgi_sfun::asyncgi_sfun
         asyncgi_hot_teacup::asyncgi_hot_teacup
 )
 
+if (ASYNCGI_USE_BOOST_ASIO)
+    SealLake_Libraries(Boost::boost)
+else()
+    SealLake_Libraries(asio)
+endif()
+
 SealLake_OptionalBuildSteps(examples)
+
+if (ASYNCGI_USE_BOOST_ASIO)
+    target_compile_definitions(asyncgi PUBLIC "ASYNCGI_USE_BOOST_ASIO")
+endif()

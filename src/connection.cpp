@@ -1,8 +1,16 @@
 #include "connection.h"
+#include "asio_error.h"
 #include "responsecontext.h"
+#include <asyncgi/detail/asio_namespace.h>
+#ifdef ASYNCGI_USE_BOOST_ASIO
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/local/stream_protocol.hpp>
+#include <boost/asio/write.hpp>
+#else
 #include <asio/ip/tcp.hpp>
 #include <asio/local/stream_protocol.hpp>
 #include <asio/write.hpp>
+#endif
 #include <asyncgi/request.h>
 #include <asyncgi/response.h>
 #include <memory>
@@ -126,13 +134,12 @@ void Connection<TProtocol>::processRequest(fcgi::Request&& fcgiRequest, fcgi::Re
 template<typename TProtocol>
 void Connection<TProtocol>::close()
 {
-    try {
-        socket_.shutdown(TProtocol::socket::shutdown_both);
-        socket_.close();
-    }
-    catch (const std::system_error& e) {
-        errorHandler_(ErrorType::SocketCloseError, e.code());
-    }
+    auto error = asio_error{};
+    socket_.shutdown(TProtocol::socket::shutdown_both, error);
+    socket_.close(error);
+
+    if (error)
+        errorHandler_(ErrorType::SocketCloseError, error);
     disconnectRequested_ = false;
 }
 

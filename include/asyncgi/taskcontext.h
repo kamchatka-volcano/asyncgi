@@ -1,11 +1,11 @@
 #ifndef ASYNCGI_TASKCONTEXT_H
 #define ASYNCGI_TASKCONTEXT_H
-
+#include "detail/asio_namespace.h"
 #include "detail/external/sfun/member.h"
 #include <functional>
 #include <memory>
 
-namespace asio {
+namespace ASYNCGI_ASIO {
 class io_context;
 }
 

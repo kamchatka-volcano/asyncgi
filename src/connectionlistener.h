@@ -1,5 +1,10 @@
 #pragma once
+#include <asyncgi/detail/asio_namespace.h>
+#ifdef ASYNCGI_USE_BOOST_ASIO
+#include <boost/asio/basic_socket_acceptor.hpp>
+#else
 #include <asio/basic_socket_acceptor.hpp>
+#endif
 #include <asyncgi/detail/external/sfun/member.h>
 #include <asyncgi/errors.h>
 #include <string>

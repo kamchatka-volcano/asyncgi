@@ -27,6 +27,8 @@ jobs:
             os: ubuntu-latest,
             cc: "gcc",
             cxx: "g++",
+            cmake_vars: "",
+            asio_type: "standalone",
             flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused",
             artifacts-path: "build/examples"
           }
@@ -35,6 +37,8 @@ jobs:
             os: ubuntu-latest,
             cc: "clang",
             cxx: "clang++",
+            cmake_vars: "",
+            asio_type: "standalone",
             flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused",
             artifacts-path: "build/examples"
           }
@@ -43,6 +47,28 @@ jobs:
             os: windows-latest,
             cc: "cl",
             cxx: "cl",
+            cmake_vars: "",
+            asio_type: "standalone",
+            flags: "/EHsc /W4 /WX",
+            artifacts-path: "build/examples/Release"
+          }
+          - {
+            name: "Ubuntu Latest clang (Boost.Asio)",
+            os: ubuntu-latest,
+            cc: "clang",
+            cxx: "clang++",
+            asio_type: "boost",
+            cmake_vars: "-DASYNCGI_USE_BOOST_ASIO=ON -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_STATIC_RUNTIME=ON -DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake",
+            flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused",
+            artifacts-path: "build/examples"
+          }
+          - {
+            name: "Windows Latest MSVC (Boost.Asio)",
+            os: windows-latest,
+            cc: "cl",
+            cxx: "cl",
+            asio_type: "boost",
+            cmake_vars: "-DASYNCGI_USE_BOOST_ASIO=ON -DCMAKE_GENERATOR_PLATFORM=x64 -DVCPKG_TARGET_TRIPLET=x64-windows-static-md -DCMAKE_TOOLCHAIN_FILE='vcpkg/scripts/buildsystems/vcpkg.cmake'",
             flags: "/EHsc /W4 /WX",
             artifacts-path: "build/examples/Release"
           }
@@ -51,8 +77,13 @@ jobs:
       - name: Git checkout
         uses: actions/checkout@v3
 
+      - name: Install vcpkg
+        uses: lukka/run-vcpkg@v10
+        with:
+          vcpkgGitCommitId: 31a159c1cae2bf905299085d9ef01bdfea0ca7b8
+
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DENABLE_EXAMPLES=ON -DCMAKE_CXX_FLAGS="${{ matrix.config.flags }}"
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DENABLE_EXAMPLES=ON ${{ matrix.config.cmake_vars }} -DCMAKE_CXX_FLAGS="${{ matrix.config.flags }}"
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build --config Release
@@ -60,16 +91,17 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: asyncgi-examples-${{ matrix.config.os }}
+          name: asyncgi-examples-${{ matrix.config.os }}-${{ matrix.config.asio_type }}-asio
           path: ${{ matrix.config.artifacts-path }}
 
   functional_tests:
-    name: Functional testing (${{ matrix.config.name }}
+    name: Functional testing (${{ matrix.config.name }} ${{ matrix.asio_type }}-asio)
     needs: build
     runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
       matrix:
+        asio_type: [ "standalone", "boost" ]
         config:
           - {
             name: "Windows",
@@ -117,7 +149,7 @@ jobs:
         id: pre_launch_tests
         uses: actions/download-artifact@v3
         with:
-          name: asyncgi-examples-${{ matrix.config.os }}
+          name: asyncgi-examples-${{ matrix.config.os }}-${{ matrix.asio_type }}-asio
           path: build/examples
 
       - name: Set artifacts execute permissions

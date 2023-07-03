@@ -1,6 +1,14 @@
 #pragma once
+#ifdef ASYNCGI_USE_BOOST_ASIO
+#include <boost/asio/executor_work_guard.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/signal_set.hpp>
+#else
+#include <asio/executor_work_guard.hpp>
 #include <asio/io_context.hpp>
 #include <asio/signal_set.hpp>
+#endif
+#include <asyncgi/detail/asio_namespace.h>
 #include <asyncgi/errors.h>
 #include <memory>
 #include <thread>

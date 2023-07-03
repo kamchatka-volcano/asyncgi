@@ -1,7 +1,7 @@
 #include "serverservice.h"
 #include "connectionlistener.h"
 #include "connectionlistenerfactory.h"
-#include <asio/error_code.hpp>
+#include <asyncgi/detail/asio_namespace.h>
 #include <asyncgi/detail/external/sfun/contract.h>
 #include <asyncgi/errors.h>
 #include <cstdint>

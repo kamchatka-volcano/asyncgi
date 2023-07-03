@@ -1,8 +1,9 @@
 #pragma once
+#include <asyncgi/detail/asio_namespace.h>
 #include <asyncgi/detail/external/sfun/member.h>
 #include <asyncgi/taskcontext.h>
 
-namespace asio {
+namespace ASYNCGI_ASIO {
 class io_context;
 }
 

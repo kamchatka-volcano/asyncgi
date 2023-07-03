@@ -1,6 +1,11 @@
 #include "timerprovider.h"
 #include "timerservice.h"
+#include <asyncgi/detail/asio_namespace.h>
+#ifdef ASYNCGI_USE_BOOST_ASIO
+#include <boost/asio/io_context.hpp>
+#else
 #include <asio/io_context.hpp>
+#endif
 
 namespace asyncgi::detail {
 

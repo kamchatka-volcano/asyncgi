@@ -1,3 +1,4 @@
+#include <asyncgi/detail/asio_namespace.h>
 #include <asyncgi/taskcontext.h>
 
 namespace asyncgi {

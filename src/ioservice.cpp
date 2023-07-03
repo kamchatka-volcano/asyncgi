@@ -1,8 +1,13 @@
 #include "ioservice.h"
+#include <asyncgi/detail/asio_namespace.h>
+#ifdef ASYNCGI_USE_BOOST_ASIO
+#include <boost/asio/signal_set.hpp>
+#else
 #include <asio/signal_set.hpp>
+#endif
+#include <asyncgi/detail/asio_namespace.h>
 #include <sfun/contract.h>
 #include <sfun/utility.h>
-
 #include <iostream>
 
 namespace asyncgi::detail {

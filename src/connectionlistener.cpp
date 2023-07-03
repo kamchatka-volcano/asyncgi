@@ -1,8 +1,14 @@
 #include "connectionlistener.h"
 #include "connection.h"
 #include "connectionfactory.h"
+#include <asyncgi/detail/asio_namespace.h>
+#ifdef ASYNCGI_USE_BOOST_ASIO
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/local/stream_protocol.hpp>
+#else
 #include <asio/ip/tcp.hpp>
 #include <asio/local/stream_protocol.hpp>
+#endif
 
 namespace asyncgi::detail {
 

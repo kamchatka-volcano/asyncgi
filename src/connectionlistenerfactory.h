@@ -1,10 +1,11 @@
 #pragma once
 #include "connectionlistener.h"
+#include <asyncgi/detail/asio_namespace.h>
 #include <asyncgi/detail/external/sfun/member.h>
 #include <asyncgi/errors.h>
 #include <memory>
 
-namespace asio {
+namespace ASYNCGI_ASIO {
 class io_context;
 }
 

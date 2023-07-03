@@ -1,12 +1,17 @@
 #pragma once
+#include <asyncgi/detail/asio_namespace.h>
+#ifdef ASYNCGI_USE_BOOST_ASIO
+#include <boost/asio/steady_timer.hpp>
+#else
 #include <asio/steady_timer.hpp>
+#endif
 #include <asyncgi/detail/external/sfun/member.h>
 #include <chrono>
 #include <functional>
 #include <future>
 #include <map>
 
-namespace asio {
+namespace ASYNCGI_ASIO {
 class io_context;
 }
 
