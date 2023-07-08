@@ -7,14 +7,14 @@ namespace boost::asio {
 }
 namespace asyncgi {
 namespace asio = boost::asio;
-};
+}
 #else
 #define ASYNCGI_ASIO asio
 namespace asio {
 }
 namespace asyncgi {
 namespace asio = ::asio;
-};
+}
 #endif
 
 #endif //ASYNCGI_ASIO_NAMESPACE_H
