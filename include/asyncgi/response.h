@@ -31,7 +31,7 @@ using ResponseContextAccessPermission =
 
 class Response {
 public:
-    explicit Response(detail::ResponseContext& responseContext);
+    explicit Response(std::shared_ptr<detail::ResponseContext> responseContext);
 
     template<typename... TArgs>
     void send(TArgs... args)
@@ -50,10 +50,10 @@ public:
     bool isSent() const;
 
     /// detail
-    detail::ResponseContext& context(detail::ResponseContextAccessPermission);
+    std::weak_ptr<detail::ResponseContext> context(detail::ResponseContextAccessPermission);
 
 private:
-    sfun::member<detail::ResponseContext&> responseContext_;
+    std::weak_ptr<detail::ResponseContext> responseContext_;
 };
 
 } // namespace asyncgi

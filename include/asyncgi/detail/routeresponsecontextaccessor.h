@@ -13,7 +13,7 @@ class RequestProcessorQueue;
 namespace detail {
 
 struct RouterResponseContextAccessor {
-    static void setRequestProcessorQueue(Response&, std::shared_ptr<whaleroute::RequestProcessorQueue>);
+    static void setRequestProcessorQueue(Response&, const std::shared_ptr<whaleroute::RequestProcessorQueue>&);
 };
 
 } //namespace detail

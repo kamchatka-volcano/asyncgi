@@ -14,13 +14,27 @@ AsioDispatcher::AsioDispatcher(IO& io)
 {
 }
 
+namespace {
+detail::AsioDispatcherService* getAsioDispatcherService(
+        Response& response,
+        sfun::access_token<AsioDispatcher> accessToken)
+{
+    if (auto context = response.context(accessToken).lock())
+        return &context->asioDispatcher();
+    else
+        return nullptr;
+}
+} //namespace
+
 AsioDispatcher::AsioDispatcher(Response& response)
-    : asioDispatcherService_{response.context(sfun::access_token<AsioDispatcher>{}).asioDispatcher()}
+    : asioDispatcherService_{getAsioDispatcherService(response, sfun::access_token<AsioDispatcher>{})}
 {
 }
 
 void AsioDispatcher::postTask(std::function<void(const TaskContext&)> task)
 {
+    if (!asioDispatcherService_.has_value())
+        return;
     asioDispatcherService_.get().postTask(std::move(task));
 }
 

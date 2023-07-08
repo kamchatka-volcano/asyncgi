@@ -20,10 +20,21 @@ std::vector<std::unique_ptr<asio::io_context>> makeIoPool(int threadCount)
         res.emplace_back(std::make_unique<asio::io_context>());
     return res;
 }
+
+std::vector<std::unique_ptr<asio_work_guard>> makeGuardPool(
+        const std::vector<std::unique_ptr<asio::io_context>>& ioPool)
+{
+    auto result = std::vector<std::unique_ptr<asio_work_guard>>{};
+    for (auto& io : ioPool)
+        result.emplace_back(std::make_unique<asio_work_guard>(io->get_executor()));
+    return result;
+}
+
 } //namespace
 
 IOService::IOService(int threadCount)
     : ioPool_{makeIoPool(threadCount)}
+    , ioGuardPool_{makeGuardPool(ioPool_)}
     , signals_{
               *ioPool_.at(0),
               SIGINT,
@@ -47,9 +58,6 @@ asio::io_context& IOService::nextIO()
 
 void IOService::run()
 {
-    for (auto& io : ioPool_)
-        ioGuardPool_.emplace_back(std::make_unique<asio_work_guard>(io->get_executor()));
-
     for (auto i = 1; i < sfun::ssize(ioPool_); ++i) {
         threadPool_.emplace_back(
                 [this, i]
@@ -65,7 +73,6 @@ void IOService::run()
 
 void IOService::stop()
 {
-    ioGuardPool_.clear();
     for (auto& io : ioPool_)
         io->stop();
 }

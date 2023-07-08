@@ -9,13 +9,14 @@ template<typename T>
 class ServiceHolder {
 public:
     explicit ServiceHolder(std::unique_ptr<T>);
-    explicit ServiceHolder(T&);
+    explicit ServiceHolder(T*);
     ~ServiceHolder();
     ServiceHolder(const ServiceHolder<T>&) = delete;
     ServiceHolder<T>& operator=(const ServiceHolder<T>&) = delete;
     ServiceHolder(ServiceHolder<T>&&) noexcept = default;
     ServiceHolder<T>& operator=(ServiceHolder<T>&&) noexcept = default;
 
+    bool has_value() const;
     T& get();
 
 private:

@@ -51,7 +51,7 @@ private:
     void close();
 
 private:
-    std::unique_ptr<ResponseContext> responseContext_;
+    std::shared_ptr<ResponseContext> responseContext_;
     std::optional<fcgi::Request> fcgiRequest_;
     std::optional<ResponseSender> responseSender_;
     RequestProcessor requestProcessor_;

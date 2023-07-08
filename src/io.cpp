@@ -9,6 +9,12 @@ IO::IO(int threadsNumber, ErrorHandlerFunc errorHandler)
 {
 }
 
+IO::IO(ErrorHandlerFunc errorHandler)
+    : ioService_{std::make_unique<detail::IOService>(1)}
+    , errorHandler_{std::move(errorHandler)}
+{
+}
+
 IO::~IO() = default;
 
 detail::IOService& IO::ioService(detail::IOAccessPermission)

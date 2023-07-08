@@ -34,7 +34,8 @@ public:
         using ResponseType = std::decay_t<typename decltype(sfun::get<args.size() - 1>(args))::type>;
 
         if constexpr (std::is_lvalue_reference_v<TRequestProcessorFunc>) {
-            requestProcessorInvoker_ = [&requestProcessor](const Request& request, detail::ResponseContext& response)
+            requestProcessorInvoker_ =
+                    [&requestProcessor](const Request& request, std::shared_ptr<detail::ResponseContext> response)
             {
                 auto contextualResponse = ResponseType{response};
                 requestProcessor(request, contextualResponse);
@@ -43,7 +44,7 @@ public:
         else {
             requestProcessorInvoker_ = [requestProcessor = std::move(requestProcessor)](
                                                const Request& request,
-                                               detail::ResponseContext& response)
+                                               std::shared_ptr<detail::ResponseContext> response)
             {
                 auto contextualResponse = ResponseType{response};
                 requestProcessor(request, contextualResponse);
@@ -51,13 +52,14 @@ public:
         }
     }
 
-    void operator()(const Request& request, detail::ResponseContext& response)
+    void operator()(const Request& request, std::shared_ptr<detail::ResponseContext> response)
     {
         requestProcessorInvoker_(request, response);
     }
 
 private:
-    std::function<void(const Request& request, detail::ResponseContext& response)> requestProcessorInvoker_;
+    std::function<void(const Request& request, std::shared_ptr<detail::ResponseContext> response)>
+            requestProcessorInvoker_;
 };
 
 } // namespace asyncgi

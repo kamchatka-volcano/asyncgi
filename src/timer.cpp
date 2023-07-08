@@ -14,28 +14,50 @@ Timer::Timer(IO& io)
 {
 }
 
+namespace {
+detail::TimerService* getTimerService(Response& response, sfun::access_token<Timer> accessToken)
+{
+    if (auto context = response.context(accessToken).lock())
+        return &context->timerProvider().emplaceTimer();
+    else
+        return nullptr;
+}
+} //namespace
+
 Timer::Timer(Response& response)
-    : timerService_{response.context(sfun::access_token<Timer>{}).timerProvider().emplaceTimer()}
+    : timerService_{getTimerService(response, sfun::access_token<Timer>{})}
 {
 }
 
 void Timer::start(std::chrono::milliseconds time, std::function<void()> callback)
 {
+    if (!timerService_.has_value())
+        return;
+
     timerService_.get().start(time, callback);
 }
 
 void Timer::startPeriodic(std::chrono::milliseconds time, std::function<void()> callback)
 {
+    if (!timerService_.has_value())
+        return;
+
     timerService_.get().startPeriodic(time, callback);
 }
 
 void Timer::stop()
 {
+    if (!timerService_.has_value())
+        return;
+
     timerService_.get().stop();
 }
 
 std::function<void()> Timer::stopSignal()
 {
+    if (!timerService_.has_value())
+        return [] {};
+
     return [timerService = &timerService_.get()]
     {
         timerService->stop();

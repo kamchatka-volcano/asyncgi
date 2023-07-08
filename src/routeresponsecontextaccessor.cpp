@@ -7,9 +7,10 @@ namespace asyncgi::detail {
 
 void RouterResponseContextAccessor::setRequestProcessorQueue(
         Response& response,
-        std::shared_ptr<whaleroute::RequestProcessorQueue> queue)
+        const std::shared_ptr<whaleroute::RequestProcessorQueue>& queue)
 {
-    response.context(sfun::access_token<RouterResponseContextAccessor>{}).setRequestProcessorQueue(queue);
+    if (auto context = response.context(sfun::access_token<RouterResponseContextAccessor>{}).lock())
+        context->setRequestProcessorQueue(queue);
 }
 
 } //namespace asyncgi::detail

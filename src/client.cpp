@@ -15,8 +15,18 @@ Client::Client(IO& io)
 {
 }
 
+namespace {
+detail::ClientService* getClientService(Response& response, sfun::access_token<Client> accessToken)
+{
+    if (auto context = response.context(accessToken).lock())
+        return &context->client();
+    else
+        return nullptr;
+}
+} //namespace
+
 Client::Client(Response& response)
-    : clientService_{response.context(sfun::access_token<Client>{}).client()}
+    : clientService_{getClientService(response, sfun::access_token<Client>{})}
 {
 }
 
@@ -26,6 +36,9 @@ void Client::makeRequest(
         std::function<void(std::optional<fastcgi::Response>)> responseHandler,
         std::chrono::milliseconds timeout)
 {
+    if (!clientService_.has_value())
+        return;
+
     clientService_.get().makeRequest(socketPath, std::move(request), std::move(responseHandler), timeout);
 }
 
@@ -35,6 +48,9 @@ void Client::makeRequest(
         const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
         std::chrono::milliseconds timeout)
 {
+    if (!clientService_.has_value())
+        return;
+
     clientService_.get().makeRequest(socketPath, request, responseHandler, timeout);
 }
 
@@ -45,6 +61,9 @@ void Client::makeRequest(
         std::function<void(std::optional<fastcgi::Response>)> responseHandler,
         std::chrono::milliseconds timeout)
 {
+    if (!clientService_.has_value())
+        return;
+
     clientService_.get().makeRequest(ipAddress, port, std::move(request), std::move(responseHandler), timeout);
 }
 
@@ -55,11 +74,17 @@ void Client::makeRequest(
         const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
         std::chrono::milliseconds timeout)
 {
+    if (!clientService_.has_value())
+        return;
+
     clientService_.get().makeRequest(ipAddress, port, request, responseHandler, timeout);
 }
 
 void Client::disconnect()
 {
+    if (!clientService_.has_value())
+        return;
+
     clientService_.get().disconnect();
 }
 

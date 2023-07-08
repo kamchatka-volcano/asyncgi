@@ -49,8 +49,10 @@ void Connection<TProtocol>::process()
             [self = this->shared_from_this(), this](const auto& error, auto bytesRead)
             {
                 if (error) {
-                    if (error.value() != asio::error::operation_aborted)
+                    if (error.value() != asio::error::operation_aborted) {
                         errorHandler_(ErrorType::SocketReadError, error);
+                        close();
+                    }
                     return;
                 }
                 self->readData(bytesRead);
@@ -87,6 +89,7 @@ void Connection<TProtocol>::sendData(const std::string& data)
             {
                 if (error) {
                     errorHandler_(ErrorType::SocketWriteError, error);
+                    close();
                     return;
                 }
                 self->onBytesWritten(bytesWritten);
@@ -123,8 +126,8 @@ void Connection<TProtocol>::processRequest(fcgi::Request&& fcgiRequest, fcgi::Re
         responseSender_.emplace(std::move(fcgiResponse));
         const auto request = Request{*fcgiRequest_};
         responseContext_ =
-                std::make_unique<ResponseContext>(*responseSender_, timerProvider_, client_, asioDispatcher_);
-        requestProcessor_(request, *responseContext_);
+                std::make_shared<ResponseContext>(*responseSender_, timerProvider_, client_, asioDispatcher_);
+        requestProcessor_(request, responseContext_);
     }
     catch (const std::exception& e) {
         errorHandler_(ErrorType::RequestProcessingError, -1, e.what());

@@ -18,8 +18,8 @@ public:
     Server(IO&, RequestProcessor);
     ~Server();
     Server(const Server&) = delete;
-    Server(Server&&) = default;
     Server& operator=(const Server&) = delete;
+    Server(Server&&) = default;
     Server& operator=(Server&&) = default;
 
     void listen(std::string_view ipAddress, int port);

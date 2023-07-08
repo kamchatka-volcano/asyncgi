@@ -17,7 +17,7 @@ namespace detail {
 class TimerProvider;
 } // namespace detail
 
-Response::Response(detail::ResponseContext& responseContext)
+Response::Response(std::shared_ptr<detail::ResponseContext> responseContext)
     : responseContext_{responseContext}
 {
 }
@@ -28,26 +28,33 @@ void Response::redirect(
         std::vector<http::Cookie> cookies,
         std::vector<http::Header> headers)
 {
-    auto response = http::Response{std::move(path), redirectType, std::move(cookies), std::move(headers)};
-    responseContext_.get().responseSender().send(response.data(http::ResponseMode::Cgi));
+    if (auto context = responseContext_.lock()) {
+        auto response = http::Response{std::move(path), redirectType, std::move(cookies), std::move(headers)};
+        context->responseSender().send(response.data(http::ResponseMode::Cgi));
+    }
 }
 
 void Response::send(const http::Response& response)
 {
-    responseContext_.get().responseSender().send(response.data(http::ResponseMode::Cgi));
+    if (auto context = responseContext_.lock())
+        context->responseSender().send(response.data(http::ResponseMode::Cgi));
 }
 
 void Response::send(fastcgi::Response response)
 {
-    responseContext_.get().responseSender().send(std::move(response.data), std::move(response.errorMsg));
+    if (auto context = responseContext_.lock())
+        context->responseSender().send(std::move(response.data), std::move(response.errorMsg));
 }
 
 bool Response::isSent() const
 {
-    return responseContext_.get().responseSender().isSent();
+    if (auto context = responseContext_.lock())
+        return context->responseSender().isSent();
+
+    return true;
 }
 
-detail::ResponseContext& Response::context(detail::ResponseContextAccessPermission)
+std::weak_ptr<detail::ResponseContext> Response::context(detail::ResponseContextAccessPermission)
 {
     return responseContext_;
 }

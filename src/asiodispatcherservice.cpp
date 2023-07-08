@@ -16,14 +16,15 @@ AsioDispatcherService::AsioDispatcherService(asio::io_context& io)
 
 void AsioDispatcherService::postTask(std::function<void(const TaskContext& ctx)> task)
 {
-    if (requestProcessorQueue_)
-        requestProcessorQueue_->stop();
+    if (auto queue = requestProcessorQueue_.lock())
+        queue->stop();
 
-    auto postTaskAction = [this]
+    auto postTaskAction = [queueObserver = requestProcessorQueue_]
     {
-        if (requestProcessorQueue_)
-            requestProcessorQueue_->launch();
+        if (auto queue = queueObserver.lock())
+            queue->launch();
     };
+
     auto taskContext = TaskContext{io_, std::move(postTaskAction)};
     io_.get().post(
             [task = std::move(task), taskContext = std::move(taskContext)]
@@ -32,7 +33,7 @@ void AsioDispatcherService::postTask(std::function<void(const TaskContext& ctx)>
             });
 }
 
-void AsioDispatcherService::setRequestProcessorQueue(whaleroute::RequestProcessorQueue* queue)
+void AsioDispatcherService::setRequestProcessorQueue(std::shared_ptr<whaleroute::RequestProcessorQueue> queue)
 {
     requestProcessorQueue_ = queue;
 }

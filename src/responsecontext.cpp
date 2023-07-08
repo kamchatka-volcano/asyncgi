@@ -41,7 +41,7 @@ void ResponseContext::setRequestProcessorQueue(const std::shared_ptr<whaleroute:
 {
     requestProcessorQueue_ = queue;
     client_.get().setRequestProcessorQueue(requestProcessorQueue_.get());
-    asioDispatcher_.get().setRequestProcessorQueue(requestProcessorQueue_.get());
+    asioDispatcher_.get().setRequestProcessorQueue(requestProcessorQueue_);
     timerProvider_.get().setRequestProcessorQueue(requestProcessorQueue_.get());
 }
 

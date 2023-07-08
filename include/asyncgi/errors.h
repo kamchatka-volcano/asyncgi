@@ -2,6 +2,7 @@
 #define ASYNCGI_ERRORS_H
 
 #include <functional>
+#include <mutex>
 #include <stdexcept>
 #include <system_error>
 
@@ -24,15 +25,12 @@ using ErrorHandlerFunc = std::function<void(ErrorType, int code, const std::stri
 class ErrorHandler {
 public:
     explicit ErrorHandler(ErrorHandlerFunc func);
-    ErrorHandler(const ErrorHandler&) = delete;
-    ErrorHandler& operator=(const ErrorHandler&) = delete;
-    ErrorHandler(ErrorHandler&&) = default;
-    ErrorHandler& operator=(ErrorHandler&&) = default;
     void operator()(ErrorType, const std::error_code& errorCode);
     void operator()(ErrorType, int code, const std::string& msg);
 
 private:
     ErrorHandlerFunc func_;
+    std::mutex mutex_;
 };
 } // namespace asyncgi
 

@@ -20,10 +20,12 @@ class IO {
 
 public:
     explicit IO(int threadsNumber = 1, ErrorHandlerFunc = {});
+    explicit IO(ErrorHandlerFunc);
+
     ~IO();
     IO(const IO&) = delete;
-    IO(IO&&) = default;
     IO& operator=(const IO&) = delete;
+    IO(IO&&) = delete;
     IO& operator=(IO&&) = delete;
 
     void run();
