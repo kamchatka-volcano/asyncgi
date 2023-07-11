@@ -2,7 +2,7 @@
 #include <mutex>
 #include <regex>
 
-using namespace asyncgi;
+namespace http = asyncgi::http;
 using namespace std::string_literals;
 
 enum class AccessRole {
@@ -44,14 +44,14 @@ void showLoginPage(const asyncgi::Request&, asyncgi::Response& response)
 void loginAdmin(const asyncgi::Request& request, asyncgi::Response& response)
 {
     if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
-        response.redirect("/", asyncgi::http::RedirectType::Found, {asyncgi::http::Cookie("admin_id", "ADMIN_SECRET")});
+        response.redirect("/", http::RedirectType::Found, {http::Cookie("admin_id", "ADMIN_SECRET")});
     else
         response.redirect("/login");
 }
 
 void logoutAdmin(const asyncgi::Request&, asyncgi::Response& response)
 {
-    response.redirect("/", asyncgi::http::RedirectType::Found, {asyncgi::http::Cookie("admin_id", "")});
+    response.redirect("/", http::RedirectType::Found, {http::Cookie("admin_id", "")});
 }
 
 struct GuestBookMessage {
@@ -107,14 +107,14 @@ std::string makeMessagesDiv(const std::vector<GuestBookMessage>& messages, Acces
 
 std::string makeLinksDiv(AccessRole role)
 {
-    if (role == AccessRole::Admin)
-        return R"(<a href="/logout">logout</a>&nbsp;<a href="https://github.com/kamchatka-volcano/asyncgi/examples">source</a></div>)";
-    return R"(<a href="/login">login</a>&nbsp;<a href="https://github.com/kamchatka-volcano/asyncgi/examples">source</a></div>)";
+    return (role == AccessRole::Admin ? R"(<a href="/logout">logout</a>&nbsp;)"s
+                                      : R"(<a href="/login">login</a>&nbsp;)"s) +
+            R"(<a href="https://github.com/kamchatka-volcano/asyncgi/blob/master/examples/example_guestbook.cpp">source</a></div>)"s;
 }
 
 auto showGuestBookPage(GuestBookState& state)
 {
-    return [&state](const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)
+    return [&state](const asyncgi::Request& request, asyncgi::Response& response, RouteContext& context)
     {
         auto page = R"(<head><link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css"></head>
                        <div style="display:flex; flex-direction: row; justify-content: flex-end">%LINKS%</div>
@@ -127,6 +127,7 @@ auto showGuestBookPage(GuestBookState& state)
                            </div>
                            <hr>
                            <div>
+                                %ERROR_MSG%
                                <form style="display:flex; flex-direction: column; width:66%;" method="post" enctype="multipart/form-data">
                                    <label for="name">Name:</label>
                                    <input id="name" name="name" style="width:50%">
@@ -140,6 +141,14 @@ auto showGuestBookPage(GuestBookState& state)
 
         page = std::regex_replace(page, std::regex{"%MESSAGES%"}, makeMessagesDiv(state.messages(), context.role));
         page = std::regex_replace(page, std::regex{"%LINKS%"}, makeLinksDiv(context.role));
+        if (request.hasQuery("error")) {
+            if (request.query("error") == "urls_in_msg")
+                page = std::regex_replace(page, std::regex{"%ERROR_MSG%"}, "<mark>Messages can't contain urls</mark>");
+            if (request.query("error") == "empty_msg")
+                page = std::regex_replace(page, std::regex{"%ERROR_MSG%"}, "<mark>Messages can't be empty</mark>");
+        }
+        else
+            page = std::regex_replace(page, std::regex{"%ERROR_MSG%"}, "");
         response.send(page);
     };
 }
@@ -148,8 +157,22 @@ auto addMessage(GuestBookState& state)
 {
     return [&state](const asyncgi::Request& request, asyncgi::Response& response)
     {
-        state.addMessage(std::string{request.formField("name")}, std::string{request.formField("msg")});
-        response.redirect("/");
+        if (std::all_of(
+                    request.formField("msg").begin(),
+                    request.formField("msg").end(),
+                    [](char ch)
+                    {
+                        return std::isspace(static_cast<unsigned char>(ch));
+                    }))
+            response.redirect("/?error=empty_msg");
+        else if (
+                request.formField("msg").find("http://") != std::string_view::npos ||
+                request.formField("msg").find("https://") != std::string_view::npos)
+            response.redirect("/?error=urls_in_msg");
+        else {
+            state.addMessage(std::string{request.formField("name")}, std::string{request.formField("msg")});
+            response.redirect("/");
+        }
     };
 }
 

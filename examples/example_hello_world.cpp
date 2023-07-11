@@ -6,8 +6,12 @@ int main()
 {
     auto io = asyncgi::IO{};
     auto router = asyncgi::Router{};
-    router.route("/", http::RequestMethod::Get).set("Hello world");
-    router.route().set(http::ResponseStatus::_404_Not_Found);
+    router.route("/", http::RequestMethod::Get)
+            .process(
+                    [](const asyncgi::Request&, asyncgi::Response& response)
+                    {
+                        response.send("Hello world");
+                    });
 
     auto server = asyncgi::Server{io, router};
 #ifndef _WIN32
