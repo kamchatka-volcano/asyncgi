@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(asyncgi VERSION 0.1.0 DESCRIPTION "asyncgi - asynchronous FastCGI web application microframework")
+project(asyncgi VERSION 0.2.0 DESCRIPTION "asyncgi - asynchronous FastCGI web application microframework")
 
 include(GNUInstallDirs)
 include(external/seal_lake)
