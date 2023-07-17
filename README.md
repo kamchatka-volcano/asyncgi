@@ -2,8 +2,13 @@
   <img height="128" src="doc/logo.png"/>
 </p>
 
-**asyncgi** - is a C++17 asynchronous microframework for creating web applications interfacing with any HTTP server supporting [FastCGI](https://en.wikipedia.org/wiki/FastCGI) protocol. It aims to provide a modern way of using [CGI](https://en.wikipedia.org/wiki/Common_Gateway_Interface), with a custom performant FastCGI implementation in C++, multithreading support and a clean and simple API:
- 
+[![build & test (clang, gcc)](https://github.com/kamchatka-volcano/asyncgi/actions/workflows/build_and_test.yml/badge.svg?branch=master)](https://github.com/kamchatka-volcano/asyncgi/actions/workflows/build_and_test.yml)
+
+**asyncgi** - is a C++17 asynchronous microframework for creating web applications interfacing with any HTTP server
+supporting [FastCGI](https://en.wikipedia.org/wiki/FastCGI) protocol. It aims to provide a modern way of
+using [CGI](https://en.wikipedia.org/wiki/Common_Gateway_Interface), with a custom performant FastCGI implementation in
+C++, multithreading support and a clean and simple API:
+
 ```c++
 #include <asyncgi/asyncgi.h>
 
@@ -37,7 +42,8 @@ int main()
      * [Timer](#timer)
      * [Client](#client)
      * [Executing an asio task](#executing-an-asio-task)
-*    [Development status](#development-status)     
+* [Showcase](#showcase)
+* [Development status](#development-status)
 *    [Installation](#installation)
 * [Building examples](#building-examples)
 * [Running functional tests](#running-functional-tests)
@@ -1199,6 +1205,10 @@ int main()
 </details>
 
 To use `asyncgi` with the `Boost.Asio` library, set the `ASYNCGI_USE_BOOST_ASIO` CMake variable .
+
+## Showcase
+
+* [`stone_skipper`](https://github.com/kamchatka-volcano/stone_skipper)
 
 ## Development status
 
