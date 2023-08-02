@@ -12,8 +12,8 @@ ServiceHolder<T>::ServiceHolder(std::unique_ptr<T> service)
 }
 
 template<typename T>
-ServiceHolder<T>::ServiceHolder(T* service)
-    : servicePtr_{service}
+ServiceHolder<T>::ServiceHolder(sfun::optional_ref<T> service)
+    : serviceOptionalRef_{service}
 {
 }
 
@@ -25,13 +25,13 @@ T& ServiceHolder<T>::get()
 {
     if (service_)
         return *service_;
-    return *servicePtr_;
+    return *serviceOptionalRef_;
 }
 
 template<typename T>
 bool ServiceHolder<T>::has_value() const
 {
-    return service_ || servicePtr_;
+    return service_ || serviceOptionalRef_;
 }
 
 template class ServiceHolder<AsioDispatcherService>;

@@ -10,6 +10,7 @@
 #include <asio/local/stream_protocol.hpp>
 #endif
 #include <asyncgi/detail/external/sfun/member.h>
+#include <asyncgi/detail/external/sfun/optional_ref.h>
 #include <asyncgi/errors.h>
 #include <fcgi_responder/requester.h>
 #include <hot_teacup/request.h>
@@ -54,7 +55,7 @@ public:
 
     void disconnect();
 
-    void setRequestProcessorQueue(whaleroute::RequestProcessorQueue* queue);
+    void setRequestProcessorQueue(whaleroute::RequestProcessorQueue& queue);
 
 private:
     sfun::member<asio::io_context&> io_;
@@ -62,7 +63,7 @@ private:
     TimerProvider timerProvider_;
     std::vector<std::unique_ptr<ClientConnection<asio::local::stream_protocol>>> localClientConnections_;
     std::vector<std::unique_ptr<ClientConnection<asio::ip::tcp>>> tcpClientConnections_;
-    whaleroute::RequestProcessorQueue* requestProcessorQueue_ = nullptr;
+    sfun::member<sfun::optional_ref<whaleroute::RequestProcessorQueue>> requestProcessorQueue_;
 };
 
 } // namespace asyncgi::detail

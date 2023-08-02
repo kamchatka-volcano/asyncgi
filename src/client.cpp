@@ -3,6 +3,7 @@
 #include "responsecontext.h"
 #include <asyncgi/client.h>
 #include <asyncgi/detail/external/sfun/interface.h>
+#include <asyncgi/detail/external/sfun/optional_ref.h>
 #include <asyncgi/io.h>
 #include <asyncgi/response.h>
 
@@ -16,12 +17,12 @@ Client::Client(IO& io)
 }
 
 namespace {
-detail::ClientService* getClientService(Response& response, sfun::access_token<Client> accessToken)
+sfun::optional_ref<detail::ClientService> getClientService(Response& response, sfun::access_token<Client> accessToken)
 {
     if (auto context = response.context(accessToken).lock())
-        return &context->client();
+        return context->client();
     else
-        return nullptr;
+        return std::nullopt;
 }
 } //namespace
 

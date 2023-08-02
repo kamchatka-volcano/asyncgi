@@ -1,4 +1,5 @@
 #include "ioservice.h"
+#include <asyncgi/detail/external/sfun/utility.h>
 #include <asyncgi/io.h>
 
 namespace asyncgi {

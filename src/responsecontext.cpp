@@ -40,9 +40,9 @@ TimerProvider& ResponseContext::timerProvider() const
 void ResponseContext::setRequestProcessorQueue(const std::shared_ptr<whaleroute::RequestProcessorQueue>& queue)
 {
     requestProcessorQueue_ = queue;
-    client_.get().setRequestProcessorQueue(requestProcessorQueue_.get());
+    client_.get().setRequestProcessorQueue(*requestProcessorQueue_);
     asioDispatcher_.get().setRequestProcessorQueue(requestProcessorQueue_);
-    timerProvider_.get().setRequestProcessorQueue(requestProcessorQueue_.get());
+    timerProvider_.get().setRequestProcessorQueue(*requestProcessorQueue_);
 }
 
 } // namespace asyncgi::detail

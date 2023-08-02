@@ -9,7 +9,9 @@
 
 namespace asyncgi::detail {
 
-TimerService::TimerService(asio::io_context& io, whaleroute::RequestProcessorQueue* requestProcessorQueue)
+TimerService::TimerService(
+        asio::io_context& io,
+        sfun::optional_ref<whaleroute::RequestProcessorQueue> requestProcessorQueue)
     : io_{io}
     , timer_{io_.get()}
     , requestProcessorQueue_{requestProcessorQueue}

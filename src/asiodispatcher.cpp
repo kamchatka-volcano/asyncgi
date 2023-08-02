@@ -3,6 +3,7 @@
 #include "responsecontext.h"
 #include <asyncgi/asiodispatcher.h>
 #include <asyncgi/detail/external/sfun/interface.h>
+#include <asyncgi/detail/external/sfun/optional_ref.h>
 #include <asyncgi/io.h>
 #include <asyncgi/response.h>
 
@@ -15,14 +16,14 @@ AsioDispatcher::AsioDispatcher(IO& io)
 }
 
 namespace {
-detail::AsioDispatcherService* getAsioDispatcherService(
+sfun::optional_ref<detail::AsioDispatcherService> getAsioDispatcherService(
         Response& response,
         sfun::access_token<AsioDispatcher> accessToken)
 {
     if (auto context = response.context(accessToken).lock())
-        return &context->asioDispatcher();
+        return context->asioDispatcher();
     else
-        return nullptr;
+        return std::nullopt;
 }
 } //namespace
 

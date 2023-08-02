@@ -6,6 +6,7 @@
 #include <asio/steady_timer.hpp>
 #endif
 #include <asyncgi/detail/external/sfun/member.h>
+#include <asyncgi/detail/external/sfun/optional_ref.h>
 #include <chrono>
 #include <functional>
 #include <future>
@@ -23,7 +24,9 @@ namespace asyncgi::detail {
 
 class TimerService {
 public:
-    explicit TimerService(asio::io_context& io, whaleroute::RequestProcessorQueue* requestProcessorQueue_ = nullptr);
+    explicit TimerService(
+            asio::io_context& io,
+            sfun::optional_ref<whaleroute::RequestProcessorQueue> requestProcessorQueue_ = {});
     void start(std::chrono::milliseconds time, std::function<void()> callback);
     void startPeriodic(std::chrono::milliseconds time, std::function<void()> callback);
     void stop();
@@ -31,7 +34,7 @@ public:
 private:
     sfun::member<asio::io_context&> io_;
     asio::steady_timer timer_;
-    whaleroute::RequestProcessorQueue* requestProcessorQueue_ = nullptr;
+    sfun::member<sfun::optional_ref<whaleroute::RequestProcessorQueue>> requestProcessorQueue_;
 };
 
 } // namespace asyncgi::detail

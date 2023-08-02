@@ -19,7 +19,7 @@ TimerService& TimerProvider::emplaceTimer()
     return timers_.emplace_back(io_, requestProcessorQueue_);
 }
 
-void TimerProvider::setRequestProcessorQueue(whaleroute::RequestProcessorQueue* queue)
+void TimerProvider::setRequestProcessorQueue(whaleroute::RequestProcessorQueue& queue)
 {
     requestProcessorQueue_ = queue;
 }

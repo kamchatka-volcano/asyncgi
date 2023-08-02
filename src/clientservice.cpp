@@ -7,6 +7,7 @@
 #else
 #include <asio/write.hpp>
 #endif
+#include <asyncgi/detail/external/sfun/utility.h>
 #include <asyncgi/detail/external/whaleroute/requestprocessorqueue.h>
 
 namespace asyncgi::detail {
@@ -187,9 +188,9 @@ void ClientService::disconnect()
     localClientConnections_.clear();
 }
 
-void ClientService::setRequestProcessorQueue(whaleroute::RequestProcessorQueue* queue)
+void ClientService::setRequestProcessorQueue(whaleroute::RequestProcessorQueue& queue)
 {
-    requestProcessorQueue_ = queue;
+    requestProcessorQueue_.get().emplace(queue);
 }
 
 } // namespace asyncgi::detail
