@@ -1,6 +1,7 @@
 #pragma once
 #include "connectionlistener.h"
 #include <asyncgi/detail/asio_namespace.h>
+#include <asyncgi/detail/eventhandlerproxy.h>
 #include <asyncgi/detail/external/sfun/member.h>
 #include <asyncgi/errors.h>
 #include <memory>
@@ -14,7 +15,7 @@ class ConnectionFactory;
 
 class ConnectionListenerFactory {
 public:
-    ConnectionListenerFactory(asio::io_context&, std::unique_ptr<ConnectionFactory>, ErrorHandler&);
+    ConnectionListenerFactory(asio::io_context&, std::unique_ptr<ConnectionFactory>, EventHandlerProxy&);
     ~ConnectionListenerFactory();
     ConnectionListenerFactory(const ConnectionListenerFactory&) = delete;
     ConnectionListenerFactory& operator=(const ConnectionListenerFactory&) = delete;
@@ -27,7 +28,7 @@ public:
 private:
     sfun::member<asio::io_context&> io_;
     std::unique_ptr<ConnectionFactory> connectionFactory_;
-    sfun::member<ErrorHandler&> errorHandler_;
+    sfun::member<EventHandlerProxy&> eventHandler_;
 };
 
 } // namespace asyncgi::detail

@@ -12,9 +12,9 @@
 
 namespace asyncgi::detail {
 
-ClientService::ClientService(asio::io_context& io, ErrorHandler& errorHandler)
+ClientService::ClientService(asio::io_context& io, EventHandlerProxy& eventHandler)
     : io_{io}
-    , errorHandler_{errorHandler}
+    , eventHandler_{eventHandler}
     , timerProvider_{io_}
 {
 }
@@ -42,7 +42,7 @@ void ClientService::makeRequest(
         responseTimeoutTimer.stop();
         if (fcgiResponse) {
             if (!fcgiResponse->errorMsg.empty())
-                errorHandler_(ErrorType::RequestProcessingError, -1, fcgiResponse->errorMsg);
+                eventHandler_(ErrorEvent::RequestProcessingError, fcgiResponse->errorMsg);
             responseHandler(fastcgi::Response{std::move(fcgiResponse->data), std::move(fcgiResponse->errorMsg)});
         }
         else
@@ -52,7 +52,7 @@ void ClientService::makeRequest(
             requestProcessorQueue_->launch();
     };
     auto& clientConnection = localClientConnections_.emplace_back(
-            std::make_unique<ClientConnection<asio::local::stream_protocol>>(io_, errorHandler_));
+            std::make_unique<ClientConnection<asio::local::stream_protocol>>(io_, eventHandler_));
     clientConnection->makeRequest(
             asio::local::stream_protocol::endpoint{socketPath.string()},
             std::move(request),
@@ -81,7 +81,7 @@ void ClientService::makeRequest(
         responseTimeoutTimer.stop();
         if (fcgiResponse) {
             if (!fcgiResponse->errorMsg.empty())
-                errorHandler_(ErrorType::RequestProcessingError, -1, fcgiResponse->errorMsg);
+                eventHandler_(ErrorEvent::RequestProcessingError, fcgiResponse->errorMsg);
             responseHandler(http::responseFromString(fcgiResponse->data));
         }
         else
@@ -90,7 +90,7 @@ void ClientService::makeRequest(
             requestProcessorQueue_->launch();
     };
     auto& clientConnection = localClientConnections_.emplace_back(
-            std::make_unique<ClientConnection<asio::local::stream_protocol>>(io_, errorHandler_));
+            std::make_unique<ClientConnection<asio::local::stream_protocol>>(io_, eventHandler_));
     auto [params, stdIn] = request.toFcgiData(http::FormType::Multipart);
     auto fcgiRequest = fastcgi::Request{std::move(params), std::move(stdIn)};
     clientConnection->makeRequest(
@@ -122,7 +122,7 @@ void ClientService::makeRequest(
         responseTimeoutTimer.stop();
         if (fcgiResponse) {
             if (!fcgiResponse->errorMsg.empty())
-                errorHandler_(ErrorType::RequestProcessingError, -1, fcgiResponse->errorMsg);
+                eventHandler_(ErrorEvent::RequestProcessingError, fcgiResponse->errorMsg);
             responseHandler(fastcgi::Response{std::move(fcgiResponse->data), std::move(fcgiResponse->errorMsg)});
         }
         else
@@ -131,7 +131,7 @@ void ClientService::makeRequest(
             requestProcessorQueue_->launch();
     };
     auto& clientConnection =
-            tcpClientConnections_.emplace_back(std::make_unique<ClientConnection<asio::ip::tcp>>(io_, errorHandler_));
+            tcpClientConnections_.emplace_back(std::make_unique<ClientConnection<asio::ip::tcp>>(io_, eventHandler_));
     auto address = asio::ip::make_address(ipAddress.data());
     clientConnection->makeRequest(
             asio::ip::tcp::endpoint{address, port},
@@ -163,7 +163,7 @@ void ClientService::makeRequest(
         responseTimeoutTimer.stop();
         if (fcgiResponse) {
             if (!fcgiResponse->errorMsg.empty())
-                errorHandler_(ErrorType::RequestProcessingError, -1, fcgiResponse->errorMsg);
+                eventHandler_(ErrorEvent::RequestProcessingError, fcgiResponse->errorMsg);
             responseHandler(http::responseFromString(fcgiResponse->data));
         }
         else
@@ -172,7 +172,7 @@ void ClientService::makeRequest(
             requestProcessorQueue_->launch();
     };
     auto& clientConnection =
-            tcpClientConnections_.emplace_back(std::make_unique<ClientConnection<asio::ip::tcp>>(io_, errorHandler_));
+            tcpClientConnections_.emplace_back(std::make_unique<ClientConnection<asio::ip::tcp>>(io_, eventHandler_));
     auto [params, stdIn] = request.toFcgiData(http::FormType::Multipart);
     auto fcgiRequest = fastcgi::Request{std::move(params), std::move(stdIn)};
     auto address = asio::ip::make_address(ipAddress);

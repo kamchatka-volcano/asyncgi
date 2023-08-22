@@ -17,7 +17,7 @@ namespace http = asyncgi::http;
 int main()
 {
     auto io = asyncgi::IO{};
-    auto router = asyncgi::Router{};
+    auto router = asyncgi::Router{io};
     router.route("/", http::RequestMethod::Get).process(
           [](const asyncgi::Request&, asyncgi::Response& response)
           {
@@ -208,7 +208,7 @@ int main()
 {
     auto io = asyncgi::IO{4}; //4 threads processing requests
     auto state = GuestBookState{};
-    auto router = asyncgi::Router{};
+    auto router = asyncgi::Router{io};
     router.route("/", http::RequestMethod::Get).process<GuestBookPage>(state);
     router.route("/", http::RequestMethod::Post).process<GuestBookAddMessage>(state);
     router.route().set(http::Response{http::ResponseStatus::_404_Not_Found, "Page not found"});
@@ -349,7 +349,7 @@ int main()
 {
     auto io = asyncgi::IO{4};
     auto state = GuestBookState{};
-    auto router = asyncgi::Router{};
+    auto router = asyncgi::Router{io};
     router.route("/", http::RequestMethod::Get).process<GuestBookPage>(state);
     router.route("/", http::RequestMethod::Post).process<GuestBookAddMessage>(state);
     router.route(asyncgi::rx{"/delete/(.+)"}, http::RequestMethod::Post).process<GuestBookRemoveMessage>(state);
@@ -493,7 +493,7 @@ int main()
 {
     auto io = asyncgi::IO{4};
     auto state = GuestBookState{};
-    auto router = asyncgi::Router{};
+    auto router = asyncgi::Router{io};
     router.route("/", http::RequestMethod::Get).process<GuestBookPage>(state);
     router.route("/", http::RequestMethod::Post).process<GuestBookAddMessage>(state);
     router.route(asyncgi::rx{"/delete/(.+)"}, http::RequestMethod::Post).process<GuestBookRemoveMessage>(state);
@@ -976,7 +976,7 @@ int main()
                 ++secondsCounter;
             });
 
-    auto router = asyncgi::Router{};
+    auto router = asyncgi::Router{io};
     router.route("/").process<Greeter>(secondsCounter);
     router.route().set(http::ResponseStatus::_404_Not_Found);
 
@@ -1028,7 +1028,7 @@ struct DelayedPage{
 int main()
 {
     auto io = asyncgi::IO{};
-    auto router = asyncgi::Router{};
+    auto router = asyncgi::Router{io};
     auto delayedPage = DelayedPage{};
     router.route("/", http::RequestMethod::Get).process(delayedPage);
     router.route().set(http::ResponseStatus::_404_Not_Found);
@@ -1111,7 +1111,7 @@ struct RequestPage{
 int main()
 {
     auto io = asyncgi::IO{};
-    auto router = asyncgi::Router{};
+    auto router = asyncgi::Router{io};
     router.route("/", http::RequestMethod::Get).process<RequestPage>();
     router.route().set(http::ResponseStatus::_404_Not_Found);
     auto server = asyncgi::Server{io, router};
@@ -1193,7 +1193,7 @@ struct DelayedPage{
 int main()
 {
     auto io = asyncgi::IO{};
-    auto router = asyncgi::Router{};
+    auto router = asyncgi::Router{io};
     router.route("/", http::RequestMethod::Get).process<DelayedPage>();
     router.route().set(http::ResponseStatus::_404_Not_Found);
     auto server = asyncgi::Server{io, router};

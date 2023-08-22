@@ -27,7 +27,7 @@ struct DelayedPage {
 int main()
 {
     auto io = asyncgi::IO{};
-    auto router = asyncgi::Router{};
+    auto router = asyncgi::Router{io};
     router.route("/", http::RequestMethod::Get).process<DelayedPage>();
     router.route().set(http::ResponseStatus::_404_Not_Found);
     auto server = asyncgi::Server{io, router};

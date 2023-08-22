@@ -30,7 +30,7 @@ jobs:
             cmake_vars: "",
             asio_type: "standalone",
             flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused",
-            artifacts-path: "build/examples"
+            artifacts-path-postfix: ""
           }
           - {
             name: "Ubuntu Latest clang",
@@ -40,7 +40,7 @@ jobs:
             cmake_vars: "",
             asio_type: "standalone",
             flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused",
-            artifacts-path: "build/examples"
+            artifacts-path-postfix: ""
           }
           - {
             name: "Windows Latest MSVC",
@@ -50,7 +50,7 @@ jobs:
             cmake_vars: "",
             asio_type: "standalone",
             flags: "/EHsc /W4 /WX",
-            artifacts-path: "build/examples/Release"
+            artifacts-path-postfix: "Release"
           }
           - {
             name: "Ubuntu Latest clang (Boost.Asio)",
@@ -60,7 +60,7 @@ jobs:
             asio_type: "boost",
             cmake_vars: "-DASYNCGI_USE_BOOST_ASIO=ON -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_STATIC_RUNTIME=ON -DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake",
             flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused",
-            artifacts-path: "build/examples"
+            artifacts-path-postfix: ""
           }
           - {
             name: "Windows Latest MSVC (Boost.Asio)",
@@ -70,7 +70,7 @@ jobs:
             asio_type: "boost",
             cmake_vars: "-DASYNCGI_USE_BOOST_ASIO=ON -DCMAKE_GENERATOR_PLATFORM=x64 -DVCPKG_TARGET_TRIPLET=x64-windows-static-md -DCMAKE_TOOLCHAIN_FILE='vcpkg/scripts/buildsystems/vcpkg.cmake'",
             flags: "/EHsc /W4 /WX",
-            artifacts-path: "build/examples/Release"
+            artifacts-path-postfix: "Release"
           }
 
     steps:
@@ -92,7 +92,13 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: asyncgi-examples-${{ matrix.config.os }}-${{ matrix.config.asio_type }}-asio
-          path: ${{ matrix.config.artifacts-path }}
+          path: build/examples/${{ matrix.config.artifacts-path-postfix }}
+
+      - name: Upload build test artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: asyncgi-test-examples-${{ matrix.config.os }}-${{ matrix.config.asio_type }}-asio
+          path: build/test_examples/${{ matrix.config.artifacts-path-postfix }}
 
   functional_tests:
     name: Functional testing (${{ matrix.config.name }} ${{ matrix.asio_type }}-asio)
@@ -146,17 +152,23 @@ jobs:
         run: chmod +x lunchtoast
 
       - name: Download asyncgi examples build
-        id: pre_launch_tests
         uses: actions/download-artifact@v3
         with:
           name: asyncgi-examples-${{ matrix.config.os }}-${{ matrix.asio_type }}-asio
           path: build/examples
 
+      - name: Download asyncgi test_examples build
+        id: pre_launch_tests
+        uses: actions/download-artifact@v3
+        with:
+          name: asyncgi-test-examples-${{ matrix.config.os }}-${{ matrix.asio_type }}-asio
+          path: build/test_examples
+
       - name: Set artifacts execute permissions
         if: matrix.config.name == 'Linux'
         shell: sh
-        working-directory: ${{github.workspace}}/build/examples
-        run: chmod +x example_*
+        working-directory: ${{github.workspace}}/build/
+        run: chmod +x examples/example_* && chmod +x test_examples/test_*
 
       - name: Make temp dir for NGINX
         run: mkdir ${{github.workspace}}/temp

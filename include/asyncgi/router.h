@@ -1,6 +1,8 @@
 #ifndef ASYNCGI_ROUTER_H
 #define ASYNCGI_ROUTER_H
 
+#include "errors.h"
+#include "io.h"
 #include "request.h"
 #include "response.h"
 #include "types.h"
@@ -13,9 +15,26 @@
 namespace asyncgi {
 namespace config = whaleroute::config;
 
+template<typename TRouteContext>
+class Router;
+
+class RouterIOAccess {
+public:
+    template<typename TRouteContext>
+    static auto makeToken(sfun::access_permission<Router<TRouteContext>>)
+    {
+        return sfun::access_token<RouterIOAccess>{};
+    }
+};
+
 template<typename TRouteContext = _>
 class Router : public whaleroute::RequestRouter<Request, Response, http::Response, TRouteContext> {
 public:
+    explicit Router(IO& io)
+        : eventHandler_{io.eventHandler(RouterIOAccess::makeToken<TRouteContext>(sfun::access_token{*this}))}
+    {
+    }
+
     void operator()(const Request& request, Response& response)
     {
         auto requestProcessorQueuePtr = std::make_shared<whaleroute::RequestProcessorQueue>();
@@ -65,8 +84,12 @@ private:
                 },
 
         };
-        response.send(http::ResponseStatus::_500_Internal_Server_Error, std::visit(errorMessageVisitor, error));
+        eventHandler_(RouteParametersError, std::visit(errorMessageVisitor, error));
+        response.send(http::ResponseStatus::_500_Internal_Server_Error);
     };
+
+private:
+    detail::EventHandlerProxy eventHandler_;
 };
 
 template<>

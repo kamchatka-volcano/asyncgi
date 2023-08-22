@@ -1,16 +1,23 @@
 #include <asyncgi/asyncgi.h>
+#include <iostream>
+#include <string_view>
 
 namespace http = asyncgi::http;
 
+void errorHandler(asyncgi::ErrorEvent, std::string_view message)
+{
+    std::cerr << message << std::endl;
+}
+
 int main()
 {
-    auto io = asyncgi::IO{};
+    auto io = asyncgi::IO{errorHandler};
     auto router = asyncgi::Router{io};
     router.route("/", http::RequestMethod::Get)
             .process(
-                    [](const asyncgi::Request&, asyncgi::Response& response)
+                    [](const asyncgi::Request&, asyncgi::Response&)
                     {
-                        response.send("Hello world");
+                        throw std::runtime_error{"Can't send a response"};
                     });
 
     auto server = asyncgi::Server{io, router};

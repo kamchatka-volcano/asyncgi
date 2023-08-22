@@ -15,6 +15,15 @@ auto makeCopyableLambda(TFunc&& f)
     };
 }
 
+template<typename T>
+decltype(auto) refWrapperOrRValue(T&& obj)
+{
+    if constexpr (std::is_lvalue_reference_v<decltype(obj)>)
+        return std::ref(std::forward<T>(obj));
+    else
+        return std::forward<T>(obj);
+}
+
 } //namespace asyncgi::detail
 
 #endif //ASYNCGI_UTILS_H

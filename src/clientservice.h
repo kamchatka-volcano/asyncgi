@@ -9,6 +9,7 @@
 #include <asio/ip/tcp.hpp>
 #include <asio/local/stream_protocol.hpp>
 #endif
+#include <asyncgi/detail/eventhandlerproxy.h>
 #include <asyncgi/detail/external/sfun/member.h>
 #include <asyncgi/detail/external/sfun/optional_ref.h>
 #include <asyncgi/errors.h>
@@ -28,7 +29,7 @@ class IOService;
 
 class ClientService {
 public:
-    ClientService(asio::io_context&, ErrorHandler&);
+    ClientService(asio::io_context&, EventHandlerProxy&);
     void makeRequest(
             const std::filesystem::path& socketPath,
             fastcgi::Request request,
@@ -59,7 +60,7 @@ public:
 
 private:
     sfun::member<asio::io_context&> io_;
-    sfun::member<ErrorHandler&> errorHandler_;
+    sfun::member<EventHandlerProxy&> eventHandler_;
     TimerProvider timerProvider_;
     std::vector<std::unique_ptr<ClientConnection<asio::local::stream_protocol>>> localClientConnections_;
     std::vector<std::unique_ptr<ClientConnection<asio::ip::tcp>>> tcpClientConnections_;

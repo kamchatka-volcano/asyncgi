@@ -1,18 +1,10 @@
 #include "ioservice.h"
-#include <asyncgi/detail/external/sfun/utility.h>
 #include <asyncgi/io.h>
 
 namespace asyncgi {
 
-IO::IO(int threadsNumber, ErrorHandlerFunc errorHandler)
+IO::IO(int threadsNumber)
     : ioService_{std::make_unique<detail::IOService>(threadsNumber)}
-    , errorHandler_{std::move(errorHandler)}
-{
-}
-
-IO::IO(ErrorHandlerFunc errorHandler)
-    : ioService_{std::make_unique<detail::IOService>(1)}
-    , errorHandler_{std::move(errorHandler)}
 {
 }
 
@@ -23,9 +15,9 @@ detail::IOService& IO::ioService(detail::IOAccessPermission)
     return *ioService_;
 }
 
-ErrorHandler& IO::errorHandler(detail::IOAccessPermission)
+detail::EventHandlerProxy& IO::eventHandler(detail::IOAccessPermission)
 {
-    return errorHandler_;
+    return eventHandler_;
 }
 
 void IO::run()

@@ -5,6 +5,7 @@
 #else
 #include <asio/basic_socket_acceptor.hpp>
 #endif
+#include <asyncgi/detail/eventhandlerproxy.h>
 #include <asyncgi/detail/external/sfun/member.h>
 #include <asyncgi/errors.h>
 #include <string>
@@ -20,7 +21,7 @@ public:
     ConnectionListener(
             std::unique_ptr<asio::basic_socket_acceptor<TProtocol>> socketAcceptor,
             ConnectionFactory& connectionFactory,
-            ErrorHandler& errorHandler);
+            EventHandlerProxy& eventHandler);
 
 private:
     void waitForConnection();
@@ -29,7 +30,7 @@ private:
 private:
     std::unique_ptr<asio::basic_socket_acceptor<TProtocol>> socketAcceptor_;
     sfun::member<ConnectionFactory&> connectionFactory_;
-    sfun::member<ErrorHandler&> errorHandler_;
+    sfun::member<EventHandlerProxy&> eventHandler_;
 };
 
 } // namespace asyncgi::detail

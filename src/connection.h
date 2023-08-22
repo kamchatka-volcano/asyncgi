@@ -9,6 +9,7 @@
 #else
 #include <asio/basic_stream_socket.hpp>
 #endif
+#include <asyncgi/detail/eventhandlerproxy.h>
 #include <asyncgi/detail/external/sfun/interface.h>
 #include <asyncgi/errors.h>
 #include <asyncgi/requestprocessor.h>
@@ -32,7 +33,7 @@ template<typename TProtocol>
 class Connection : public std::enable_shared_from_this<Connection<TProtocol>>,
                    public fcgi::Responder {
 public:
-    Connection(RequestProcessor, asio::io_context&, ErrorHandler&, sfun::access_permission<ConnectionFactory>);
+    Connection(RequestProcessor, asio::io_context&, EventHandlerProxy&, sfun::access_permission<ConnectionFactory>);
     ~Connection() override;
     Connection(const Connection<TProtocol>&) = delete;
     Connection& operator=(const Connection<TProtocol>&) = delete;
@@ -64,7 +65,7 @@ private:
     std::string nextWriteBuffer_;
     std::size_t bytesToWrite_ = 0;
     bool disconnectRequested_ = false;
-    sfun::member<ErrorHandler&> errorHandler_;
+    sfun::member<EventHandlerProxy&> eventHandler_;
 };
 
 } // namespace asyncgi::detail

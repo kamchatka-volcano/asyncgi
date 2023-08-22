@@ -31,23 +31,23 @@ public:
     {
         constexpr auto args = sfun::callable_args<TRequestProcessorFunc>{};
         detail::checkRequestProcessorSignature(args);
-        using ResponseType = std::decay_t<typename decltype(sfun::get<args.size() - 1>(args))::type>;
 
         if constexpr (std::is_lvalue_reference_v<TRequestProcessorFunc>) {
-            requestProcessorInvoker_ =
-                    [&requestProcessor](const Request& request, std::shared_ptr<detail::ResponseContext> response)
+            requestProcessorInvoker_ = [&requestProcessor](
+                                               const Request& request,
+                                               std::shared_ptr<detail::ResponseContext> responseContext)
             {
-                auto contextualResponse = ResponseType{response};
-                requestProcessor(request, contextualResponse);
+                auto response = Response{std::move(responseContext)};
+                requestProcessor(request, response);
             };
         }
         else {
-            requestProcessorInvoker_ = [requestProcessor = std::move(requestProcessor)](
+            requestProcessorInvoker_ = [requestProcessor = std::forward<TRequestProcessorFunc>(requestProcessor)](
                                                const Request& request,
-                                               std::shared_ptr<detail::ResponseContext> response)
+                                               std::shared_ptr<detail::ResponseContext> responseContext)
             {
-                auto contextualResponse = ResponseType{response};
-                requestProcessor(request, contextualResponse);
+                auto response = Response{std::move(responseContext)};
+                requestProcessor(request, response);
             };
         }
     }

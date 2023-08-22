@@ -16,9 +16,9 @@
 namespace asyncgi::detail {
 
 template<typename TProtocol>
-ClientConnection<TProtocol>::ClientConnection(asio::io_context& io, ErrorHandler& errorHandler)
+ClientConnection<TProtocol>::ClientConnection(asio::io_context& io, EventHandlerProxy& eventHandler)
     : socket_{io}
-    , errorHandler_{errorHandler}
+    , eventHandler_{eventHandler}
 {
 }
 
@@ -79,7 +79,7 @@ void ClientConnection<TProtocol>::processReading()
             {
                 if (error) {
                     if (error.value() != asio::error::operation_aborted)
-                        errorHandler_(ErrorType::SocketReadError, error);
+                        eventHandler_(ErrorEvent::SocketReadError, error.message());
                     return;
                 }
                 readData(bytesRead);
@@ -115,7 +115,7 @@ void ClientConnection<TProtocol>::sendData(const std::string& data)
             [this](const auto& error, auto bytesWritten)
             {
                 if (error) {
-                    errorHandler_(ErrorType::SocketWriteError, error);
+                    eventHandler_(ErrorEvent::SocketWriteError, error.message());
                     return;
                 }
                 onBytesWritten(bytesWritten);
@@ -142,7 +142,7 @@ void ClientConnection<TProtocol>::close()
     socket_.shutdown(asio::basic_stream_socket<TProtocol>::shutdown_both, error);
     socket_.close(error);
     if (error) {
-        errorHandler_(ErrorType::SocketCloseError, error);
+        eventHandler_(ErrorEvent::SocketCloseError, error.message());
     }
     disconnectRequested_ = false;
 }

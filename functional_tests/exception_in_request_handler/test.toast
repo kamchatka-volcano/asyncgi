@@ -1,0 +1,5 @@
+-Launch detached: ../../build/test_examples/test_exception_in_request_handler
+-Wait: 1 sec
+
+-Expect status from "/": 500
+-Expect status from "/foo": 404

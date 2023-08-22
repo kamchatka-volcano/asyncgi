@@ -16,10 +16,10 @@ namespace asyncgi::detail {
 ConnectionFactory::ConnectionFactory(
         RequestProcessor requestProcessor,
         IOService& ioService,
-        ErrorHandler& errorHandler)
+        EventHandlerProxy& eventHandler)
     : requestProcessor_{std::move(requestProcessor)}
     , ioService_{ioService}
-    , errorHandler_{errorHandler}
+    , eventHandler_{eventHandler}
 {
 }
 
@@ -29,7 +29,7 @@ std::shared_ptr<Connection<TProtocol>> ConnectionFactory::makeConnection()
     return std::make_shared<Connection<TProtocol>>(
             requestProcessor_,
             ioService_.get().nextIO(),
-            errorHandler_,
+            eventHandler_,
             sfun::access_token<ConnectionFactory>{});
 }
 

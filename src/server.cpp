@@ -17,12 +17,12 @@ auto makeConnectionListenerFactory(
     auto connectionFactory = std::make_unique<detail::ConnectionFactory>(
             std::move(requestProcessor),
             io.ioService(accessToken),
-            io.errorHandler(accessToken));
+            io.eventHandler(accessToken));
 
     return std::make_unique<detail::ConnectionListenerFactory>(
             io.ioService(accessToken).io(),
             std::move(connectionFactory),
-            io.errorHandler(accessToken));
+            io.eventHandler(accessToken));
 }
 } //namespace detail
 

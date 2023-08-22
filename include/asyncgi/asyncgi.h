@@ -4,6 +4,7 @@
 #include "asiodispatcher.h"
 #include "client.h"
 #include "errors.h"
+#include "events.h"
 #include "io.h"
 #include "router.h"
 #include "server.h"

@@ -2,6 +2,7 @@
 #define ASYNCGI_IO_H
 
 #include "errors.h"
+#include "detail/eventhandlerproxy.h"
 #include "detail/external/sfun/interface.h"
 #include <memory>
 
@@ -10,17 +11,29 @@ class Server;
 class Client;
 class Timer;
 class AsioDispatcher;
+class RouterIOAccess;
 
 namespace detail {
 class IOService;
-using IOAccessPermission = sfun::access_permission<Server, Client, Timer, AsioDispatcher>;
+using IOAccessPermission = sfun::access_permission<Server, Client, Timer, AsioDispatcher, RouterIOAccess>;
 } //namespace detail
 
 class IO {
 
 public:
-    explicit IO(int threadsNumber = 1, ErrorHandlerFunc = {});
-    explicit IO(ErrorHandlerFunc);
+    template<typename TEventHandler>
+    explicit IO(int threadsNumber, TEventHandler& eventHandler)
+        : IO(threadsNumber)
+    {
+        eventHandler_ = eventHandler;
+    }
+    template<typename TEventHandler>
+    explicit IO(TEventHandler& eventHandler)
+        : IO(1)
+    {
+        eventHandler_ = eventHandler;
+    }
+    explicit IO(int threadsNumber = 1);
 
     ~IO();
     IO(const IO&) = delete;
@@ -32,12 +45,12 @@ public:
     void stop();
 
     /// detail
-    ErrorHandler& errorHandler(detail::IOAccessPermission);
+    detail::EventHandlerProxy& eventHandler(detail::IOAccessPermission);
     detail::IOService& ioService(detail::IOAccessPermission);
 
 private:
     std::unique_ptr<detail::IOService> ioService_;
-    ErrorHandler errorHandler_;
+    detail::EventHandlerProxy eventHandler_;
 };
 
 } //namespace asyncgi

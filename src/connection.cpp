@@ -21,14 +21,14 @@ template<typename TProtocol>
 Connection<TProtocol>::Connection(
         RequestProcessor requestProcessor,
         asio::io_context& io,
-        ErrorHandler& errorHandler,
+        EventHandlerProxy& eventHandler,
         sfun::access_permission<ConnectionFactory>)
     : requestProcessor_{std::move(requestProcessor)}
     , asioDispatcher_{io}
     , timerProvider_{io}
-    , client_{io, errorHandler}
+    , client_{io, eventHandler}
     , socket_{io}
-    , errorHandler_{errorHandler}
+    , eventHandler_{eventHandler}
 {
 }
 
@@ -50,7 +50,7 @@ void Connection<TProtocol>::process()
             {
                 if (error) {
                     if (error.value() != asio::error::operation_aborted) {
-                        errorHandler_(ErrorType::SocketReadError, error);
+                        eventHandler_(ErrorEvent::SocketReadError, error.message());
                         close();
                     }
                     return;
@@ -88,7 +88,7 @@ void Connection<TProtocol>::sendData(const std::string& data)
             [self = this->shared_from_this(), this](const auto& error, auto bytesWritten)
             {
                 if (error) {
-                    errorHandler_(ErrorType::SocketWriteError, error);
+                    eventHandler_(ErrorEvent::SocketWriteError, error.message());
                     close();
                     return;
                 }
@@ -121,16 +121,22 @@ void Connection<TProtocol>::disconnect()
 template<typename TProtocol>
 void Connection<TProtocol>::processRequest(fcgi::Request&& fcgiRequest, fcgi::Response&& fcgiResponse)
 {
+    fcgiRequest_ = std::move(fcgiRequest);
+    responseSender_.emplace(std::move(fcgiResponse));
+    const auto request = Request{*fcgiRequest_};
+    responseContext_ = std::make_shared<ResponseContext>(*responseSender_, timerProvider_, client_, asioDispatcher_);
     try {
-        fcgiRequest_ = std::move(fcgiRequest);
-        responseSender_.emplace(std::move(fcgiResponse));
-        const auto request = Request{*fcgiRequest_};
-        responseContext_ =
-                std::make_shared<ResponseContext>(*responseSender_, timerProvider_, client_, asioDispatcher_);
         requestProcessor_(request, responseContext_);
     }
     catch (const std::exception& e) {
-        errorHandler_(ErrorType::RequestProcessingError, -1, e.what());
+        auto response = Response{responseContext_};
+        response.send(http::ResponseStatus::_500_Internal_Server_Error);
+        eventHandler_(ErrorEvent::RequestProcessingError, e.what());
+    }
+    catch (...) {
+        auto response = Response{responseContext_};
+        response.send(http::ResponseStatus::_500_Internal_Server_Error);
+        eventHandler_(ErrorEvent::RequestProcessingError, "Unknown error");
     }
 }
 
@@ -142,7 +148,7 @@ void Connection<TProtocol>::close()
     socket_.close(error);
 
     if (error)
-        errorHandler_(ErrorType::SocketCloseError, error);
+        eventHandler_(ErrorEvent::SocketCloseError, error.message());
     disconnectRequested_ = false;
 }
 

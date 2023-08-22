@@ -30,7 +30,7 @@ int main()
                 ++secondsCounter;
             });
 
-    auto router = asyncgi::Router{};
+    auto router = asyncgi::Router{io};
     router.route("/").process<Greeter>(secondsCounter);
     router.route().set(http::ResponseStatus::_404_Not_Found);
 

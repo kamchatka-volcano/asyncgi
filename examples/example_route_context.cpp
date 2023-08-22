@@ -59,7 +59,7 @@ struct LoginPageAuthorize {
 int main()
 {
     auto io = asyncgi::IO{4}; //4 threads processing requests
-    auto router = asyncgi::Router<RouteContext>{};
+    auto router = asyncgi::Router<RouteContext>{io};
     router.route(asyncgi::rx{".*"}).process<AdminAuthorizer>();
     router.route("/").process(
             [](const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)

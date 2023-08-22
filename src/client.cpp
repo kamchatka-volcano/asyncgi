@@ -12,7 +12,7 @@ namespace asyncgi {
 Client::Client(IO& io)
     : clientService_{std::make_unique<detail::ClientService>(
               io.ioService(sfun::access_token<Client>{}).io(),
-              io.errorHandler(sfun::access_token<Client>{}))}
+              io.eventHandler(sfun::access_token<Client>{}))}
 {
 }
 

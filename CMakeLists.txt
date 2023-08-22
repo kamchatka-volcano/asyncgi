@@ -12,7 +12,7 @@ endif()
 SealLake_Bundle(
     NAME asyncgi_sfun
     GIT_REPOSITORY https://github.com/kamchatka-volcano/sfun.git
-    GIT_TAG dev
+    GIT_TAG v4.1.1
     DESTINATION include/asyncgi/detail/external
     DIRECTORIES include/sfun
     TEXT_REPLACEMENTS
@@ -61,7 +61,7 @@ set(SRC
     src/asiodispatcherservice.cpp
     src/connection.cpp
     src/connectionfactory.cpp
-    src/errors.cpp
+    src/eventhandlerproxy.cpp
     src/responsecontext.cpp
     src/responsesender.cpp
     src/ioservice.cpp
@@ -97,6 +97,9 @@ else()
 endif()
 
 SealLake_OptionalBuildSteps(examples)
+if (ENABLE_EXAMPLES)
+    add_subdirectory(test_examples)
+endif()
 
 if (ASYNCGI_USE_BOOST_ASIO)
     target_compile_definitions(asyncgi PUBLIC "ASYNCGI_USE_BOOST_ASIO")

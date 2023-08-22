@@ -16,10 +16,10 @@ template<typename TProtocol>
 ConnectionListener<TProtocol>::ConnectionListener(
         std::unique_ptr<asio::basic_socket_acceptor<TProtocol>> socketAcceptor,
         ConnectionFactory& connectionFactory,
-        ErrorHandler& errorHandler)
+        EventHandlerProxy& eventHandler)
     : socketAcceptor_{std::move(socketAcceptor)}
     , connectionFactory_{connectionFactory}
-    , errorHandler_{errorHandler}
+    , eventHandler_{eventHandler}
 
 {
     waitForConnection();
@@ -41,7 +41,7 @@ template<typename TProtocol>
 void ConnectionListener<TProtocol>::onConnected(Connection<TProtocol>& connection, const std::error_code& error)
 {
     if (error) {
-        errorHandler_(ErrorType::ConnectionError, error);
+        eventHandler_(ErrorEvent::ConnectionError, error.message());
         return;
     }
     connection.process();

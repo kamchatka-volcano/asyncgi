@@ -5,6 +5,7 @@
 #else
 #include <asio/basic_stream_socket.hpp>
 #endif
+#include <asyncgi/detail/eventhandlerproxy.h>
 #include <asyncgi/detail/external/sfun/member.h>
 #include <asyncgi/errors.h>
 #include <asyncgi/types.h>
@@ -21,7 +22,7 @@ class TimerProvider;
 template<typename TProtocol>
 class ClientConnection : public fcgi::Requester {
 public:
-    ClientConnection(asio::io_context&, ErrorHandler&);
+    ClientConnection(asio::io_context&, EventHandlerProxy&);
     ~ClientConnection() override;
 
     void makeRequest(
@@ -40,7 +41,7 @@ private:
 
 private:
     asio::basic_stream_socket<TProtocol> socket_;
-    sfun::member<ErrorHandler&> errorHandler_;
+    sfun::member<EventHandlerProxy&> eventHandler_;
     std::array<char, fcgi::maxRecordSize> buffer_;
     std::string writeBuffer_;
     std::string nextWriteBuffer_;

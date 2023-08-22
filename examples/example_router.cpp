@@ -74,7 +74,7 @@ int main()
 {
     auto io = asyncgi::IO{4}; //4 threads processing requests
     auto state = GuestBookState{};
-    auto router = asyncgi::Router{};
+    auto router = asyncgi::Router{io};
     router.route("/", http::RequestMethod::Get).process<GuestBookPage>(state);
     router.route("/", http::RequestMethod::Post).process<GuestBookAddMessage>(state);
     router.route().set(http::Response{http::ResponseStatus::_404_Not_Found, "Page not found"});
