@@ -586,7 +586,7 @@ struct LoginPageAuthorize {
 int main()
 {
     auto io = asyncgi::IO{4}; //4 threads processing requests
-    auto router = asyncgi::Router<RouteContext>{};
+    auto router = asyncgi::Router<RouteContext>{io};
     router.route(asyncgi::rx{".*"}).process<AdminAuthorizer>();
     router.route("/").process(
             [](const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)
@@ -684,7 +684,7 @@ struct asyncgi::config::RouteMatcher<AccessRole, RouteContext> {
 int main()
 {
     auto io = asyncgi::IO{4};
-    auto router = asyncgi::Router<RouteContext>{};
+    auto router = asyncgi::Router<RouteContext>{io};
     router.route(asyncgi::rx{".*"}).process<AdminAuthorizer>();
     router.route("/").process(
             [](const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)
@@ -911,7 +911,7 @@ int main()
 {
     auto io = asyncgi::IO{4};
     auto state = GuestBookState{};
-    auto router = asyncgi::Router<RouteContext>{};
+    auto router = asyncgi::Router<RouteContext>{io};
     router.route(asyncgi::rx{".*"}).process(authorizeAdmin);
     router.route("/", http::RequestMethod::Get).process(showGuestBookPage(state));
     router.route("/", http::RequestMethod::Post).process(addMessage(state));
