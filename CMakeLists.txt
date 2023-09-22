@@ -12,7 +12,7 @@ endif()
 SealLake_Bundle(
     NAME asyncgi_sfun
     GIT_REPOSITORY https://github.com/kamchatka-volcano/sfun.git
-    GIT_TAG v4.1.1
+    GIT_TAG v5.0.0
     DESTINATION include/asyncgi/detail/external
     DIRECTORIES include/sfun
     TEXT_REPLACEMENTS
@@ -20,6 +20,7 @@ SealLake_Bundle(
         "SFUN_" "ASYNCGI_SFUN_"
 )
 
+set(ASYNCGI_FCGI_RESPONDER_OBJECT_LIB ON)
 SealLake_Bundle(
     NAME asyncgi_fcgi_responder
     GIT_REPOSITORY https://github.com/kamchatka-volcano/fcgi_responder.git
