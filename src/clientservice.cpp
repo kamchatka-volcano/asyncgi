@@ -82,7 +82,7 @@ void ClientService::makeRequest(
         if (fcgiResponse) {
             if (!fcgiResponse->errorMsg.empty())
                 eventHandler_(ErrorEvent::RequestProcessingError, fcgiResponse->errorMsg);
-            responseHandler(http::responseFromString(fcgiResponse->data));
+            responseHandler(http::responseFromString(fcgiResponse->data, http::ResponseMode::Cgi));
         }
         else
             responseHandler(std::nullopt);
@@ -164,7 +164,7 @@ void ClientService::makeRequest(
         if (fcgiResponse) {
             if (!fcgiResponse->errorMsg.empty())
                 eventHandler_(ErrorEvent::RequestProcessingError, fcgiResponse->errorMsg);
-            responseHandler(http::responseFromString(fcgiResponse->data));
+            responseHandler(http::responseFromString(fcgiResponse->data, http::ResponseMode::Cgi));
         }
         else
             responseHandler(std::nullopt);
