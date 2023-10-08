@@ -5,6 +5,7 @@
 #include "detail/utils.h"
 #include <chrono>
 #include <functional>
+#include <future>
 #include <memory>
 
 namespace asyncgi {
