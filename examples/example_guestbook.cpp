@@ -1,5 +1,6 @@
 #include <asyncgi/asyncgi.h>
 #include <mutex>
+#include <optional>
 #include <regex>
 
 namespace http = asyncgi::http;
@@ -22,15 +23,17 @@ struct asyncgi::config::RouteMatcher<AccessRole, RouteContext> {
     }
 };
 
-void authorizeAdmin(const asyncgi::Request& request, asyncgi::Response&, RouteContext& context)
+std::optional<http::Response> authorizeAdmin(const asyncgi::Request& request, RouteContext& context)
 {
     if (request.cookie("admin_id") == "ADMIN_SECRET")
         context.role = AccessRole::Admin;
+
+    return std::nullopt;
 }
 
-void showLoginPage(const asyncgi::Request&, asyncgi::Response& response)
+http::Response showLoginPage(const asyncgi::Request&)
 {
-    response.send(R"(
+    return {R"(
             <head><link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css"></head>
             <form method="post" enctype="multipart/form-data">
                 <label for="msg">Login:</label>
@@ -38,20 +41,20 @@ void showLoginPage(const asyncgi::Request&, asyncgi::Response& response)
                 <label for="msg">Password:</label>
                 <input id="passwd" name="passwd" value="">
                 <input value="Submit" data-popup="true" type="submit">
-            </form>)");
+            </form>)"};
 }
 
-void loginAdmin(const asyncgi::Request& request, asyncgi::Response& response)
+http::Response loginAdmin(const asyncgi::Request& request)
 {
     if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
-        response.redirect("/", http::RedirectType::Found, {http::Cookie("admin_id", "ADMIN_SECRET")});
+        return {http::Redirect{"/"}, {http::Cookie("admin_id", "ADMIN_SECRET")}};
     else
-        response.redirect("/login");
+        return http::Redirect{"/login"};
 }
 
-void logoutAdmin(const asyncgi::Request&, asyncgi::Response& response)
+http::Response logoutAdmin(const asyncgi::Request&)
 {
-    response.redirect("/", http::RedirectType::Found, {http::Cookie("admin_id", "")});
+    return {http::Redirect{"/"}, {http::Cookie("admin_id", "")}};
 }
 
 struct GuestBookMessage {
@@ -114,7 +117,7 @@ std::string makeLinksDiv(AccessRole role)
 
 auto showGuestBookPage(GuestBookState& state)
 {
-    return [&state](const asyncgi::Request& request, asyncgi::Response& response, RouteContext& context)
+    return [&state](const asyncgi::Request& request, RouteContext& context) -> http::Response
     {
         auto page = R"(<head><link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css"></head>
                        <div style="display:flex; flex-direction: row; justify-content: flex-end">%LINKS%</div>
@@ -149,13 +152,14 @@ auto showGuestBookPage(GuestBookState& state)
         }
         else
             page = std::regex_replace(page, std::regex{"%ERROR_MSG%"}, "");
-        response.send(page);
+
+        return page;
     };
 }
 
 auto addMessage(GuestBookState& state)
 {
-    return [&state](const asyncgi::Request& request, asyncgi::Response& response)
+    return [&state](const asyncgi::Request& request) -> http::Response
     {
         if (std::all_of(
                     request.formField("msg").begin(),
@@ -164,24 +168,24 @@ auto addMessage(GuestBookState& state)
                     {
                         return std::isspace(static_cast<unsigned char>(ch));
                     }))
-            response.redirect("/?error=empty_msg");
+            return http::Redirect{"/?error=empty_msg"};
         else if (
                 request.formField("msg").find("http://") != std::string_view::npos ||
                 request.formField("msg").find("https://") != std::string_view::npos)
-            response.redirect("/?error=urls_in_msg");
+            return http::Redirect{"/?error=urls_in_msg"};
         else {
             state.addMessage(std::string{request.formField("name")}, std::string{request.formField("msg")});
-            response.redirect("/");
+            return http::Redirect{"/"};
         }
     };
 }
 
 auto removeMessage(GuestBookState& state)
 {
-    return [&state](int index, const asyncgi::Request&, asyncgi::Response& response)
+    return [&state](int index, const asyncgi::Request&) -> http::Response
     {
         state.removeMessage(index);
-        response.redirect("/");
+        return http::Redirect{"/"};
     };
 }
 

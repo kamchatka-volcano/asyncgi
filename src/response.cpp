@@ -22,18 +22,6 @@ Response::Response(std::shared_ptr<detail::ResponseContext> responseContext)
 {
 }
 
-void Response::redirect(
-        std::string path,
-        http::RedirectType redirectType,
-        std::vector<http::Cookie> cookies,
-        std::vector<http::Header> headers)
-{
-    if (auto context = responseContext_.lock()) {
-        auto response = http::Response{std::move(path), redirectType, std::move(cookies), std::move(headers)};
-        context->responseSender().send(response.data(http::ResponseMode::Cgi));
-    }
-}
-
 void Response::send(const http::Response& response)
 {
     if (auto context = responseContext_.lock())

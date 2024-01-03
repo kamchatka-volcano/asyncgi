@@ -8,9 +8,9 @@ int main()
     auto router = asyncgi::Router{io};
     router.route("/", http::RequestMethod::Get)
             .process(
-                    [](const asyncgi::Request&, asyncgi::Response& response)
+                    [](const asyncgi::Request&)
                     {
-                        response.send("Hello world");
+                        return http::Response{"Hello world"};
                     });
 
     auto server = asyncgi::Server{io, router};

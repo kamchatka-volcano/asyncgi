@@ -40,11 +40,6 @@ public:
         send(response);
     }
 
-    void redirect(
-            std::string path,
-            http::RedirectType redirectType = http::RedirectType::Found,
-            std::vector<http::Cookie> cookies = {},
-            std::vector<http::Header> headers = {});
     void send(const http::Response& response);
     void send(fastcgi::Response response);
     bool isSent() const;

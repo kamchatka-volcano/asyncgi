@@ -1,5 +1,6 @@
 #include <asyncgi/asyncgi.h>
 #include <mutex>
+#include <optional>
 
 namespace http = asyncgi::http;
 using namespace std::string_literals;
@@ -14,17 +15,19 @@ struct RouteContext {
 };
 
 struct AdminAuthorizer {
-    void operator()(const asyncgi::Request& request, asyncgi::Response&, RouteContext& context)
+    std::optional<http::Response> operator()(const asyncgi::Request& request, RouteContext& context)
     {
         if (request.cookie("admin_id") == "ADMIN_SECRET")
             context.role = AccessRole::Admin;
+
+        return std::nullopt;
     }
 };
 
 struct LoginPage {
-    void operator()(const asyncgi::Request&, asyncgi::Response& response, RouteContext&)
+    http::Response operator()(const asyncgi::Request&)
     {
-        response.send(R"(
+        return {R"(
                 <html>
                 <form method="post" enctype="multipart/form-data">
                 <label for="msg">Login:</label>
@@ -32,20 +35,17 @@ struct LoginPage {
                 <label for="msg">Password:</label>
                 <input id="passwd" name="passwd" value="">
                 <input value="Submit" data-popup="true" type="submit">
-                </form></html>)");
+                </form></html>)"};
     }
 };
 
 struct LoginPageAuthorize {
-    void operator()(const asyncgi::Request& request, asyncgi::Response& response, RouteContext&)
+    http::Response operator()(const asyncgi::Request& request)
     {
         if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
-            response.redirect(
-                    "/",
-                    asyncgi::http::RedirectType::Found,
-                    {asyncgi::http::Cookie("admin_id", "ADMIN_SECRET")});
-        else
-            response.redirect("/login");
+            return {http::Redirect{"/"}, {asyncgi::http::Cookie("admin_id", "ADMIN_SECRET")}};
+
+        return http::Redirect{"/login"};
     }
 };
 
@@ -63,12 +63,12 @@ int main()
     auto router = asyncgi::Router<RouteContext>{io};
     router.route(asyncgi::rx{".*"}).process<AdminAuthorizer>();
     router.route("/").process(
-            [](const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)
+            [](const asyncgi::Request&, RouteContext& context) -> http::Response
             {
                 if (context.role == AccessRole::Admin)
-                    response.send("<p>Hello admin</p>");
+                    return {"<p>Hello admin</p>"};
                 else
-                    response.send(R"(<p>Hello guest</p><p><a href="/login">login</a>)");
+                    return {R"(<p>Hello guest</p><p><a href="/login">login</a>)"};
             });
 
     router.route("/login", http::RequestMethod::Get, AccessRole::Guest).process<LoginPage>();

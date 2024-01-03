@@ -24,31 +24,31 @@ set(ASYNCGI_FCGI_RESPONDER_OBJECT_LIB ON)
 SealLake_Bundle(
     NAME asyncgi_fcgi_responder
     GIT_REPOSITORY https://github.com/kamchatka-volcano/fcgi_responder.git
-    GIT_TAG v1.6.1
+    GIT_TAG v1.6.2
     TEXT_REPLACEMENTS
         "namespace fcgi" "namespace asyncgi::fcgi"
 )
 
 SealLake_Bundle(
-    NAME asyncgi_whaleroute
-    GIT_REPOSITORY https://github.com/kamchatka-volcano/whaleroute.git
-    GIT_TAG v2.0.1
-    DESTINATION include/asyncgi/detail/external
-    DIRECTORIES include/whaleroute
-    TEXT_REPLACEMENTS
+        NAME asyncgi_whaleroute
+        GIT_REPOSITORY https://github.com/kamchatka-volcano/whaleroute.git
+        GIT_TAG dev
+        DESTINATION include/asyncgi/detail/external
+        DIRECTORIES include/whaleroute
+        TEXT_REPLACEMENTS
         "namespace whaleroute" "namespace asyncgi::whaleroute"
         "WHALEROUTE_" "ASYNCGI_WHALEROUTE_"
 )
 
 set(ASYNCGI_HOT_TEACUP_OBJECT_LIB ON)
 SealLake_Bundle(
-    NAME asyncgi_hot_teacup
-    GIT_REPOSITORY https://github.com/kamchatka-volcano/hot_teacup.git
-    GIT_TAG v3.1.0
-    WILDCARDS
+        NAME asyncgi_hot_teacup
+        GIT_REPOSITORY https://github.com/kamchatka-volcano/hot_teacup.git
+        GIT_TAG v3.2.0
+        WILDCARDS
         include/hot_teacup/*.h
-    DESTINATION include/asyncgi/http
-    TEXT_REPLACEMENTS
+        DESTINATION include/asyncgi/http
+        TEXT_REPLACEMENTS
         "namespace http" "namespace asyncgi::http"
         "HOT_TEACUP_" "ASYNCGI_HOT_TEACUP_"
 )

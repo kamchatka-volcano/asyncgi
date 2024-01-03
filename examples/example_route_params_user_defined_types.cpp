@@ -56,7 +56,7 @@ public:
     {
     }
 
-    void operator()(const asyncgi::Request&, asyncgi::Response& response)
+    http::Response operator()(const asyncgi::Request&)
     {
         auto messages = state_->messages();
         auto page = "<h1>Guest book</h1>"s;
@@ -72,7 +72,7 @@ public:
                 "<input id=\"msg\" name=\"msg\" value=\"\">"
                 "<input value=\"Submit\" data-popup=\"true\" type=\"submit\">"
                 "</form>";
-        response.send(page);
+        return page;
     }
 
 private:
@@ -86,10 +86,10 @@ public:
     {
     }
 
-    void operator()(const asyncgi::Request& request, asyncgi::Response& response)
+    http::Response operator()(const asyncgi::Request& request)
     {
         state_->addMessage(std::string{request.formField("msg")});
-        response.redirect("/");
+        return http::Redirect{"/"};
     }
 
 private:
@@ -103,10 +103,10 @@ public:
     {
     }
 
-    void operator()(MessageNumber msgNumber, const asyncgi::Request&, asyncgi::Response& response)
+    http::Response operator()(MessageNumber msgNumber, const asyncgi::Request&)
     {
         state_->removeMessage(msgNumber.value);
-        response.redirect("/");
+        return http::Redirect{"/"};
     }
 
 private:

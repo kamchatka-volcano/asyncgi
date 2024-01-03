@@ -2,15 +2,15 @@
 
 namespace http = asyncgi::http;
 
-void guestBookPage(const asyncgi::Request& request, asyncgi::Response& response)
+http::Response guestBookPage(const asyncgi::Request& request)
 {
     if (request.path() == "/")
-        response.send(R"(
+        return {R"(
                 <h1>Guest book</h1>
                 <p>No messages</p>
-            )");
-    else
-        response.send(http::ResponseStatus::_404_Not_Found);
+            )"};
+
+    return http::ResponseStatus::_404_Not_Found;
 }
 
 int main()

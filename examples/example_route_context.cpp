@@ -1,5 +1,6 @@
 #include <asyncgi/asyncgi.h>
 #include <mutex>
+#include <optional>
 
 namespace http = asyncgi::http;
 using namespace std::string_literals;
@@ -14,18 +15,20 @@ struct RouteContext {
 };
 
 struct AdminAuthorizer {
-    void operator()(const asyncgi::Request& request, asyncgi::Response&, RouteContext& context)
+    std::optional<http::Response> operator()(const asyncgi::Request& request, RouteContext& context)
     {
         if (request.cookie("admin_id") == "ADMIN_SECRET")
             context.role = AccessRole::Admin;
+
+        return std::nullopt;
     }
 };
 
 struct LoginPage {
-    void operator()(const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)
+    http::Response operator()(const asyncgi::Request&, RouteContext& context)
     {
         if (context.role == AccessRole::Guest)
-            response.send(R"(
+            return {R"(
                     <html>
                     <form method="post" enctype="multipart/form-data">
                     <label for="msg">Login:</label>
@@ -33,26 +36,23 @@ struct LoginPage {
                     <label for="msg">Password:</label>
                     <input id="passwd" name="passwd" value="">
                     <input value="Submit" data-popup="true" type="submit">
-                    </form></html>)");
+                    </form></html>)"};
         else //We are already logged in as the administrator
-            response.redirect("/");
+            return http::Redirect{"/"};
     }
 };
 
 struct LoginPageAuthorize {
-    void operator()(const asyncgi::Request& request, asyncgi::Response& response, RouteContext& context)
+    http::Response operator()(const asyncgi::Request& request, RouteContext& context)
     {
         if (context.role == AccessRole::Guest) {
             if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
-                response.redirect(
-                        "/",
-                        asyncgi::http::RedirectType::Found,
-                        {asyncgi::http::Cookie("admin_id", "ADMIN_SECRET")});
+                return {http::Redirect{"/"}, {asyncgi::http::Cookie("admin_id", "ADMIN_SECRET")}};
             else
-                response.redirect("/login");
+                return http::Redirect{"/login"};
         }
         else //We are already logged in as the administrator
-            response.redirect("/");
+            return http::Redirect{"/"};
     }
 };
 

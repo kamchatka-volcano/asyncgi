@@ -8,9 +8,9 @@ struct Greeter{
     {
     }
 
-    void operator()(const asyncgi::Request&, asyncgi::Response& response)
+    http::Response operator()(const asyncgi::Request&)
     {
-        response.send("Hello world\n(alive for " + std::to_string(*secondsCounter_) + " seconds)");
+        return "Hello world\n(alive for " + std::to_string(*secondsCounter_) + " seconds)";
     }
 
 private:

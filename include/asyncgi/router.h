@@ -8,6 +8,7 @@
 #include "types.h"
 #include "detail/external/sfun/functional.h"
 #include "detail/external/sfun/interface.h"
+#include "detail/external/sfun/type_traits.h"
 #include "detail/external/whaleroute/requestrouter.h"
 #include "detail/routeresponsecontextaccessor.h"
 #include "http/response.h"
@@ -27,8 +28,30 @@ public:
     }
 };
 
+namespace detail {
+struct ResponseSender {
+    template<typename TResponse>
+    void operator()(Response& responseSender, const TResponse& response)
+    {
+        if constexpr (sfun::is_optional_v<TResponse>) {
+            if (response.has_value())
+                responseSender.send(response.value());
+        }
+        else {
+            responseSender.send(response);
+        }
+    }
+
+    template<typename... TResponse>
+    auto operator()(Response& responseSender, TResponse&&... response) -> std::enable_if_t<(sizeof...(TResponse) > 1)>
+    {
+        responseSender.send(response...);
+    }
+};
+} //namespace detail
+
 template<typename TRouteContext = _>
-class Router : public whaleroute::RequestRouter<Request, Response, http::Response, TRouteContext> {
+class Router : public whaleroute::RequestRouter<Request, Response, detail::ResponseSender, TRouteContext> {
 public:
     explicit Router(IO& io)
         : eventHandler_{io.eventHandler(RouterIOAccess::makeToken<TRouteContext>(sfun::access_token{*this}))}
@@ -40,8 +63,9 @@ public:
         auto requestProcessorQueuePtr = std::make_shared<whaleroute::RequestProcessorQueue>();
         detail::RouterResponseContextAccessor::setRequestProcessorQueue(response, requestProcessorQueuePtr);
         auto requestProcessorQueue =
-                whaleroute::RequestRouter<asyncgi::Request, asyncgi::Response, http::Response, TRouteContext>::
+                whaleroute::RequestRouter<asyncgi::Request, asyncgi::Response, detail::ResponseSender, TRouteContext>::
                         makeRequestProcessorQueue(request, response);
+
         *requestProcessorQueuePtr = requestProcessorQueue;
         requestProcessorQueuePtr->launch();
     }
@@ -60,11 +84,6 @@ private:
     bool isRouteProcessingFinished(const Request&, Response& response) const final
     {
         return response.isSent();
-    }
-
-    void setResponseValue(Response& response, const http::Response& httpResponse) final
-    {
-        response.send(httpResponse);
     }
 
     void onRouteParametersError(const Request&, Response& response, const whaleroute::RouteParameterError& error)
