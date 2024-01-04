@@ -22,16 +22,17 @@ class IO {
 
 public:
     template<typename TEventHandler>
-    explicit IO(int threadsNumber, TEventHandler& eventHandler)
+    explicit IO(int threadsNumber, TEventHandler&& eventHandler)
         : IO(threadsNumber)
     {
-        eventHandler_ = eventHandler;
+        eventHandler_ = std::forward<TEventHandler>(eventHandler);
     }
+
     template<typename TEventHandler>
-    explicit IO(TEventHandler& eventHandler)
+    explicit IO(TEventHandler&& eventHandler)
         : IO(1)
     {
-        eventHandler_ = eventHandler;
+        eventHandler_ = std::forward<TEventHandler>(eventHandler);
     }
     explicit IO(int threadsNumber = 1);
 
