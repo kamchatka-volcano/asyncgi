@@ -5,7 +5,7 @@
 #include <asyncgi/detail/external/sfun/interface.h>
 #include <asyncgi/detail/external/sfun/optional_ref.h>
 #include <asyncgi/io.h>
-#include <asyncgi/response.h>
+#include <asyncgi/responder.h>
 #include <asyncgi/timer.h>
 
 namespace asyncgi {

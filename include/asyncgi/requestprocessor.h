@@ -2,7 +2,7 @@
 #define ASYNCGI_REQUESTPROCESSOR_H
 
 #include "request.h"
-#include "response.h"
+#include "responder.h"
 #include "detail/external/sfun/functional.h"
 #include <functional>
 

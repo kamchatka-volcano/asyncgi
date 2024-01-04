@@ -12,7 +12,7 @@
 #include <asio/write.hpp>
 #endif
 #include <asyncgi/request.h>
-#include <asyncgi/response.h>
+#include <asyncgi/responder.h>
 #include <memory>
 
 namespace asyncgi::detail {

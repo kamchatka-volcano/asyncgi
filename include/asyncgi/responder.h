@@ -1,5 +1,5 @@
-#ifndef ASYNCGI_RESPONSE_H
-#define ASYNCGI_RESPONSE_H
+#ifndef ASYNCGI_RESPONDER_H
+#define ASYNCGI_RESPONDER_H
 
 #include "types.h"
 #include "detail/external/sfun/interface.h"
@@ -53,4 +53,4 @@ private:
 
 } // namespace asyncgi
 
-#endif //ASYNCGI_RESPONSE_H
+#endif //ASYNCGI_RESPONDER_H

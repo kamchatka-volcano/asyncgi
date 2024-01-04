@@ -5,7 +5,7 @@
 #include "timerprovider.h"
 #include <asyncgi/http/request.h>
 #include <asyncgi/http/response.h>
-#include <asyncgi/response.h>
+#include <asyncgi/responder.h>
 #include <asyncgi/types.h>
 #include <functional>
 #include <memory>

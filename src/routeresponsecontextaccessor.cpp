@@ -1,7 +1,7 @@
 #include "responsecontext.h"
 #include <asyncgi/detail/external/sfun/interface.h>
 #include <asyncgi/detail/routeresponsecontextaccessor.h>
-#include <asyncgi/response.h>
+#include <asyncgi/responder.h>
 
 namespace asyncgi::detail {
 
