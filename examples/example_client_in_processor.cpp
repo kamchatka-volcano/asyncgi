@@ -3,10 +3,10 @@
 namespace http = asyncgi::http;
 
 struct RequestPage{
-    void operator()(const asyncgi::Request&, asyncgi::Responder& response)
+    void operator()(const asyncgi::Request&, asyncgi::Responder& responder)
     {
         // making request to FastCgi application listening on /tmp/fcgi.sock and showing the received response
-        auto client = asyncgi::Client{response};
+        auto client = asyncgi::Client{responder};
         client.makeRequest(
 #ifndef _WIN32
                 "/tmp/fcgi.sock",
@@ -15,12 +15,12 @@ struct RequestPage{
                 9088,
 #endif
                 http::Request{http::RequestMethod::Get, "/"},
-                [response](const std::optional<http::ResponseView>& reqResponse) mutable
+                [responder](const std::optional<http::ResponseView>& reqResponse) mutable
                 {
                     if (reqResponse)
-                        response.send(std::string{reqResponse->body()});
+                        responder.send(std::string{reqResponse->body()});
                     else
-                        response.send("No response");
+                        responder.send("No response");
                 });
     }
 };

@@ -9,16 +9,16 @@ namespace asio = boost::asio;
 namespace http = asyncgi::http;
 
 struct DelayedPage {
-    void operator()(const asyncgi::Request&, asyncgi::Responder& response)
+    void operator()(const asyncgi::Request&, asyncgi::Responder& responder)
     {
-        auto disp = asyncgi::AsioDispatcher{response};
+        auto disp = asyncgi::AsioDispatcher{responder};
         disp.postTask(
-                [response](const asyncgi::TaskContext& ctx) mutable
+                [responder](const asyncgi::TaskContext& ctx) mutable
                 {
                     auto timer = std::make_shared<asio::steady_timer>(ctx.io());
                     timer->expires_after(std::chrono::seconds{3});
-                    timer->async_wait([timer, response, ctx](auto&) mutable { // Note how we capture ctx object here,
-                        response.send("Hello world"); // it's necessary to keep it (or its copy) alive
+                    timer->async_wait([timer, responder, ctx](auto&) mutable { // Note how we capture ctx object here,
+                        responder.send("Hello world"); // it's necessary to keep it (or its copy) alive
                     }); // before the end of request processing
                 });
     }

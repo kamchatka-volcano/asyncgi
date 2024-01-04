@@ -4,9 +4,9 @@
 using namespace asyncgi;
 
 struct DelayedPage{
-    void operator()(const asyncgi::Request&, asyncgi::Responder& response)
+    void operator()(const asyncgi::Request&, asyncgi::Responder& responder)
     {
-        auto timer = asyncgi::Timer{response};
+        auto timer = asyncgi::Timer{responder};
         timer.waitFuture(
                 std::async(
                         std::launch::async,
@@ -15,9 +15,9 @@ struct DelayedPage{
                             std::this_thread::sleep_for(std::chrono::seconds(3));
                             return "world";
                         }),
-                [response](const std::string& result) mutable
+                [responder](const std::string& result) mutable
                 {
-                    response.send(http::Response{"Hello " + result});
+                    responder.send(http::Response{"Hello " + result});
                 });
     }
 };
