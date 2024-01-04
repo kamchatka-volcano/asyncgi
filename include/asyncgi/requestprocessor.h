@@ -18,7 +18,7 @@ constexpr void checkRequestProcessorSignature()
         constexpr auto args = TRequestProcessorArgs{};
         static_assert(args.size() == 2);
         static_assert(std::is_same_v<const asyncgi::Request&, typename decltype(sfun::get<0>(args))::type>);
-        static_assert(std::is_same_v<asyncgi::Response&, typename decltype(sfun::get<1>(args))::type>);
+        static_assert(std::is_same_v<asyncgi::Responder&, typename decltype(sfun::get<1>(args))::type>);
     }
     else {
         static_assert(
@@ -49,12 +49,12 @@ public:
                                                std::shared_ptr<detail::ResponseContext> responseContext)
             {
                 if constexpr (std::is_same_v<sfun::callable_return_type<TRequestProcessorFunc>, void>) {
-                    auto response = Response{std::move(responseContext)};
+                    auto response = Responder{std::move(responseContext)};
                     requestProcessor(request, response);
                 }
                 else {
                     auto response = requestProcessor(request);
-                    Response{std::move(responseContext)}.send(response);
+                    Responder{std::move(responseContext)}.send(response);
                 }
             };
         }
@@ -64,12 +64,12 @@ public:
                                                std::shared_ptr<detail::ResponseContext> responseContext)
             {
                 if constexpr (std::is_same_v<sfun::callable_return_type<TRequestProcessorFunc>, void>) {
-                    auto response = Response{std::move(responseContext)};
+                    auto response = Responder{std::move(responseContext)};
                     requestProcessor(request, response);
                 }
                 else {
                     auto response = requestProcessor(request);
-                    Response{std::move(responseContext)}.send(response);
+                    Responder{std::move(responseContext)}.send(response);
                 }
             };
         }

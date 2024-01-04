@@ -17,7 +17,7 @@ AsioDispatcher::AsioDispatcher(IO& io)
 
 namespace {
 sfun::optional_ref<detail::AsioDispatcherService> getAsioDispatcherService(
-        Response& response,
+        Responder& response,
         sfun::access_token<AsioDispatcher> accessToken)
 {
     if (auto context = response.context(accessToken).lock())
@@ -27,7 +27,7 @@ sfun::optional_ref<detail::AsioDispatcherService> getAsioDispatcherService(
 }
 } //namespace
 
-AsioDispatcher::AsioDispatcher(Response& response)
+AsioDispatcher::AsioDispatcher(Responder& response)
     : asioDispatcherService_{getAsioDispatcherService(response, sfun::access_token<AsioDispatcher>{})}
 {
 }

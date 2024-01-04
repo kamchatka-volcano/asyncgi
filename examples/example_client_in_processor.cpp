@@ -3,7 +3,7 @@
 namespace http = asyncgi::http;
 
 struct RequestPage{
-    void operator()(const asyncgi::Request&, asyncgi::Response& response)
+    void operator()(const asyncgi::Request&, asyncgi::Responder& response)
     {
         // making request to FastCgi application listening on /tmp/fcgi.sock and showing the received response
         auto client = asyncgi::Client{response};

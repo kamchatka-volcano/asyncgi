@@ -12,12 +12,12 @@ class AsioDispatcherService;
 }
 
 class IO;
-class Response;
+class Responder;
 
 class AsioDispatcher {
 public:
     explicit AsioDispatcher(IO&);
-    explicit AsioDispatcher(Response&);
+    explicit AsioDispatcher(Responder&);
 
     void postTask(std::function<void(const TaskContext&)> task);
 

@@ -10,7 +10,7 @@
 
 namespace asyncgi {
 class IO;
-class Response;
+class Responder;
 
 namespace detail {
 class TimerService;
@@ -19,7 +19,7 @@ class TimerService;
 class Timer {
 public:
     explicit Timer(IO&);
-    explicit Timer(Response&);
+    explicit Timer(Responder&);
 
     void start(std::chrono::milliseconds time, std::function<void()> callback);
     void startPeriodic(std::chrono::milliseconds time, std::function<void()> callback);

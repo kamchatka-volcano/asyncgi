@@ -9,7 +9,7 @@ namespace asio = boost::asio;
 namespace http = asyncgi::http;
 
 struct DelayedPage {
-    void operator()(const asyncgi::Request&, asyncgi::Response& response)
+    void operator()(const asyncgi::Request&, asyncgi::Responder& response)
     {
         auto disp = asyncgi::AsioDispatcher{response};
         disp.postTask(

@@ -15,7 +15,7 @@ int main()
     auto router = asyncgi::Router{io};
     router.route("/", http::RequestMethod::Get)
             .process(
-                    [](const asyncgi::Request&, asyncgi::Response&)
+                    [](const asyncgi::Request&, asyncgi::Responder&)
                     {
                         throw std::runtime_error{"Can't send a response"};
                     });

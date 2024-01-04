@@ -16,7 +16,7 @@ Timer::Timer(IO& io)
 }
 
 namespace {
-sfun::optional_ref<detail::TimerService> getTimerService(Response& response, sfun::access_token<Timer> accessToken)
+sfun::optional_ref<detail::TimerService> getTimerService(Responder& response, sfun::access_token<Timer> accessToken)
 {
     if (auto context = response.context(accessToken).lock())
         return context->timerProvider().emplaceTimer();
@@ -25,7 +25,7 @@ sfun::optional_ref<detail::TimerService> getTimerService(Response& response, sfu
 }
 } //namespace
 
-Timer::Timer(Response& response)
+Timer::Timer(Responder& response)
     : timerService_{getTimerService(response, sfun::access_token<Timer>{})}
 {
 }

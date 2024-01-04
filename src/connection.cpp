@@ -129,12 +129,12 @@ void Connection<TProtocol>::processRequest(fcgi::Request&& fcgiRequest, fcgi::Re
         requestProcessor_(request, responseContext_);
     }
     catch (const std::exception& e) {
-        auto response = Response{responseContext_};
+        auto response = asyncgi::Responder{responseContext_};
         response.send(http::ResponseStatus::_500_Internal_Server_Error);
         eventHandler_(ErrorEvent::RequestProcessingError, e.what());
     }
     catch (...) {
-        auto response = Response{responseContext_};
+        auto response = asyncgi::Responder{responseContext_};
         response.send(http::ResponseStatus::_500_Internal_Server_Error);
         eventHandler_(ErrorEvent::RequestProcessingError, "Unknown error");
     }

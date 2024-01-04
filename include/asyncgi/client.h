@@ -14,7 +14,7 @@
 
 namespace asyncgi {
 class IO;
-class Response;
+class Responder;
 
 namespace detail {
 class ClientService;
@@ -23,7 +23,7 @@ class ClientService;
 class Client {
 public:
     explicit Client(IO&);
-    explicit Client(Response&);
+    explicit Client(Responder&);
 
     void makeRequest(
             const std::filesystem::path& socketPath,

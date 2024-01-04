@@ -17,7 +17,7 @@ Client::Client(IO& io)
 }
 
 namespace {
-sfun::optional_ref<detail::ClientService> getClientService(Response& response, sfun::access_token<Client> accessToken)
+sfun::optional_ref<detail::ClientService> getClientService(Responder& response, sfun::access_token<Client> accessToken)
 {
     if (auto context = response.context(accessToken).lock())
         return context->client();
@@ -26,7 +26,7 @@ sfun::optional_ref<detail::ClientService> getClientService(Response& response, s
 }
 } //namespace
 
-Client::Client(Response& response)
+Client::Client(Responder& response)
     : clientService_{getClientService(response, sfun::access_token<Client>{})}
 {
 }

@@ -62,7 +62,7 @@ int main()
     auto router = asyncgi::Router<RouteContext>{io};
     router.route(asyncgi::rx{".*"}).process<AdminAuthorizer>();
     router.route("/").process(
-            [](const asyncgi::Request&, asyncgi::Response& response, RouteContext& context)
+            [](const asyncgi::Request&, asyncgi::Responder& response, RouteContext& context)
             {
                 if (context.role == AccessRole::Admin)
                     response.send("<p>Hello admin</p>");

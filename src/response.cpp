@@ -17,24 +17,24 @@ namespace detail {
 class TimerProvider;
 } // namespace detail
 
-Response::Response(std::shared_ptr<detail::ResponseContext> responseContext)
+Responder::Responder(std::shared_ptr<detail::ResponseContext> responseContext)
     : responseContext_{responseContext}
 {
 }
 
-void Response::send(const http::Response& response)
+void Responder::send(const http::Response& response)
 {
     if (auto context = responseContext_.lock())
         context->responseSender().send(response.data(http::ResponseMode::Cgi));
 }
 
-void Response::send(fastcgi::Response response)
+void Responder::send(fastcgi::Response response)
 {
     if (auto context = responseContext_.lock())
         context->responseSender().send(std::move(response.data), std::move(response.errorMsg));
 }
 
-bool Response::isSent() const
+bool Responder::isSent() const
 {
     if (auto context = responseContext_.lock())
         return context->responseSender().isSent();
@@ -42,7 +42,7 @@ bool Response::isSent() const
     return true;
 }
 
-std::weak_ptr<detail::ResponseContext> Response::context(detail::ResponseContextAccessPermission)
+std::weak_ptr<detail::ResponseContext> Responder::context(detail::ResponseContextAccessPermission)
 {
     return responseContext_;
 }

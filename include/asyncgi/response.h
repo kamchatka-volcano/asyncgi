@@ -29,9 +29,9 @@ using ResponseContextAccessPermission =
         sfun::access_permission<Client, Timer, AsioDispatcher, RouterResponseContextAccessor>;
 } //namespace detail
 
-class Response {
+class Responder {
 public:
-    explicit Response(std::shared_ptr<detail::ResponseContext> responseContext);
+    explicit Responder(std::shared_ptr<detail::ResponseContext> responseContext);
 
     template<typename... TArgs>
     void send(TArgs... args)

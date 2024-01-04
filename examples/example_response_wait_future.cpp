@@ -4,7 +4,7 @@
 using namespace asyncgi;
 
 struct DelayedPage{
-    void operator()(const asyncgi::Request&, asyncgi::Response& response)
+    void operator()(const asyncgi::Request&, asyncgi::Responder& response)
     {
         auto timer = asyncgi::Timer{response};
         timer.waitFuture(
