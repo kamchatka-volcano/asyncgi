@@ -2,7 +2,7 @@
   <img height="128" src="doc/logo.png"/>
 </p>
 
-[![build & test (clang, gcc)](https://github.com/kamchatka-volcano/asyncgi/actions/workflows/build_and_test.yml/badge.svg?branch=master)](https://github.com/kamchatka-volcano/asyncgi/actions/workflows/build_and_test.yml)
+[![build & test (clang, gcc, MSVC)](https://github.com/kamchatka-volcano/asyncgi/actions/workflows/build_and_test.yml/badge.svg?branch=master)](https://github.com/kamchatka-volcano/asyncgi/actions/workflows/build_and_test.yml)
 
 **asyncgi** - is a C++17 asynchronous microframework for creating web applications interfacing with any HTTP server
 supporting [FastCGI](https://en.wikipedia.org/wiki/FastCGI) protocol. It aims to provide a modern way of
@@ -58,17 +58,16 @@ Web applications developed with `asyncgi` require to establish a FastCGI connect
 server {
 	listen 8088;
 	server_name localhost;
-	index /~;	
+	
 	location / {
-		try_files $uri $uri/ @fcgi;
+		try_files $uri @fcgi;
 	}
 	
 	location @fcgi {	
 		fastcgi_pass  unix:/tmp/fcgi.sock;		
 		#or using a TCP socket
 		#fastcgi_pass localhost:9000;
-		include fastcgi_params;		
-		fastcgi_keep_conn off;	    
+		include fastcgi_params;
 	}
 }
 
