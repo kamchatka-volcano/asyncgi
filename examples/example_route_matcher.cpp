@@ -51,7 +51,7 @@ struct LoginPageAuthorize {
 
 template<>
 struct asyncgi::config::RouteMatcher<AccessRole, RouteContext> {
-    bool operator()(AccessRole value, const asyncgi::Request&, asyncgi::Response&, RouteContext& context) const
+    bool operator()(AccessRole value, const asyncgi::Request&, const RouteContext& context) const
     {
         return value == context.role;
     }

@@ -113,7 +113,7 @@ private:
 
 template<>
 struct config::RouteMatcher<asyncgi::http::RequestMethod> {
-    bool operator()(asyncgi::http::RequestMethod value, const asyncgi::Request& request, asyncgi::Response&) const
+    bool operator()(asyncgi::http::RequestMethod value, const asyncgi::Request& request) const
     {
         return value == request.method();
     }
@@ -121,8 +121,7 @@ struct config::RouteMatcher<asyncgi::http::RequestMethod> {
 
 template<typename TContext>
 struct config::RouteMatcher<asyncgi::http::RequestMethod, TContext> {
-    bool operator()(asyncgi::http::RequestMethod value, const asyncgi::Request& request, asyncgi::Response&, TContext&)
-            const
+    bool operator()(asyncgi::http::RequestMethod value, const asyncgi::Request& request, const TContext&) const
     {
         return value == request.method();
     }

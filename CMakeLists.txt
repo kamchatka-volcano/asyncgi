@@ -32,7 +32,7 @@ SealLake_Bundle(
 SealLake_Bundle(
         NAME asyncgi_whaleroute
         GIT_REPOSITORY https://github.com/kamchatka-volcano/whaleroute.git
-        GIT_TAG dev
+        GIT_TAG v3.0.0
         DESTINATION include/asyncgi/detail/external
         DIRECTORIES include/whaleroute
         TEXT_REPLACEMENTS
