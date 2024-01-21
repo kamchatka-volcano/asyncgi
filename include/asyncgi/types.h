@@ -14,7 +14,6 @@ namespace string_literals = whaleroute::string_literals;
 using TrailingSlashMode = whaleroute::TrailingSlashMode;
 template<int minSize = 0>
 using RouteParameters = whaleroute::RouteParameters<minSize>;
-} // namespace asyncgi
 
 namespace fastcgi {
 struct Response {
@@ -27,5 +26,7 @@ struct Request {
     std::string stdIn;
 };
 } // namespace fastcgi
+
+} //namespace asyncgi
 
 #endif //ASYNCGI_TYPES_H

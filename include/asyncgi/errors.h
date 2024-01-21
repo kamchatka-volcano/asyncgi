@@ -4,7 +4,7 @@
 
 namespace asyncgi {
 
-struct Error : public std::runtime_error {
+class Error : public std::runtime_error {
     using std::runtime_error::runtime_error;
 };
 
