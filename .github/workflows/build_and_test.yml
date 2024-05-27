@@ -1,6 +1,7 @@
 name: build & test (clang, gcc, MSVC)
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "master", "dev" ]
     paths-ignore:
@@ -25,57 +26,51 @@ jobs:
           - {
             name: "Ubuntu Latest gcc",
             os: ubuntu-latest,
-            cc: "gcc",
-            cxx: "g++",
+            cmake-preset: gcc-release,
             cmake_vars: "",
-            asio_type: "standalone",
-            flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused",
-            artifacts-path-postfix: ""
+            asio_type: "standalone"
           }
           - {
             name: "Ubuntu Latest clang",
             os: ubuntu-latest,
-            cc: "clang",
-            cxx: "clang++",
+            cmake-preset: clang-release,
             cmake_vars: "",
-            asio_type: "standalone",
-            flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused",
-            artifacts-path-postfix: ""
+            asio_type: "standalone"
           }
           - {
             name: "Windows Latest MSVC",
             os: windows-latest,
-            cc: "cl",
-            cxx: "cl",
+            cmake-preset: msvc-release,
             cmake_vars: "",
-            asio_type: "standalone",
-            flags: "/EHsc /W4 /WX",
-            artifacts-path-postfix: "Release"
+            asio_type: "standalone"
           }
           - {
             name: "Ubuntu Latest clang (Boost.Asio)",
             os: ubuntu-latest,
-            cc: "clang",
-            cxx: "clang++",
+            cmake-preset: clang-release,
             asio_type: "boost",
             cmake_vars: "-DASYNCGI_USE_BOOST_ASIO=ON -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_STATIC_RUNTIME=ON -DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake",
-            flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused",
-            artifacts-path-postfix: ""
           }
           - {
             name: "Windows Latest MSVC (Boost.Asio)",
             os: windows-latest,
-            cc: "cl",
-            cxx: "cl",
+            cmake-preset: msvc-release,
             asio_type: "boost",
-            cmake_vars: "-DASYNCGI_USE_BOOST_ASIO=ON -DCMAKE_GENERATOR_PLATFORM=x64 -DVCPKG_TARGET_TRIPLET=x64-windows-static-md -DCMAKE_TOOLCHAIN_FILE='vcpkg/scripts/buildsystems/vcpkg.cmake'",
-            flags: "/EHsc /W4 /WX",
-            artifacts-path-postfix: "Release"
+            cmake_vars: "-DASYNCGI_USE_BOOST_ASIO=ON -DVCPKG_TARGET_TRIPLET=x64-windows-static-md -DCMAKE_TOOLCHAIN_FILE='vcpkg/scripts/buildsystems/vcpkg.cmake'"
           }
 
     steps:
-      - name: Git checkout
-        uses: actions/checkout@v3
+      - name: Install ninja (Windows)
+        if: matrix.config.os == 'windows-latest'
+        run: choco install ninja
+      - name: Install ninja (Linux)
+        if: matrix.config.os == 'ubuntu-latest'
+        run: sudo apt install ninja-build
+      - uses: actions/checkout@v4
+
+      - uses: rui314/setup-mold@v1
+      - uses: hendrikmuhs/ccache-action@v1.2
+      - uses: ilammy/msvc-dev-cmd@v1
 
       - name: Install vcpkg
         uses: lukka/run-vcpkg@v10
@@ -83,7 +78,7 @@ jobs:
           vcpkgGitCommitId: 31a159c1cae2bf905299085d9ef01bdfea0ca7b8
 
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DENABLE_EXAMPLES=ON ${{ matrix.config.cmake_vars }} -DCMAKE_CXX_FLAGS="${{ matrix.config.flags }}"
+        run: cmake -B ${{github.workspace}}/build -DENABLE_EXAMPLES=ON ${{ matrix.config.cmake_vars }} --preset="${{ matrix.config.cmake-preset }}"
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build --config Release
@@ -92,13 +87,13 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: asyncgi-examples-${{ matrix.config.os }}-${{ matrix.config.asio_type }}-asio
-          path: build/examples/${{ matrix.config.artifacts-path-postfix }}
+          path: build/examples/
 
       - name: Upload build test artifact
         uses: actions/upload-artifact@v3
         with:
           name: asyncgi-test-examples-${{ matrix.config.os }}-${{ matrix.config.asio_type }}-asio
-          path: build/test_examples/${{ matrix.config.artifacts-path-postfix }}
+          path: build/test_examples/
 
   functional_tests:
     name: Functional testing (${{ matrix.config.name }} ${{ matrix.asio_type }}-asio)
@@ -115,7 +110,7 @@ jobs:
             lunchtoast_exec: "lunchtoast.exe",
             shell_command: -shell="msys2 -c",
             tags: -skip=linux,
-            nginx_exec: "c:/tools/nginx-1.25.3/nginx.exe",
+            nginx_exec: "c:/tools/nginx-1.27.0/nginx.exe",
             nginx_cfg: "nginx_windows.conf"
           }
           - {

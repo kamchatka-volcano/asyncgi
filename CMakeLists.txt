@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.18)
-project(asyncgi VERSION 0.4.0 DESCRIPTION "asyncgi - asynchronous FastCGI web application microframework")
+project(asyncgi VERSION 0.6.0 DESCRIPTION "asyncgi - asynchronous FastCGI web application microframework")
 
-include(GNUInstallDirs)
 include(external/seal_lake)
 if (ASYNCGI_USE_BOOST_ASIO)
     find_package(Boost REQUIRED COMPONENTS system)
@@ -12,7 +11,7 @@ endif()
 SealLake_Bundle(
     NAME asyncgi_sfun
     GIT_REPOSITORY https://github.com/kamchatka-volcano/sfun.git
-    GIT_TAG v5.0.0
+        GIT_TAG v5.1.0
     DESTINATION include/asyncgi/detail/external
     DIRECTORIES include/sfun
     TEXT_REPLACEMENTS
@@ -24,7 +23,7 @@ set(ASYNCGI_FCGI_RESPONDER_OBJECT_LIB ON)
 SealLake_Bundle(
     NAME asyncgi_fcgi_responder
     GIT_REPOSITORY https://github.com/kamchatka-volcano/fcgi_responder.git
-    GIT_TAG v1.6.2
+        GIT_TAG v1.7.0
     TEXT_REPLACEMENTS
         "namespace fcgi" "namespace asyncgi::fcgi"
 )
@@ -32,7 +31,7 @@ SealLake_Bundle(
 SealLake_Bundle(
         NAME asyncgi_whaleroute
         GIT_REPOSITORY https://github.com/kamchatka-volcano/whaleroute.git
-        GIT_TAG v3.0.0
+        GIT_TAG v3.1.0
         DESTINATION include/asyncgi/detail/external
         DIRECTORIES include/whaleroute
         TEXT_REPLACEMENTS
@@ -44,7 +43,7 @@ set(ASYNCGI_HOT_TEACUP_OBJECT_LIB ON)
 SealLake_Bundle(
         NAME asyncgi_hot_teacup
         GIT_REPOSITORY https://github.com/kamchatka-volcano/hot_teacup.git
-        GIT_TAG v3.2.0
+        GIT_TAG v3.3.0
         WILDCARDS
         include/hot_teacup/*.h
         DESTINATION include/asyncgi/http
@@ -92,12 +91,12 @@ SealLake_StaticLibrary(
 )
 
 if (ASYNCGI_USE_BOOST_ASIO)
-    SealLake_Libraries(Boost::boost)
+    SealLake_AddLibraries(Boost::boost)
 else()
-    SealLake_Libraries(asio)
+    SealLake_AddLibraries(asio)
 endif()
 
-SealLake_OptionalBuildSteps(examples)
+SealLake_OptionalSubProjects(examples)
 if (ENABLE_EXAMPLES)
     add_subdirectory(test_examples)
 endif()

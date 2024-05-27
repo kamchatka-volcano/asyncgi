@@ -12,6 +12,6 @@ enum ErrorEvent {
     RouteParametersError
 };
 
-}; //namespace asyncgi
+} //namespace asyncgi
 
 #endif //ASYNCGI_EVENTS_H
