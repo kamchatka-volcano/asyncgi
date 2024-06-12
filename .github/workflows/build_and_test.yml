@@ -123,6 +123,10 @@ jobs:
             nginx_cfg: "nginx_linux.conf"
           }
     steps:
+      - if: matrix.config.name == 'Windows'
+        name: Disable Windows Defender real monitoring
+        run: Set-MpPreference -DisableRealtimeMonitoring $true
+        shell: powershell
       - name: Git checkout
         uses: actions/checkout@v3
 
