@@ -1,14 +1,12 @@
 #include <asyncgi/asyncgi.h>
 
-namespace http = asyncgi::http;
-
 struct Greeter{
     Greeter(const int& secondsCounter)
         : secondsCounter_{&secondsCounter}
     {
     }
 
-    http::Response operator()(const asyncgi::Request&)
+    http::Response operator()(const http::Request&)
     {
         return "Hello world\n(alive for " + std::to_string(*secondsCounter_) + " seconds)";
     }

@@ -3,7 +3,6 @@
 
 namespace asyncgi {
 class IO;
-class Request;
 class Responder;
 class Server;
 class Client;
@@ -13,13 +12,23 @@ class TaskContext;
 class Timer;
 
 namespace http {
+class Request;
 class Response;
-};
+}; //namespace http
+
 namespace fastcgi {
-struct Request;
-struct Response;
+class Request;
+class Response;
 } //namespace fastcgi
 
 } //namespace asyncgi
+
+#ifndef ASYNCGI_DISABLE_GLOBAL_HTTP_NAMESPACE
+namespace http = asyncgi::http;
+#endif
+
+#ifndef ASYNCGI_DISABLE_GLOBAL_FASTCGI_NAMESPACE
+namespace fastcgi = asyncgi::fastcgi;
+#endif
 
 #endif //ASYNCGI_FWD_H

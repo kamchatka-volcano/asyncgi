@@ -6,10 +6,8 @@ namespace asio = boost::asio;
 #include <asio/steady_timer.hpp>
 #endif
 
-namespace http = asyncgi::http;
-
 struct DelayedPage {
-    void operator()(const asyncgi::Request&, asyncgi::Responder& responder)
+    void operator()(const http::Request&, asyncgi::Responder& responder)
     {
         auto disp = asyncgi::AsioDispatcher{responder};
         disp.postTask(

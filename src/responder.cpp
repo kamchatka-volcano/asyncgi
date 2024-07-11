@@ -28,10 +28,20 @@ void Responder::send(const http::Response& response)
         context->responseSender().send(response.data(http::ResponseMode::Cgi));
 }
 
-void Responder::send(fastcgi::Response response)
+void Responder::send(fastcgi::Response& response)
 {
-    if (auto context = responseContext_.lock())
-        context->responseSender().send(std::move(response.data), std::move(response.errorMsg));
+    if (auto context = responseContext_.lock()) {
+        auto responseData = fastcgi::detail::moveOutResponseData(response);
+        context->responseSender().send(std::move(responseData.data), std::move(responseData.errorMsg));
+    }
+}
+
+void Responder::send(fastcgi::Response&& response)
+{
+    if (auto context = responseContext_.lock()) {
+        auto responseData = fastcgi::detail::moveOutResponseData(response);
+        context->responseSender().send(std::move(responseData.data), std::move(responseData.errorMsg));
+    }
 }
 
 bool Responder::isSent() const

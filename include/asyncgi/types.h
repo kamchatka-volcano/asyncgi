@@ -15,18 +15,6 @@ using TrailingSlashMode = whaleroute::TrailingSlashMode;
 template<int minSize = 0>
 using RouteParameters = whaleroute::RouteParameters<minSize>;
 
-namespace fastcgi {
-struct Response {
-    std::string data;
-    std::string errorMsg;
-};
-
-struct Request {
-    std::map<std::string, std::string> params;
-    std::string stdIn;
-};
-} // namespace fastcgi
-
 } //namespace asyncgi
 
 #endif //ASYNCGI_TYPES_H

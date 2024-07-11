@@ -1,7 +1,6 @@
 #include <asyncgi/asyncgi.h>
 #include <mutex>
 
-using namespace asyncgi;
 using namespace std::string_literals;
 
 struct MessageNumber {
@@ -56,7 +55,7 @@ public:
     {
     }
 
-    http::Response operator()(const asyncgi::Request&)
+    http::Response operator()(const http::Request&)
     {
         auto messages = state_->messages();
         auto page = "<h1>Guest book</h1>"s;
@@ -86,7 +85,7 @@ public:
     {
     }
 
-    http::Response operator()(const asyncgi::Request& request)
+    http::Response operator()(const http::Request& request)
     {
         state_->addMessage(std::string{request.formField("msg")});
         return http::Redirect{"/"};
@@ -103,7 +102,7 @@ public:
     {
     }
 
-    http::Response operator()(MessageNumber msgNumber, const asyncgi::Request&)
+    http::Response operator()(MessageNumber msgNumber, const http::Request&)
     {
         state_->removeMessage(msgNumber.value);
         return http::Redirect{"/"};

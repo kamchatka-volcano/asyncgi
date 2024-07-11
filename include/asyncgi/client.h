@@ -4,8 +4,10 @@
 #include "errors.h"
 #include "types.h"
 #include "detail/serviceholder.h"
+#include "fastcgi/request.h"
+#include "fastcgi/response.h"
 #include "http/request.h"
-#include "http/response_view.h"
+#include "http/response.h"
 #include <filesystem>
 #include <functional>
 #include <memory>
@@ -33,7 +35,7 @@ public:
     void makeRequest(
             const std::filesystem::path& socketPath,
             const http::Request& request,
-            const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
+            const std::function<void(std::optional<http::Response>)>& responseHandler,
             std::chrono::milliseconds timeout = std::chrono::seconds{3});
 
     void makeRequest(
@@ -46,7 +48,7 @@ public:
             std::string_view ipAddress,
             uint16_t port,
             const http::Request& request,
-            const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
+            const std::function<void(std::optional<http::Response>)>& responseHandler,
             std::chrono::milliseconds timeout = std::chrono::seconds{3});
 
     void disconnect();

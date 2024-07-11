@@ -11,7 +11,7 @@
 #include <asio/local/stream_protocol.hpp>
 #include <asio/write.hpp>
 #endif
-#include <asyncgi/request.h>
+#include <asyncgi/detail/requestproxy.h>
 #include <asyncgi/responder.h>
 #include <memory>
 
@@ -123,7 +123,7 @@ void Connection<TProtocol>::processRequest(fcgi::Request&& fcgiRequest, fcgi::Re
 {
     fcgiRequest_ = std::move(fcgiRequest);
     responseSender_.emplace(std::move(fcgiResponse));
-    const auto request = Request{*fcgiRequest_};
+    const auto request = RequestProxy{*fcgiRequest_};
     responseContext_ = std::make_shared<ResponseContext>(*responseSender_, timerProvider_, client_, asioDispatcher_);
     try {
         requestProcessor_(request, responseContext_);

@@ -12,14 +12,12 @@ C++, multithreading support and a clean and simple API:
 ```c++
 #include <asyncgi/asyncgi.h>
 
-namespace http = asyncgi::http;
-
 int main()
 {
     auto io = asyncgi::IO{};
     auto router = asyncgi::Router{io};
     router.route("/", http::RequestMethod::Get).process(
-        [](const asyncgi::Request&)
+        [](const http::Request&)
         {
             return http::Response{"Hello world"};
         });
@@ -33,7 +31,7 @@ int main()
 ## Table of Contents
 *    [Usage](#usage)
      * [Connection](#connection)
-     * [Request processor](#request-processor)
+     * [RequestProxy processor](#request-processor)
      * [Router](#router)
      * [Route parameters](#route-parameters)
      * [Route context](#route-context)
@@ -75,13 +73,13 @@ server {
 
 `asyncgi` supports both `UNIX domain` and `TCP` sockets for opening `FastCGI` connections.
 
-### Request processor
+### RequestProxy processor
 
 In order to process requests, it's necessary to provide a function or function object that fulfills
 the `RequestProcessor` requirement. This means that the function must be invocable with one of the following signatures:
 
-* `http::Response (const asyncgi::Request&)`
-* `void (const asyncgi::Request&, asyncgi::Responder&)`.
+* `http::Response (const http::Request&)`
+* `void (const http::Request&, asyncgi::Responder&)`.
 
 <details>
   <summary>Example</summary>
@@ -91,9 +89,7 @@ the `RequestProcessor` requirement. This means that the function must be invocab
 ///
 #include <asyncgi/asyncgi.h>
 
-namespace http = asyncgi::http;
-
-http::Response guestBookPage(const asyncgi::Request& request)
+http::Response guestBookPage(const http::Request& request)
 {
     if (request.path() == "/")
         return {R"(
@@ -121,7 +117,7 @@ Here, the `guestBookPage` function serves as the request processor. Another way 
 reference to the `asyncgi::Responder` object, which can be used for sending responses manually:
 
 ```c++
-void guestBookPage(const asyncgi::Request& request, asyncgi::Responder& responder)
+void guestBookPage(const http::Request& request, asyncgi::Responder& responder)
 {
     if (request.path() == "/")
         responder.send(R"(
@@ -157,7 +153,6 @@ processors is protected from concurrent read/write access.
 #include <asyncgi/asyncgi.h>
 #include <mutex>
 
-namespace http = asyncgi::http;
 using namespace std::string_literals;
 
 class GuestBookState {
@@ -186,7 +181,7 @@ public:
     {
     }
 
-    http::Response operator()(const asyncgi::Request&)
+    http::Response operator()(const http::Request&)
     {
         auto messages = state_->messages();
         auto page = "<h1>Guest book</h1>"s;
@@ -216,7 +211,7 @@ public:
     {
     }
 
-    http::Response operator()(const asyncgi::Request& request)
+    http::Response operator()(const http::Request& request)
     {
         state_->addMessage(std::string{request.formField("msg")});
         return http::Redirect{"/"};
@@ -251,11 +246,11 @@ When using `asyncgi::Router` with regular expressions, request processors must s
 the `ParametrizedRequestProcessor` requirement. That means that a function object must be invocable with one of the
 following signatures:
 
-* `http::Response void(const TRouteParams&..., const asyncgi::Request&)`
-* `void (const TRouteParams&..., const asyncgi::Request&, asyncgi::Responder&)`
+* `http::Response void(const TRouteParams&..., const http::Request&)`
+* `void (const TRouteParams&..., const http::Request&, asyncgi::Responder&)`
 
 The `TRouteParams` represents zero or more parameters generated from the capturing groups of the regular expression. For
-example, `http::Response (int age, string name, const asyncgi::Request&)` signature can be used to process
+example, `http::Response (int age, string name, const http::Request&)` signature can be used to process
 requests matched by `asyncgi::rx{"/person/(\\w+)/age/(\\d+)"}`.
 
 In the following example a `ParametrizedRequestProcessor` named `GuestBookRemoveMessage` is added to remove the stored
@@ -270,7 +265,6 @@ guest book messages:
 #include <asyncgi/asyncgi.h>
 #include <mutex>
 
-using namespace asyncgi;
 using namespace std::string_literals;
 
 class GuestBookState {
@@ -313,7 +307,7 @@ public:
     {
     }
 
-    http::Response operator()(const asyncgi::Request&)
+    http::Response operator()(const http::Request&)
     {
         auto messages = state_->messages();
         auto page = "<h1>Guest book</h1>"s;
@@ -343,7 +337,7 @@ public:
     {
     }
 
-    http::Response operator()(const asyncgi::Request& request)
+    http::Response operator()(const http::Request& request)
     {
         state_->addMessage(std::string{request.formField("msg")});
         return http::Redirect{"/"};
@@ -360,7 +354,7 @@ public:
     {
     }
 
-    http::Response operator()(int index, const asyncgi::Request&)
+    http::Response operator()(int index, const http::Request&)
     {
         state_->removeMessage(index);
         return http::Redirect{"/"};
@@ -402,7 +396,6 @@ the `GuestBookRemoveMessage` request processor to use the `MessageNumber` struct
 #include <asyncgi/asyncgi.h>
 #include <mutex>
 
-using namespace asyncgi;
 using namespace std::string_literals;
 
 struct MessageNumber {
@@ -457,7 +450,7 @@ public:
     {
     }
 
-    http::Response operator()(const asyncgi::Request&)
+    http::Response operator()(const http::Request&)
     {
         auto messages = state_->messages();
         auto page = "<h1>Guest book</h1>"s;
@@ -487,7 +480,7 @@ public:
     {
     }
 
-    http::Response operator()(const asyncgi::Request& request)
+    http::Response operator()(const http::Request& request)
     {
         state_->addMessage(std::string{request.formField("msg")});
         return http::Redirect{"/"};
@@ -504,7 +497,7 @@ public:
     {
     }
 
-    http::Response operator()(MessageNumber msgNumber, const asyncgi::Request&)
+    http::Response operator()(MessageNumber msgNumber, const http::Request&)
     {
         state_->removeMessage(msgNumber.value);
         return http::Redirect{"/"};
@@ -556,7 +549,6 @@ The next example demonstrates how a route context can be used for storing author
 #include <mutex>
 #include <optional>
 
-namespace http = asyncgi::http;
 using namespace std::string_literals;
 
 enum class AccessRole {
@@ -569,7 +561,7 @@ struct RouteContext {
 };
 
 struct AdminAuthorizer {
-    std::optional<http::Response> operator()(const asyncgi::Request& request, RouteContext& context)
+    std::optional<http::Response> operator()(const http::Request& request, RouteContext& context)
     {
         if (request.cookie("admin_id") == "ADMIN_SECRET")
             context.role = AccessRole::Admin;
@@ -579,7 +571,7 @@ struct AdminAuthorizer {
 };
 
 struct LoginPage {
-    http::Response operator()(const asyncgi::Request&, RouteContext& context)
+    http::Response operator()(const http::Request&, RouteContext& context)
     {
         if (context.role == AccessRole::Guest)
             return {R"(
@@ -597,7 +589,7 @@ struct LoginPage {
 };
 
 struct LoginPageAuthorize {
-    http::Response operator()(const asyncgi::Request& request, RouteContext& context)
+    http::Response operator()(const http::Request& request, RouteContext& context)
     {
         if (context.role == AccessRole::Guest) {
             if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
@@ -616,7 +608,7 @@ int main()
     auto router = asyncgi::Router<RouteContext>{io};
     router.route(asyncgi::rx{".*"}).process<AdminAuthorizer>();
     router.route("/").process(
-            [](const asyncgi::Request&, asyncgi::Responder& response, RouteContext& context)
+            [](const http::Request&, asyncgi::Responder& response, RouteContext& context)
             {
                 if (context.role == AccessRole::Admin)
                     response.send("<p>Hello admin</p>");
@@ -653,7 +645,6 @@ to register the enum class `Access` from the previous example as a route matcher
 #include <mutex>
 #include <optional>
 
-namespace http = asyncgi::http;
 using namespace std::string_literals;
 
 enum class AccessRole {
@@ -666,7 +657,7 @@ struct RouteContext {
 };
 
 struct AdminAuthorizer {
-    std::optional<http::Response> operator()(const asyncgi::Request& request, RouteContext& context)
+    std::optional<http::Response> operator()(const http::Request& request, RouteContext& context)
     {
         if (request.cookie("admin_id") == "ADMIN_SECRET")
             context.role = AccessRole::Admin;
@@ -676,7 +667,7 @@ struct AdminAuthorizer {
 };
 
 struct LoginPage {
-    http::Response operator()(const asyncgi::Request&)
+    http::Response operator()(const http::Request&)
     {
         return {R"(
                 <html>
@@ -691,7 +682,7 @@ struct LoginPage {
 };
 
 struct LoginPageAuthorize {
-    http::Response operator()(const asyncgi::Request& request)
+    http::Response operator()(const http::Request& request)
     {
         if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
             return {http::Redirect{"/"}, {asyncgi::http::Cookie("admin_id", "ADMIN_SECRET")}};
@@ -702,7 +693,7 @@ struct LoginPageAuthorize {
 
 template<>
 struct asyncgi::config::RouteMatcher<AccessRole, RouteContext> {
-    bool operator()(AccessRole value, const asyncgi::Request&, const RouteContext& context) const
+    bool operator()(AccessRole value, const http::Request&, const RouteContext& context) const
     {
         return value == context.role;
     }
@@ -714,7 +705,7 @@ int main()
     auto router = asyncgi::Router<RouteContext>{io};
     router.route(asyncgi::rx{".*"}).process<AdminAuthorizer>();
     router.route("/").process(
-            [](const asyncgi::Request&, RouteContext& context) -> http::Response
+            [](const http::Request&, RouteContext& context) -> http::Response
             {
                 if (context.role == AccessRole::Admin)
                     return {"<p>Hello admin</p>"};
@@ -754,7 +745,6 @@ ability to delete posts.
 #include <optional>
 #include <regex>
 
-namespace http = asyncgi::http;
 using namespace std::string_literals;
 
 enum class AccessRole {
@@ -768,13 +758,13 @@ struct RouteContext {
 
 template<>
 struct asyncgi::config::RouteMatcher<AccessRole, RouteContext> {
-    bool operator()(AccessRole value, const asyncgi::Request&, const RouteContext& context) const
+    bool operator()(AccessRole value, const http::Request&, const RouteContext& context) const
     {
         return value == context.role;
     }
 };
 
-std::optional<http::Response> authorizeAdmin(const asyncgi::Request& request, RouteContext& context)
+std::optional<http::Response> authorizeAdmin(const http::Request& request, RouteContext& context)
 {
     if (request.cookie("admin_id") == "ADMIN_SECRET")
         context.role = AccessRole::Admin;
@@ -782,7 +772,7 @@ std::optional<http::Response> authorizeAdmin(const asyncgi::Request& request, Ro
     return std::nullopt;
 }
 
-http::Response showLoginPage(const asyncgi::Request&)
+http::Response showLoginPage(const http::Request&)
 {
     return {R"(
             <head><link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css"></head>
@@ -795,7 +785,7 @@ http::Response showLoginPage(const asyncgi::Request&)
             </form>)"};
 }
 
-http::Response loginAdmin(const asyncgi::Request& request)
+http::Response loginAdmin(const http::Request& request)
 {
     if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
         return {http::Redirect{"/"}, {http::Cookie("admin_id", "ADMIN_SECRET")}};
@@ -803,7 +793,7 @@ http::Response loginAdmin(const asyncgi::Request& request)
         return http::Redirect{"/login"};
 }
 
-http::Response logoutAdmin(const asyncgi::Request&)
+http::Response logoutAdmin(const http::Request&)
 {
     return {http::Redirect{"/"}, {http::Cookie("admin_id", "")}};
 }
@@ -868,7 +858,7 @@ std::string makeLinksDiv(AccessRole role)
 
 auto showGuestBookPage(GuestBookState& state)
 {
-    return [&state](const asyncgi::Request& request, RouteContext& context) -> http::Response
+    return [&state](const http::Request& request, RouteContext& context) -> http::Response
     {
         auto page = R"(<head><link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css"></head>
                        <div style="display:flex; flex-direction: row; justify-content: flex-end">%LINKS%</div>
@@ -910,7 +900,7 @@ auto showGuestBookPage(GuestBookState& state)
 
 auto addMessage(GuestBookState& state)
 {
-    return [&state](const asyncgi::Request& request) -> http::Response
+    return [&state](const http::Request& request) -> http::Response
     {
         if (std::all_of(
                     request.formField("msg").begin(),
@@ -933,7 +923,7 @@ auto addMessage(GuestBookState& state)
 
 auto removeMessage(GuestBookState& state)
 {
-    return [&state](int index, const asyncgi::Request&) -> http::Response
+    return [&state](int index, const http::Request&) -> http::Response
     {
         state.removeMessage(index);
         return http::Redirect{"/"};
@@ -979,15 +969,13 @@ A timer object `asyncgi::Timer` can be created to change or check some state per
 ///
 #include <asyncgi/asyncgi.h>
 
-namespace http = asyncgi::http;
-
 struct Greeter{
     Greeter(const int& secondsCounter)
         : secondsCounter_{&secondsCounter}
     {
     }
 
-    http::Response operator()(const asyncgi::Request&)
+    http::Response operator()(const http::Request&)
     {
         return "Hello world\n(alive for " + std::to_string(*secondsCounter_) + " seconds)";
     }
@@ -1037,10 +1025,8 @@ been sent.
 #include <asyncgi/asyncgi.h>
 #include <thread>
 
-using namespace asyncgi;
-
 struct DelayedPage{
-    void operator()(const asyncgi::Request&, asyncgi::Responder& responder)
+    void operator()(const http::Request&, asyncgi::Responder& responder)
     {
         auto timer = asyncgi::Timer{responder};
         timer.waitFuture(
@@ -1088,15 +1074,13 @@ communication solutions.
 #include <asyncgi/asyncgi.h>
 #include <iostream>
 
-using namespace asyncgi;
-
 int main()
 {
     auto io = asyncgi::IO{};
     auto client = asyncgi::Client{io};
     client.makeRequest(
             "/tmp/fcgi.sock",
-            http::Request{http::RequestMethod::Get, "/"},
+            http::RequestProxy{http::RequestMethod::Get, "/"},
             [&io](const std::optional<http::ResponseView>& response)
             {
                 if (response)
@@ -1121,16 +1105,14 @@ be used. It is important to avoid using this client object after the response ha
 ///
 #include <asyncgi/asyncgi.h>
 
-namespace http = asyncgi::http;
-
 struct RequestPage{
-    void operator()(const asyncgi::Request&, asyncgi::Responder& responder)
+    void operator()(const http::Request&, asyncgi::Responder& responder)
     {
         // making request to FastCgi application listening on /tmp/fcgi.sock and showing the received response
         auto client = asyncgi::Client{responder};
         client.makeRequest(
                 "/tmp/fcgi.sock",
-                http::Request{http::RequestMethod::Get, "/"},
+                http::RequestProxy{http::RequestMethod::Get, "/"},
                 [responder](const std::optional<http::ResponseView>& reqResponse) mutable
                 {
                     if (reqResponse)
@@ -1205,10 +1187,8 @@ must be used. It is important to avoid using this dispatcher after the response 
 #include <asyncgi/asyncgi.h>
 #include <asio/steady_timer.hpp>
 
-namespace http = asyncgi::http;
-
 struct DelayedPage {
-    void operator()(const asyncgi::Request&, asyncgi::Responder& responder)
+    void operator()(const http::Request&, asyncgi::Responder& responder)
     {
         auto disp = asyncgi::AsioDispatcher{responder};
         disp.postTask(

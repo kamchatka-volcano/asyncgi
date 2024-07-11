@@ -1,10 +1,8 @@
 #include <asyncgi/asyncgi.h>
 #include <thread>
 
-using namespace asyncgi;
-
 struct DelayedPage{
-    void operator()(const asyncgi::Request&, asyncgi::Responder& responder)
+    void operator()(const http::Request&, asyncgi::Responder& responder)
     {
         auto timer = asyncgi::Timer{responder};
         timer.waitFuture(

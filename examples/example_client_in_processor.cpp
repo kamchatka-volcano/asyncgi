@@ -1,9 +1,7 @@
 #include <asyncgi/asyncgi.h>
 
-namespace http = asyncgi::http;
-
 struct RequestPage{
-    void operator()(const asyncgi::Request&, asyncgi::Responder& responder)
+    void operator()(const http::Request&, asyncgi::Responder& responder)
     {
         // making request to FastCgi application listening on /tmp/fcgi.sock and showing the received response
         auto client = asyncgi::Client{responder};
@@ -15,7 +13,7 @@ struct RequestPage{
                 9088,
 #endif
                 http::Request{http::RequestMethod::Get, "/"},
-                [responder](const std::optional<http::ResponseView>& reqResponse) mutable
+                [responder](std::optional<http::Response> reqResponse) mutable
                 {
                     if (reqResponse)
                         responder.send(std::string{reqResponse->body()});

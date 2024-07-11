@@ -3,7 +3,7 @@
 
 #include "types.h"
 #include "detail/external/sfun/interface.h"
-#include "http/request.h"
+#include "fastcgi/response.h"
 #include "http/response.h"
 #include <filesystem>
 #include <functional>
@@ -41,7 +41,8 @@ public:
     }
 
     void send(const http::Response& response);
-    void send(fastcgi::Response response);
+    void send(fastcgi::Response& response);
+    void send(fastcgi::Response&& response);
     bool isSent() const;
 
     /// detail

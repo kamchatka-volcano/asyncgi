@@ -1,9 +1,13 @@
 #ifndef ASYNCGI_REQUESTPROCESSOR_H
 #define ASYNCGI_REQUESTPROCESSOR_H
 
-#include "request.h"
 #include "responder.h"
 #include "detail/external/sfun/functional.h"
+#include "detail/requestproxy.h"
+#include "fastcgi/request.h"
+#include "fastcgi/response.h"
+#include "http/request.h"
+#include "http/response.h"
 #include <functional>
 
 namespace asyncgi {
@@ -17,7 +21,9 @@ constexpr void checkRequestProcessorSignature()
     if constexpr (std::is_same_v<TRequestProcessorReturnType, void>) {
         constexpr auto args = TRequestProcessorArgs{};
         static_assert(args.size() == 2);
-        static_assert(std::is_same_v<const asyncgi::Request&, typename decltype(sfun::get<0>(args))::type>);
+        static_assert(
+                std::is_same_v<const http::Request&, typename decltype(sfun::get<0>(args))::type> ||
+                std::is_same_v<const fastcgi::Request&, typename decltype(sfun::get<0>(args))::type>);
         static_assert(std::is_same_v<asyncgi::Responder&, typename decltype(sfun::get<1>(args))::type>);
     }
     else {
@@ -26,7 +32,9 @@ constexpr void checkRequestProcessorSignature()
                 std::is_same_v<TRequestProcessorReturnType, fastcgi::Response>);
         constexpr auto args = TRequestProcessorArgs{};
         static_assert(args.size() == 1);
-        static_assert(std::is_same_v<const asyncgi::Request&, typename decltype(sfun::get<0>(args))::type>);
+        static_assert(
+                std::is_same_v<const http::Request&, typename decltype(sfun::get<0>(args))::type> ||
+                std::is_same_v<const fastcgi::Request&, typename decltype(sfun::get<0>(args))::type>);
     }
 }
 } // namespace detail
@@ -45,7 +53,7 @@ public:
 
         if constexpr (std::is_lvalue_reference_v<TRequestProcessorFunc>) {
             requestProcessorInvoker_ = [&requestProcessor](
-                                               const Request& request,
+                                               const detail::RequestProxy& request,
                                                std::shared_ptr<detail::ResponseContext> responseContext)
             {
                 if constexpr (std::is_same_v<sfun::callable_return_type<TRequestProcessorFunc>, void>) {
@@ -60,7 +68,7 @@ public:
         }
         else {
             requestProcessorInvoker_ = [requestProcessor = std::forward<TRequestProcessorFunc>(requestProcessor)](
-                                               const Request& request,
+                                               const detail::RequestProxy& request,
                                                std::shared_ptr<detail::ResponseContext> responseContext)
             {
                 if constexpr (std::is_same_v<sfun::callable_return_type<TRequestProcessorFunc>, void>) {
@@ -75,13 +83,13 @@ public:
         }
     }
 
-    void operator()(const Request& request, std::shared_ptr<detail::ResponseContext> response)
+    void operator()(const detail::RequestProxy& request, std::shared_ptr<detail::ResponseContext> response)
     {
         requestProcessorInvoker_(request, response);
     }
 
 private:
-    std::function<void(const Request& request, std::shared_ptr<detail::ResponseContext> response)>
+    std::function<void(const detail::RequestProxy& request, std::shared_ptr<detail::ResponseContext> response)>
             requestProcessorInvoker_;
 };
 

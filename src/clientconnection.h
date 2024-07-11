@@ -8,6 +8,7 @@
 #include <asyncgi/detail/eventhandlerproxy.h>
 #include <asyncgi/detail/external/sfun/member.h>
 #include <asyncgi/errors.h>
+#include <asyncgi/fastcgi/request.h>
 #include <asyncgi/types.h>
 #include <fcgi_responder/fcgi_limits.h>
 #include <fcgi_responder/requester.h>

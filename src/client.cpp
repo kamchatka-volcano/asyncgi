@@ -46,7 +46,7 @@ void Client::makeRequest(
 void Client::makeRequest(
         const std::filesystem::path& socketPath,
         const http::Request& request,
-        const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
+        const std::function<void(std::optional<http::Response>)>& responseHandler,
         std::chrono::milliseconds timeout)
 {
     if (!clientService_.has_value())
@@ -72,7 +72,7 @@ void Client::makeRequest(
         std::string_view ipAddress,
         uint16_t port,
         const http::Request& request,
-        const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
+        const std::function<void(std::optional<http::Response>)>& responseHandler,
         std::chrono::milliseconds timeout)
 {
     if (!clientService_.has_value())

@@ -1,14 +1,12 @@
 #include <asyncgi/asyncgi.h>
 
-namespace http = asyncgi::http;
-
 int main()
 {
     auto io = asyncgi::IO{};
     auto router = asyncgi::Router{io};
     router.route("/", http::RequestMethod::Get)
             .process(
-                    [](const asyncgi::Request&)
+                    [](const http::Request&)
                     {
                         return http::Response{"Hello world"};
                     });

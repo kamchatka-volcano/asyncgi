@@ -2,7 +2,6 @@
 #include <mutex>
 #include <optional>
 
-namespace http = asyncgi::http;
 using namespace std::string_literals;
 
 enum class AccessRole {
@@ -15,7 +14,7 @@ struct RouteContext {
 };
 
 struct AdminAuthorizer {
-    std::optional<http::Response> operator()(const asyncgi::Request& request, RouteContext& context)
+    std::optional<http::Response> operator()(const http::Request& request, RouteContext& context)
     {
         if (request.cookie("admin_id") == "ADMIN_SECRET")
             context.role = AccessRole::Admin;
@@ -25,7 +24,7 @@ struct AdminAuthorizer {
 };
 
 struct LoginPage {
-    http::Response operator()(const asyncgi::Request&)
+    http::Response operator()(const http::Request&)
     {
         return {R"(
                 <html>
@@ -40,7 +39,7 @@ struct LoginPage {
 };
 
 struct LoginPageAuthorize {
-    http::Response operator()(const asyncgi::Request& request)
+    http::Response operator()(const http::Request& request)
     {
         if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
             return {http::Redirect{"/"}, {asyncgi::http::Cookie("admin_id", "ADMIN_SECRET")}};
@@ -51,7 +50,7 @@ struct LoginPageAuthorize {
 
 template<>
 struct asyncgi::config::RouteMatcher<AccessRole, RouteContext> {
-    bool operator()(AccessRole value, const asyncgi::Request&, const RouteContext& context) const
+    bool operator()(AccessRole value, const http::Request&, const RouteContext& context) const
     {
         return value == context.role;
     }
@@ -63,7 +62,7 @@ int main()
     auto router = asyncgi::Router<RouteContext>{io};
     router.route(asyncgi::rx{".*"}).process<AdminAuthorizer>();
     router.route("/").process(
-            [](const asyncgi::Request&, RouteContext& context) -> http::Response
+            [](const http::Request&, RouteContext& context) -> http::Response
             {
                 if (context.role == AccessRole::Admin)
                     return {"<p>Hello admin</p>"};

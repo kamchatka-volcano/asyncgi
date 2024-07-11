@@ -35,12 +35,13 @@ void ClientConnection<TProtocol>::makeRequest(
         std::function<void(std::optional<fcgi::ResponseData>)> responseHandler,
         const std::shared_ptr<std::function<void()>>& cancelRequestOnTimeout)
 {
+    auto requestParams = fastcgi::detail::moveOutRequestData(request);
     socket_.async_connect(
             socketPath,
             [this,
              cancelRequestOnTimeout,
-             fcgiParams = std::move(request.params),
-             fcgiStdIn = std::move(request.stdIn),
+             fcgiParams = std::move(requestParams.params),
+             fcgiStdIn = std::move(requestParams.stdIn),
              responseHandler = std::move(responseHandler)](auto error_code) mutable
             {
                 if (error_code) {

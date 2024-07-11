@@ -1,8 +1,6 @@
 #include <asyncgi/asyncgi.h>
 
-namespace http = asyncgi::http;
-
-http::Response guestBookPage(const asyncgi::Request& request)
+http::Response guestBookPage(const http::Request& request)
 {
     if (request.path() == "/")
         return {R"(

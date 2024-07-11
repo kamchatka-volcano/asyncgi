@@ -2,6 +2,7 @@
 #include "ioservice.h"
 #include "timerprovider.h"
 #include <asyncgi/detail/asio_namespace.h>
+#include <hot_teacup/response_view.h>
 #ifdef ASYNCGI_USE_BOOST_ASIO
 #include <boost/asio/write.hpp>
 #else
@@ -63,7 +64,7 @@ void ClientService::makeRequest(
 void ClientService::makeRequest(
         const fs::path& socketPath,
         const http::Request& request,
-        const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
+        const std::function<void(std::optional<http::Response>)>& responseHandler,
         std::chrono::milliseconds timeout)
 {
     if (requestProcessorQueue_)
@@ -82,7 +83,11 @@ void ClientService::makeRequest(
         if (fcgiResponse) {
             if (!fcgiResponse->errorMsg.empty())
                 eventHandler_(ErrorEvent::RequestProcessingError, fcgiResponse->errorMsg);
-            responseHandler(http::responseFromString(fcgiResponse->data, http::ResponseMode::Cgi));
+            const auto responseView = http::responseFromString(fcgiResponse->data, http::ResponseMode::Cgi);
+            if (!responseView.has_value())
+                responseHandler(std::nullopt);
+            else
+                responseHandler(http::Response{responseView.value()});
         }
         else
             responseHandler(std::nullopt);
@@ -92,10 +97,9 @@ void ClientService::makeRequest(
     auto& clientConnection = localClientConnections_.emplace_back(
             std::make_unique<ClientConnection<asio::local::stream_protocol>>(io_, eventHandler_));
     auto [params, stdIn] = request.toFcgiData(http::FormType::Multipart);
-    auto fcgiRequest = fastcgi::Request{std::move(params), std::move(stdIn)};
     clientConnection->makeRequest(
             asio::local::stream_protocol::endpoint{socketPath.string()},
-            std::move(fcgiRequest),
+            fastcgi::Request{std::move(params), std::move(stdIn)},
             onResponseReceived,
             cancelRequestOnTimeout);
 }
@@ -144,7 +148,7 @@ void ClientService::makeRequest(
         std::string_view ipAddress,
         uint16_t port,
         const http::Request& request,
-        const std::function<void(std::optional<http::ResponseView>)>& responseHandler,
+        const std::function<void(std::optional<http::Response>)>& responseHandler,
         std::chrono::milliseconds timeout)
 {
     if (requestProcessorQueue_)
@@ -164,7 +168,11 @@ void ClientService::makeRequest(
         if (fcgiResponse) {
             if (!fcgiResponse->errorMsg.empty())
                 eventHandler_(ErrorEvent::RequestProcessingError, fcgiResponse->errorMsg);
-            responseHandler(http::responseFromString(fcgiResponse->data, http::ResponseMode::Cgi));
+            const auto responseView = http::responseFromString(fcgiResponse->data, http::ResponseMode::Cgi);
+            if (!responseView.has_value())
+                responseHandler(std::nullopt);
+            else
+                responseHandler(http::Response{responseView.value()});
         }
         else
             responseHandler(std::nullopt);
@@ -174,11 +182,10 @@ void ClientService::makeRequest(
     auto& clientConnection =
             tcpClientConnections_.emplace_back(std::make_unique<ClientConnection<asio::ip::tcp>>(io_, eventHandler_));
     auto [params, stdIn] = request.toFcgiData(http::FormType::Multipart);
-    auto fcgiRequest = fastcgi::Request{std::move(params), std::move(stdIn)};
-    auto address = asio::ip::make_address(ipAddress);
+    const auto address = asio::ip::make_address(ipAddress);
     clientConnection->makeRequest(
             asio::ip::tcp::endpoint{address, port},
-            std::move(fcgiRequest),
+            fastcgi::Request{std::move(params), std::move(stdIn)},
             onResponseReceived,
             cancelRequestOnTimeout);
 }

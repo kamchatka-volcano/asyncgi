@@ -1,8 +1,6 @@
 #include <asyncgi/asyncgi.h>
 #include <iostream>
 
-using namespace asyncgi;
-
 int main()
 {
     auto io = asyncgi::IO{};
@@ -15,7 +13,7 @@ int main()
             9088,
 #endif
             http::Request{http::RequestMethod::Get, "/"},
-            [&io](const std::optional<http::ResponseView>& response)
+            [&io](std::optional<http::Response> response)
             {
                 if (response)
                     std::cout << response->body() << std::endl;

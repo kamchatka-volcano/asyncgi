@@ -23,9 +23,9 @@ set(ASYNCGI_FCGI_RESPONDER_OBJECT_LIB ON)
 SealLake_Bundle(
     NAME asyncgi_fcgi_responder
     GIT_REPOSITORY https://github.com/kamchatka-volcano/fcgi_responder.git
-        GIT_TAG v1.7.0
+        GIT_TAG dev
     TEXT_REPLACEMENTS
-        "namespace fcgi" "namespace asyncgi::fcgi"
+        "namespace fcgi" "namespace asyncgi::detail::fcgi"
 )
 
 SealLake_Bundle(
@@ -43,7 +43,7 @@ set(ASYNCGI_HOT_TEACUP_OBJECT_LIB ON)
 SealLake_Bundle(
         NAME asyncgi_hot_teacup
         GIT_REPOSITORY https://github.com/kamchatka-volcano/hot_teacup.git
-        GIT_TAG v3.3.0
+        GIT_TAG dev
         WILDCARDS
         include/hot_teacup/*.h
         DESTINATION include/asyncgi/http
@@ -73,11 +73,13 @@ set(SRC
     src/connectionlistener.cpp
     src/connectionlistenerfactory.cpp
     src/clientconnection.cpp
-    src/request.cpp
-    src/response.cpp
+        src/requestproxy.cpp
+        src/responder.cpp
     src/routeresponsecontextaccessor.cpp
     src/serviceholder.cpp
-    )
+        src/fastcgirequest.cpp
+        src/fastcgiresponse.cpp
+)
 
 SealLake_StaticLibrary(
     SOURCES ${SRC}
@@ -104,3 +106,7 @@ endif()
 if (ASYNCGI_USE_BOOST_ASIO)
     target_compile_definitions(asyncgi PUBLIC "ASYNCGI_USE_BOOST_ASIO")
 endif()
+
+if (ASYNCGI_DISABLE_GLOBAL_HTTP_NAMESPACE)
+    target_compile_definitions(asyncgi PUBLIC "ASYNCGI_DISABLE_GLOBAL_HTTP_NAMESPACE")
+endif ()

@@ -3,7 +3,6 @@
 
 #include "errors.h"
 #include "io.h"
-#include "request.h"
 #include "responder.h"
 #include "types.h"
 #include "detail/external/sfun/functional.h"
@@ -11,6 +10,7 @@
 #include "detail/external/sfun/type_traits.h"
 #include "detail/external/whaleroute/requestrouter.h"
 #include "detail/routeresponsecontextaccessor.h"
+#include "http/request.h"
 #include "http/response.h"
 
 namespace asyncgi {
@@ -51,19 +51,19 @@ struct ResponseSender {
 } //namespace detail
 
 template<typename TRouteContext = _>
-class Router : public whaleroute::RequestRouter<Request, Responder, detail::ResponseSender, TRouteContext> {
+class Router : public whaleroute::RequestRouter<http::Request, Responder, detail::ResponseSender, TRouteContext> {
 public:
     explicit Router(IO& io)
         : eventHandler_{io.eventHandler(RouterIOAccess::makeToken<TRouteContext>(sfun::access_token{*this}))}
     {
     }
 
-    void operator()(const Request& request, Responder& response)
+    void operator()(const http::Request& request, Responder& response)
     {
         auto requestProcessorQueuePtr = std::make_shared<whaleroute::RequestProcessorQueue>();
         detail::RouterResponseContextAccessor::setRequestProcessorQueue(response, requestProcessorQueuePtr);
         auto requestProcessorQueue =
-                whaleroute::RequestRouter<asyncgi::Request, asyncgi::Responder, detail::ResponseSender, TRouteContext>::
+                whaleroute::RequestRouter<http::Request, asyncgi::Responder, detail::ResponseSender, TRouteContext>::
                         makeRequestProcessorQueue(request, response);
 
         *requestProcessorQueuePtr = requestProcessorQueue;
@@ -71,22 +71,22 @@ public:
     }
 
 private:
-    std::string getRequestPath(const Request& request) final
+    std::string getRequestPath(const http::Request& request) final
     {
         return std::string{request.path()};
     }
 
-    void processUnmatchedRequest(const Request&, Responder& response) final
+    void processUnmatchedRequest(const http::Request&, Responder& response) final
     {
         response.send(http::ResponseStatus::_404_Not_Found);
     }
 
-    bool isRouteProcessingFinished(const Request&, Responder& response) const final
+    bool isRouteProcessingFinished(const http::Request&, Responder& response) const final
     {
         return response.isSent();
     }
 
-    void onRouteParametersError(const Request&, Responder& response, const whaleroute::RouteParameterError& error)
+    void onRouteParametersError(const http::Request&, Responder& response, const whaleroute::RouteParameterError& error)
             override
     {
         auto errorMessageVisitor = sfun::overloaded{
@@ -113,7 +113,7 @@ private:
 
 template<>
 struct config::RouteMatcher<asyncgi::http::RequestMethod> {
-    bool operator()(asyncgi::http::RequestMethod value, const asyncgi::Request& request) const
+    bool operator()(asyncgi::http::RequestMethod value, const http::Request& request) const
     {
         return value == request.method();
     }
@@ -121,7 +121,7 @@ struct config::RouteMatcher<asyncgi::http::RequestMethod> {
 
 template<typename TContext>
 struct config::RouteMatcher<asyncgi::http::RequestMethod, TContext> {
-    bool operator()(asyncgi::http::RequestMethod value, const asyncgi::Request& request, const TContext&) const
+    bool operator()(asyncgi::http::RequestMethod value, const http::Request& request, const TContext&) const
     {
         return value == request.method();
     }

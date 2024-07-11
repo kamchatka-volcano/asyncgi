@@ -2,7 +2,6 @@
 #include <mutex>
 #include <optional>
 
-namespace http = asyncgi::http;
 using namespace std::string_literals;
 
 enum class AccessRole {
@@ -15,7 +14,7 @@ struct RouteContext {
 };
 
 struct AdminAuthorizer {
-    std::optional<http::Response> operator()(const asyncgi::Request& request, RouteContext& context)
+    std::optional<http::Response> operator()(const http::Request& request, RouteContext& context)
     {
         if (request.cookie("admin_id") == "ADMIN_SECRET")
             context.role = AccessRole::Admin;
@@ -25,7 +24,7 @@ struct AdminAuthorizer {
 };
 
 struct LoginPage {
-    http::Response operator()(const asyncgi::Request&, RouteContext& context)
+    http::Response operator()(const http::Request&, RouteContext& context)
     {
         if (context.role == AccessRole::Guest)
             return {R"(
@@ -43,7 +42,7 @@ struct LoginPage {
 };
 
 struct LoginPageAuthorize {
-    http::Response operator()(const asyncgi::Request& request, RouteContext& context)
+    http::Response operator()(const http::Request& request, RouteContext& context)
     {
         if (context.role == AccessRole::Guest) {
             if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
@@ -62,12 +61,12 @@ int main()
     auto router = asyncgi::Router<RouteContext>{io};
     router.route(asyncgi::rx{".*"}).process<AdminAuthorizer>();
     router.route("/").process(
-            [](const asyncgi::Request&, asyncgi::Responder& response, RouteContext& context)
+            [](const http::Request&, RouteContext& context) -> http::Response
             {
                 if (context.role == AccessRole::Admin)
-                    response.send("<p>Hello admin</p>");
+                    return {"<p>Hello admin</p>"};
                 else
-                    response.send(R"(<p>Hello guest</p><p><a href="/login">login</a>)");
+                    return {R"(<p>Hello guest</p><p><a href="/login">login</a>)"};
             });
 
     router.route("/login", http::RequestMethod::Get).process<LoginPage>();
