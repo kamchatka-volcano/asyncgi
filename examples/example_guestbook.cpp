@@ -46,14 +46,14 @@ http::Response showLoginPage(const http::Request&)
 http::Response loginAdmin(const http::Request& request)
 {
     if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
-        return {http::Redirect{"/"}, {http::Cookie("admin_id", "ADMIN_SECRET")}};
+        return {http::Redirect{"/"}, http::Cookies{{"admin_id", "ADMIN_SECRET"}}};
     else
         return http::Redirect{"/login"};
 }
 
 http::Response logoutAdmin(const http::Request&)
 {
-    return {http::Redirect{"/"}, {http::Cookie("admin_id", "")}};
+    return {http::Redirect{"/"}, http::Cookies{{"admin_id", ""}}};
 }
 
 struct GuestBookMessage {
@@ -193,12 +193,11 @@ int main()
     auto io = asyncgi::IO{4};
     auto state = GuestBookState{};
     auto router = asyncgi::Router<RouteContext>{io};
-    router.route(asyncgi::rx{".*"}).process(authorizeAdmin);
+    router.route("{any}").process(authorizeAdmin);
     router.route("/", http::RequestMethod::Get).process(showGuestBookPage(state));
     router.route("/", http::RequestMethod::Post).process(addMessage(state));
-    router.route(asyncgi::rx{"/delete/(.+)"}, http::RequestMethod::Post, AccessRole::Admin)
-            .process(removeMessage(state));
-    router.route(asyncgi::rx{"/delete/(.+)"}, http::RequestMethod::Post, AccessRole::Guest)
+    router.route("/delete/{str}/", http::RequestMethod::Post, AccessRole::Admin).process(removeMessage(state));
+    router.route("/delete/{str}/", http::RequestMethod::Post, AccessRole::Guest)
             .set(http::ResponseStatus::_401_Unauthorized);
     router.route("/login", http::RequestMethod::Get, AccessRole::Guest).process(showLoginPage);
     router.route("/login", http::RequestMethod::Post, AccessRole::Guest).process(loginAdmin);

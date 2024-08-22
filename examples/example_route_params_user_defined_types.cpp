@@ -119,7 +119,7 @@ int main()
     auto router = asyncgi::Router{io};
     router.route("/", http::RequestMethod::Get).process<GuestBookPage>(state);
     router.route("/", http::RequestMethod::Post).process<GuestBookAddMessage>(state);
-    router.route(asyncgi::rx{"/delete/(.+)"}, http::RequestMethod::Post).process<GuestBookRemoveMessage>(state);
+    router.route("/delete/{str}", http::RequestMethod::Post).process<GuestBookRemoveMessage>(state);
     router.route().set(http::ResponseStatus::_404_Not_Found, "Page not found");
 
     auto server = asyncgi::Server{io, router};

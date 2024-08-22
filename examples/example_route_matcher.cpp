@@ -42,7 +42,7 @@ struct LoginPageAuthorize {
     http::Response operator()(const http::Request& request)
     {
         if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
-            return {http::Redirect{"/"}, {asyncgi::http::Cookie("admin_id", "ADMIN_SECRET")}};
+            return {http::Redirect{"/"}, asyncgi::http::Cookies{{"admin_id", "ADMIN_SECRET"}}};
 
         return http::Redirect{"/login"};
     }
@@ -60,7 +60,7 @@ int main()
 {
     auto io = asyncgi::IO{4};
     auto router = asyncgi::Router<RouteContext>{io};
-    router.route(asyncgi::rx{".*"}).process<AdminAuthorizer>();
+    router.route("{any}").process<AdminAuthorizer>();
     router.route("/").process(
             [](const http::Request&, RouteContext& context) -> http::Response
             {
@@ -72,8 +72,8 @@ int main()
 
     router.route("/login", http::RequestMethod::Get, AccessRole::Guest).process<LoginPage>();
     router.route("/login", http::RequestMethod::Post, AccessRole::Guest).process<LoginPageAuthorize>();
-    router.route("/login", http::RequestMethod::Get, AccessRole::Admin).set("/", http::RedirectType::Found);
-    router.route("/login", http::RequestMethod::Post, AccessRole::Admin).set("/", http::RedirectType::Found);
+    router.route("/login", http::RequestMethod::Get, AccessRole::Admin).set(http::Redirect{"/"});
+    router.route("/login", http::RequestMethod::Post, AccessRole::Admin).set(http::Redirect{"/"});
     router.route().set(http::ResponseStatus::_404_Not_Found, "Page not found");
 
     auto server = asyncgi::Server{io, router};

@@ -11,7 +11,7 @@ endif()
 SealLake_Bundle(
     NAME asyncgi_sfun
     GIT_REPOSITORY https://github.com/kamchatka-volcano/sfun.git
-        GIT_TAG v5.1.0
+        GIT_TAG develop
     DESTINATION include/asyncgi/detail/external
     DIRECTORIES include/sfun
     TEXT_REPLACEMENTS
@@ -31,7 +31,7 @@ SealLake_Bundle(
 SealLake_Bundle(
         NAME asyncgi_whaleroute
         GIT_REPOSITORY https://github.com/kamchatka-volcano/whaleroute.git
-        GIT_TAG v3.1.0
+        GIT_TAG dev
         DESTINATION include/asyncgi/detail/external
         DIRECTORIES include/whaleroute
         TEXT_REPLACEMENTS

@@ -9,8 +9,6 @@
 namespace asyncgi {
 using _ = whaleroute::_;
 
-using rx = whaleroute::rx;
-namespace string_literals = whaleroute::string_literals;
 using TrailingSlashMode = whaleroute::TrailingSlashMode;
 template<int minSize = 0>
 using RouteParameters = whaleroute::RouteParameters<minSize>;

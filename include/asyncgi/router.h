@@ -7,14 +7,43 @@
 #include "types.h"
 #include "detail/external/sfun/functional.h"
 #include "detail/external/sfun/interface.h"
+#include "detail/external/sfun/string_utils.h"
 #include "detail/external/sfun/type_traits.h"
 #include "detail/external/whaleroute/requestrouter.h"
+#include "detail/external/whaleroute/routeparam.h"
 #include "detail/routeresponsecontextaccessor.h"
 #include "http/request.h"
 #include "http/response.h"
+#include <unordered_map>
 
 namespace asyncgi {
 namespace config = whaleroute::config;
+
+constexpr auto routeParamId(std::string_view paramTypeName)
+{
+    return whaleroute::routeParamId(paramTypeName);
+}
+
+template<>
+struct config::RouteParam<routeParamId("int")> {
+    using type = int;
+    inline static std::string_view name = "int";
+    inline static std::string_view regex = R"(\d+)";
+};
+
+template<>
+struct config::RouteParam<routeParamId("str")> {
+    using type = std::string;
+    inline static std::string_view name = "str";
+    inline static std::string_view regex = R"([\w\$-\.\+!*'\(\)]+)";
+};
+
+template<>
+struct config::RouteParam<routeParamId("any")> {
+    using type = std::string;
+    inline static std::string_view name = "any";
+    inline static std::string_view regex = R"([\w\$-\.\+!*'\(\)/]+)";
+};
 
 template<typename TRouteContext>
 class Router;
@@ -106,6 +135,27 @@ private:
         eventHandler_(RouteParametersError, std::visit(errorMessageVisitor, error));
         response.send(http::ResponseStatus::_500_Internal_Server_Error);
     };
+
+    void onUnregisteredRouteParameterError(std::string_view paramName) const final
+    {
+        throw Error{sfun::join_strings(
+                "Regular expression for route parameter '",
+                paramName,
+                "' isn't registered. Override asyncgi::Router::routeParamRegex() method to add it.")};
+    }
+
+    std::optional<std::string_view> routeParamRegex(std::string_view paramName) const final
+    {
+        static const auto routeParamRegex = std::unordered_map<std::string, std::string>{
+                {"int", R"(\d+)"},
+                {"str", R"([\w\$-\.\+!*'\(\)]+)"},
+                {"any", R"([\w\$-\.\+!*'\(\)/]+)"}};
+
+        auto it = routeParamRegex.find(std::string{paramName});
+        if (it == routeParamRegex.end())
+            return std::nullopt;
+        return it->second;
+    }
 
 private:
     detail::EventHandlerProxy eventHandler_;

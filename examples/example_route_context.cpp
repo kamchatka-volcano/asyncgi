@@ -46,7 +46,7 @@ struct LoginPageAuthorize {
     {
         if (context.role == AccessRole::Guest) {
             if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
-                return {http::Redirect{"/"}, {asyncgi::http::Cookie("admin_id", "ADMIN_SECRET")}};
+                return {http::Redirect{"/"}, asyncgi::http::Cookies{{"admin_id", "ADMIN_SECRET"}}};
             else
                 return http::Redirect{"/login"};
         }
@@ -59,7 +59,7 @@ int main()
 {
     auto io = asyncgi::IO{4}; //4 threads processing requests
     auto router = asyncgi::Router<RouteContext>{io};
-    router.route(asyncgi::rx{".*"}).process<AdminAuthorizer>();
+    router.route("{any}").process<AdminAuthorizer>();
     router.route("/").process(
             [](const http::Request&, RouteContext& context) -> http::Response
             {
