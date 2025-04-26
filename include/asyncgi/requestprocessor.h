@@ -57,8 +57,8 @@ public:
                                                std::shared_ptr<detail::ResponseContext> responseContext)
             {
                 if constexpr (std::is_same_v<sfun::callable_return_type<TRequestProcessorFunc>, void>) {
-                    auto response = Responder{std::move(responseContext)};
-                    requestProcessor(request, response);
+                    auto responder = Responder{std::move(responseContext)};
+                    requestProcessor(request, responder);
                 }
                 else {
                     auto response = requestProcessor(request);

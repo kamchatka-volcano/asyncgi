@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.18)
 project(asyncgi VERSION 0.6.0 DESCRIPTION "asyncgi - asynchronous FastCGI web application microframework")
 
 include(external/seal_lake)
-if (ASYNCGI_USE_BOOST_ASIO)
-    find_package(Boost REQUIRED COMPONENTS system)
+if (ASYNCGI_USE_BOOST_ASIO OR ASYNCGI_USE_HTTP_CLIENT)
+    find_package(Boost 1.66 REQUIRED COMPONENTS system)
 else()
     include(external/asio)
 endif()
@@ -28,6 +28,26 @@ SealLake_Bundle(
         "namespace fcgi" "namespace asyncgi::detail::fcgi"
 )
 
+if (ASYNCGI_USE_HTTP_CLIENT)
+    set(ASYNCGI_RESTC_CPP_WITH_UNIT_TESTS OFF)
+    set(ASYNCGI_RESTC_CPP_WITH_FUNCTIONALT_TESTS OFF)
+    set(ASYNCGI_RESTC_CPP_USE_CPP17 ON)
+    set(ASYNCGI_RESTC_CPP_INSTALL OFF)
+    set(INSTALL_RAPIDJSON_HEADERS OFF)
+    set(ASYNCGI_RESTC_CPP_WITH_EXAMPLES OFF)
+
+    SealLake_Bundle(
+            NAME asyncgi_restc-cpp
+            GIT_REPOSITORY https://github.com/kamchatka-volcano/restc-cpp.git
+            GIT_TAG dev
+            TEXT_REPLACEMENTS
+            "namespace restc_cpp" "namespace asyncgi::restc_cpp"
+            "restc_cpp::" "asyncgi::restc_cpp::"
+            "RESTC_CPP_" "ASYNCGI_RESTC_CPP_"
+
+    )
+endif ()
+
 SealLake_Bundle(
         NAME asyncgi_whaleroute
         GIT_REPOSITORY https://github.com/kamchatka-volcano/whaleroute.git
@@ -51,11 +71,17 @@ SealLake_Bundle(
         "namespace http" "namespace asyncgi::http"
         "HOT_TEACUP_" "ASYNCGI_HOT_TEACUP_"
 )
+SealLake_Copy(
+        SOURCE asyncgi_hot_teacup
+        WILDCARDS
+        include/hot_teacup/detail/*.h
+        DESTINATION include/asyncgi/http/detail
+)
 
 set(SRC
     src/asiodispatcher.cpp
     src/io.cpp
-    src/client.cpp
+        src/fastcgi_client.cpp
     src/server.cpp
     src/timer.cpp
     src/asiodispatcherservice.cpp
@@ -67,7 +93,7 @@ set(SRC
     src/ioservice.cpp
     src/serverservice.cpp
     src/clientservice.cpp
-    src/taskcontext.cpp
+        src/asio_context.cpp
     src/timerservice.cpp
     src/timerprovider.cpp
     src/connectionlistener.cpp
@@ -79,6 +105,7 @@ set(SRC
     src/serviceholder.cpp
         src/fastcgirequest.cpp
         src/fastcgiresponse.cpp
+        src/http_client.cpp
 )
 
 SealLake_StaticLibrary(
@@ -91,8 +118,11 @@ SealLake_StaticLibrary(
         asyncgi_sfun::asyncgi_sfun
         asyncgi_hot_teacup::asyncgi_hot_teacup
 )
+if (ASYNCGI_USE_HTTP_CLIENT)
+    SealLake_AddLibraries(restc-cpp::restc-cpp)
+endif ()
 
-if (ASYNCGI_USE_BOOST_ASIO)
+if (ASYNCGI_USE_BOOST_ASIO OR ASYNCGI_USE_HTTP_CLIENT)
     SealLake_AddLibraries(Boost::boost)
 else()
     SealLake_AddLibraries(asio)
@@ -103,9 +133,12 @@ if (ENABLE_EXAMPLES)
     add_subdirectory(test_examples)
 endif()
 
-if (ASYNCGI_USE_BOOST_ASIO)
+if (ASYNCGI_USE_BOOST_ASIO OR ASYNCGI_USE_HTTP_CLIENT)
     target_compile_definitions(asyncgi PUBLIC "ASYNCGI_USE_BOOST_ASIO")
 endif()
+if (ASYNCGI_USE_HTTP_CLIENT)
+    target_compile_definitions(asyncgi PUBLIC "ASYNCGI_USE_HTTP_CLIENT")
+endif ()
 
 if (ASYNCGI_DISABLE_GLOBAL_HTTP_NAMESPACE)
     target_compile_definitions(asyncgi PUBLIC "ASYNCGI_DISABLE_GLOBAL_HTTP_NAMESPACE")

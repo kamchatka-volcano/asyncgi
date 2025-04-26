@@ -1,0 +1,22 @@
+-Tags: no-standalone-asio
+-Launch detached: python ../http_response.py > request.txt
+-Wait: 1 sec
+-Launch: ../../build/test_examples/test_http_client
+-Expect output:
+Hello
+Cookie: foo=bar
+Header: Connection=close
+Header: Content-Length=5
+Header: Content-Type=text/html
+
+---
+
+-Expect request.txt:
+GET / HTTP/1.1
+Content-Length: 0
+Content-Type: application/json; charset=utf-8
+Cookie: foo=bar; foo=baz
+
+
+
+---

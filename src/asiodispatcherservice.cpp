@@ -1,8 +1,10 @@
 #include "asiodispatcherservice.h"
 #ifdef ASYNCGI_USE_BOOST_ASIO
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/post.hpp>
 #else
 #include <asio/io_context.hpp>
+#include <asio/post.hpp>
 #endif
 #include <asyncgi/detail/asio_namespace.h>
 #include <asyncgi/detail/external/whaleroute/requestprocessorqueue.h>
@@ -14,22 +16,26 @@ AsioDispatcherService::AsioDispatcherService(asio::io_context& io)
 {
 }
 
-void AsioDispatcherService::postTask(std::function<void(const TaskContext& ctx)> task)
+AsioDispatcherService::~AsioDispatcherService()
 {
+    if (!hasTask_)
+        return;
+
+    if (auto queue = requestProcessorQueue_.lock())
+        queue->launch();
+}
+
+void AsioDispatcherService::postTask(std::function<void(const AsioContext& ctx)> task)
+{
+    hasTask_ = true;
     if (auto queue = requestProcessorQueue_.lock())
         queue->stop();
 
-    auto postTaskAction = [queueObserver = requestProcessorQueue_]
-    {
-        if (auto queue = queueObserver.lock())
-            queue->launch();
-    };
-
-    auto taskContext = TaskContext{io_, std::move(postTaskAction)};
-    io_.get().post(
-            [task = std::move(task), taskContext = std::move(taskContext)]
+    asio::post(
+            io_.get(),
+            [this, task = std::move(task)]
             {
-                task(taskContext);
+                task(AsioContext{io_});
             });
 }
 

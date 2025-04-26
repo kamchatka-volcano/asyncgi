@@ -4,7 +4,7 @@
 int main()
 {
     auto io = asyncgi::IO{};
-    auto client = asyncgi::Client{io};
+    auto client = asyncgi::FastCgiClient{io};
     client.makeRequest(
 #ifndef _WIN32
             "/tmp/fcgi.sock",

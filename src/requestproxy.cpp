@@ -42,4 +42,4 @@ RequestProxy::operator const http::Request&() const
     return httpRequest_;
 }
 
-} // namespace asyncgi
+} //namespace asyncgi::detail

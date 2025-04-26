@@ -4,14 +4,15 @@ file(GLOB SRC_FILES "*.cpp")
 foreach (SRC_FILE ${SRC_FILES})
     SealLake_StringAfterLast(${SRC_FILE} "/" EXAMPLE_NAME)
     SealLake_StringBeforeLast(${EXAMPLE_NAME} "." EXAMPLE_NAME)
-
-    SealLake_Executable(
-            NAME ${EXAMPLE_NAME}
-            SOURCES ${SRC_FILE}
-            COMPILE_FEATURES cxx_std_17
-            PROPERTIES
-            CXX_EXTENSIONS OFF
-            LIBRARIES
-            asyncgi::asyncgi Threads::Threads
-    )
+    if (EXAMPLE_NAME STREQUAL test_exception_in_request_handler OR ASYNCGI_USE_HTTP_CLIENT)
+        SealLake_Executable(
+                NAME ${EXAMPLE_NAME}
+                SOURCES ${SRC_FILE}
+                COMPILE_FEATURES cxx_std_17
+                PROPERTIES
+                CXX_EXTENSIONS OFF
+                LIBRARIES
+                asyncgi::asyncgi Threads::Threads
+        )
+    endif ()
 endforeach ()

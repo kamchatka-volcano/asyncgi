@@ -4,9 +4,9 @@
 #include "asyncgi/detail/external/sfun/member.h"
 #include "asyncgi/detail/lazyinitialized.h"
 #include "asyncgi/fastcgi/request.h"
-#include "asyncgi/http/cookie_view.h"
 #include "asyncgi/http/query_view.h"
 #include "asyncgi/http/request.h"
+#include "asyncgi/http/request_cookie_view.h"
 #include "asyncgi/http/types.h"
 #include <functional>
 #include <map>

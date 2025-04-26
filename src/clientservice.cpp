@@ -96,7 +96,7 @@ void ClientService::makeRequest(
     };
     auto& clientConnection = localClientConnections_.emplace_back(
             std::make_unique<ClientConnection<asio::local::stream_protocol>>(io_, eventHandler_));
-    auto [params, stdIn] = request.toFcgiData(http::FormType::Multipart);
+    auto [params, stdIn] = request.toFcgiData();
     clientConnection->makeRequest(
             asio::local::stream_protocol::endpoint{socketPath.string()},
             fastcgi::Request{std::move(params), std::move(stdIn)},
@@ -181,7 +181,7 @@ void ClientService::makeRequest(
     };
     auto& clientConnection =
             tcpClientConnections_.emplace_back(std::make_unique<ClientConnection<asio::ip::tcp>>(io_, eventHandler_));
-    auto [params, stdIn] = request.toFcgiData(http::FormType::Multipart);
+    auto [params, stdIn] = request.toFcgiData();
     const auto address = asio::ip::make_address(ipAddress);
     clientConnection->makeRequest(
             asio::ip::tcp::endpoint{address, port},

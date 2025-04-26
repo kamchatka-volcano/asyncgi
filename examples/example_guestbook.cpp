@@ -45,15 +45,17 @@ http::Response showLoginPage(const http::Request&)
 
 http::Response loginAdmin(const http::Request& request)
 {
-    if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
-        return {http::Redirect{"/"}, http::Cookies{{"admin_id", "ADMIN_SECRET"}}};
-    else
-        return http::Redirect{"/login"};
+    if (!request.multipartForm().has_value())
+        return http::ResponseStatus::_400_Bad_Request;
+    const auto form = request.multipartForm().value();
+    if (form.param("login") == "admin" && form.param("passwd") == "12345")
+        return {http::Redirect{"/"}, http::ResponseCookies{{"admin_id", "ADMIN_SECRET"}}};
+    return http::Redirect{"/login"};
 }
 
 http::Response logoutAdmin(const http::Request&)
 {
-    return {http::Redirect{"/"}, http::Cookies{{"admin_id", ""}}};
+    return {http::Redirect{"/"}, http::ResponseCookies{{"admin_id", ""}}};
 }
 
 struct GuestBookMessage {
@@ -160,22 +162,23 @@ auto addMessage(GuestBookState& state)
 {
     return [&state](const http::Request& request) -> http::Response
     {
+        if (!request.multipartForm().has_value())
+            return http::ResponseStatus::_400_Bad_Request;
+        const auto form = request.multipartForm().value();
         if (std::all_of(
-                    request.formField("msg").begin(),
-                    request.formField("msg").end(),
+                    form.param("msg").begin(),
+                    form.param("msg").end(),
                     [](char ch)
                     {
                         return std::isspace(static_cast<unsigned char>(ch));
                     }))
             return http::Redirect{"/?error=empty_msg"};
-        else if (
-                request.formField("msg").find("http://") != std::string_view::npos ||
-                request.formField("msg").find("https://") != std::string_view::npos)
+        if (form.param("msg").find("http://") != std::string_view::npos ||
+            form.param("msg").find("https://") != std::string_view::npos)
             return http::Redirect{"/?error=urls_in_msg"};
-        else {
-            state.addMessage(std::string{request.formField("name")}, std::string{request.formField("msg")});
-            return http::Redirect{"/"};
-        }
+
+        state.addMessage(std::string{form.param("name")}, std::string{form.param("msg")});
+        return http::Redirect{"/"};
     };
 }
 

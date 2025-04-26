@@ -8,14 +8,15 @@
 
 namespace asyncgi {
 class Server;
-class Client;
+class FastCgiClient;
+class HttpClient;
 class Timer;
 class AsioDispatcher;
 class RouterIOAccess;
 
 namespace detail {
 class IOService;
-using IOAccessPermission = sfun::access_permission<Server, Client, Timer, AsioDispatcher, RouterIOAccess>;
+using IOAccessPermission = sfun::access_permission<Server, FastCgiClient, HttpClient, Timer, AsioDispatcher, RouterIOAccess>;
 } //namespace detail
 
 class IO {

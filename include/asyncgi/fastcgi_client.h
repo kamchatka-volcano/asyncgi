@@ -22,10 +22,10 @@ namespace detail {
 class ClientService;
 }
 
-class Client {
+class FastCgiClient {
 public:
-    explicit Client(IO&);
-    explicit Client(Responder&);
+    explicit FastCgiClient(IO&);
+    explicit FastCgiClient(Responder&);
 
     void makeRequest(
             const std::filesystem::path& socketPath,

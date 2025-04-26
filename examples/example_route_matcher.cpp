@@ -41,8 +41,11 @@ struct LoginPage {
 struct LoginPageAuthorize {
     http::Response operator()(const http::Request& request)
     {
-        if (request.formField("login") == "admin" && request.formField("passwd") == "12345")
-            return {http::Redirect{"/"}, asyncgi::http::Cookies{{"admin_id", "ADMIN_SECRET"}}};
+        if (!request.multipartForm().has_value())
+            return http::ResponseStatus::_400_Bad_Request;
+        const auto form = request.multipartForm().value();
+        if (form.param("login") == "admin" && form.param("passwd") == "12345")
+            return {http::Redirect{"/"}, http::ResponseCookies{{"admin_id", "ADMIN_SECRET"}}};
 
         return http::Redirect{"/login"};
     }

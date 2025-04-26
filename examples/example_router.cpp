@@ -61,7 +61,10 @@ public:
 
     http::Response operator()(const http::Request& request)
     {
-        state_->addMessage(std::string{request.formField("msg")});
+        if (!request.multipartForm().has_value())
+            return http::ResponseStatus::_400_Bad_Request;
+        const auto form = request.multipartForm().value();
+        state_->addMessage(std::string{form.param("msg")});
         return http::Redirect{"/"};
     }
 

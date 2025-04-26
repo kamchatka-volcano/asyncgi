@@ -100,7 +100,7 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "cl.exe",
         "CMAKE_C_COMPILER": "cl.exe",
-        "CMAKE_CXX_FLAGS": "/EHsc /W4 /WX /wd4267"
+        "CMAKE_CXX_FLAGS": "/EHsc /W4 /WX /wd4267 /wd4244"
       }
     },
     {

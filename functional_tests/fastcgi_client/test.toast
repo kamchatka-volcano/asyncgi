@@ -1,6 +1,6 @@
 -Launch detached: ../../build/examples/example_hello_world
 -Wait: 1 sec
--Launch: ../../build/examples/example_client
+-Launch: ../../build/examples/example_fastcgi_client
 -Expect output:
 Hello world
 

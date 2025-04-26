@@ -5,11 +5,14 @@ namespace asyncgi {
 class IO;
 class Responder;
 class Server;
-class Client;
+class FastCgiClient;
 class Error;
 class AsioDispatcher;
-class TaskContext;
+class AsioContext;
 class Timer;
+#ifdef ASYNCGI_USE_HTTP_CLIENT
+class HttpClient;
+#endif
 
 namespace http {
 class Request;

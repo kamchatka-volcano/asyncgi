@@ -1,23 +1,25 @@
 #include "clientservice.h"
 #include "ioservice.h"
 #include "responsecontext.h"
-#include <asyncgi/client.h>
 #include <asyncgi/detail/external/sfun/interface.h>
 #include <asyncgi/detail/external/sfun/optional_ref.h>
+#include <asyncgi/fastcgi_client.h>
 #include <asyncgi/io.h>
 #include <asyncgi/responder.h>
 
 namespace asyncgi {
 
-Client::Client(IO& io)
+FastCgiClient::FastCgiClient(IO& io)
     : clientService_{std::make_unique<detail::ClientService>(
-              io.ioService(sfun::access_token<Client>{}).io(),
-              io.eventHandler(sfun::access_token<Client>{}))}
+              io.ioService(sfun::access_token<FastCgiClient>{}).io(),
+              io.eventHandler(sfun::access_token<FastCgiClient>{}))}
 {
 }
 
 namespace {
-sfun::optional_ref<detail::ClientService> getClientService(Responder& response, sfun::access_token<Client> accessToken)
+sfun::optional_ref<detail::ClientService> getClientService(
+        Responder& response,
+        sfun::access_token<FastCgiClient> accessToken)
 {
     if (auto context = response.context(accessToken).lock())
         return context->client();
@@ -26,12 +28,12 @@ sfun::optional_ref<detail::ClientService> getClientService(Responder& response, 
 }
 } //namespace
 
-Client::Client(Responder& response)
-    : clientService_{getClientService(response, sfun::access_token<Client>{})}
+FastCgiClient::FastCgiClient(Responder& response)
+    : clientService_{getClientService(response, sfun::access_token<FastCgiClient>{})}
 {
 }
 
-void Client::makeRequest(
+void FastCgiClient::makeRequest(
         const std::filesystem::path& socketPath,
         fastcgi::Request request,
         std::function<void(std::optional<fastcgi::Response>)> responseHandler,
@@ -43,7 +45,7 @@ void Client::makeRequest(
     clientService_.get().makeRequest(socketPath, std::move(request), std::move(responseHandler), timeout);
 }
 
-void Client::makeRequest(
+void FastCgiClient::makeRequest(
         const std::filesystem::path& socketPath,
         const http::Request& request,
         const std::function<void(std::optional<http::Response>)>& responseHandler,
@@ -55,7 +57,7 @@ void Client::makeRequest(
     clientService_.get().makeRequest(socketPath, request, responseHandler, timeout);
 }
 
-void Client::makeRequest(
+void FastCgiClient::makeRequest(
         std::string_view ipAddress,
         uint16_t port,
         fastcgi::Request request,
@@ -68,7 +70,7 @@ void Client::makeRequest(
     clientService_.get().makeRequest(ipAddress, port, std::move(request), std::move(responseHandler), timeout);
 }
 
-void Client::makeRequest(
+void FastCgiClient::makeRequest(
         std::string_view ipAddress,
         uint16_t port,
         const http::Request& request,
@@ -81,7 +83,7 @@ void Client::makeRequest(
     clientService_.get().makeRequest(ipAddress, port, request, responseHandler, timeout);
 }
 
-void Client::disconnect()
+void FastCgiClient::disconnect()
 {
     if (!clientService_.has_value())
         return;

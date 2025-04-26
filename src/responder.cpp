@@ -25,7 +25,7 @@ Responder::Responder(std::shared_ptr<detail::ResponseContext> responseContext)
 void Responder::send(const http::Response& response)
 {
     if (auto context = responseContext_.lock())
-        context->responseSender().send(response.data(http::ResponseMode::Cgi));
+        context->responseSender().send(response.toString(http::ResponseMode::Cgi));
 }
 
 void Responder::send(fastcgi::Response& response)

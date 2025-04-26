@@ -1,0 +1,7 @@
+-Tags: no-standalone-asio
+-Launch: ../../build/test_examples/test_http_client httpbun > response.txt
+-Launch: cat response.txt | grep Host
+-Expect output:
+    "Host": "httpbun.com",
+
+---

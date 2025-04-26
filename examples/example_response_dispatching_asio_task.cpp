@@ -1,7 +1,7 @@
 #include <asyncgi/asyncgi.h>
 #ifdef ASYNCGI_USE_BOOST_ASIO
-namespace asio = boost::asio;
 #include <boost/asio/steady_timer.hpp>
+namespace asio = boost::asio;
 #else
 #include <asio/steady_timer.hpp>
 #endif
@@ -11,13 +11,15 @@ struct DelayedPage {
     {
         auto disp = asyncgi::AsioDispatcher{responder};
         disp.postTask(
-                [responder](const asyncgi::TaskContext& ctx) mutable
+                [responder](const asyncgi::AsioContext& ctx) mutable
                 {
                     auto timer = std::make_shared<asio::steady_timer>(ctx.io());
                     timer->expires_after(std::chrono::seconds{3});
-                    timer->async_wait([timer, responder, ctx](auto&) mutable { // Note how we capture ctx object here,
-                        responder.send("Hello world"); // it's necessary to keep it (or its copy) alive
-                    }); // before the end of request processing
+                    timer->async_wait(
+                            [timer, responder](auto&) mutable
+                            {
+                                responder.send("Hello world");
+                            });
                 });
     }
 };

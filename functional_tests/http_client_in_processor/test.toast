@@ -1,0 +1,10 @@
+-Tags: no-standalone-asio
+-Launch detached: python ../http_response.py
+-Launch detached: ../../build/test_examples/test_http_client_in_processor
+-Wait: 1 sec
+
+-Expect response from "/" on port 8089:
+Hello
+---
+
+-Expect status from "/foo" on port 8089: 404

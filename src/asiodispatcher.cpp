@@ -17,22 +17,22 @@ AsioDispatcher::AsioDispatcher(IO& io)
 
 namespace {
 sfun::optional_ref<detail::AsioDispatcherService> getAsioDispatcherService(
-        Responder& response,
+        Responder& responder,
         sfun::access_token<AsioDispatcher> accessToken)
 {
-    if (auto context = response.context(accessToken).lock())
+    if (auto context = responder.context(accessToken).lock())
         return context->asioDispatcher();
     else
         return std::nullopt;
 }
 } //namespace
 
-AsioDispatcher::AsioDispatcher(Responder& response)
-    : asioDispatcherService_{getAsioDispatcherService(response, sfun::access_token<AsioDispatcher>{})}
+AsioDispatcher::AsioDispatcher(Responder& responder)
+    : asioDispatcherService_{getAsioDispatcherService(responder, sfun::access_token<AsioDispatcher>{})}
 {
 }
 
-void AsioDispatcher::postTask(std::function<void(const TaskContext&)> task)
+void AsioDispatcher::postTask(std::function<void(const AsioContext&)> task)
 {
     if (!asioDispatcherService_.has_value())
         return;

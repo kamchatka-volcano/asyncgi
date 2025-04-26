@@ -18,7 +18,8 @@ class RequestProcessorQueue;
 
 template<typename TContext>
 class Router;
-class Client;
+class FastCgiClient;
+class HttpClient;
 class Timer;
 class AsioDispatcher;
 
@@ -26,7 +27,7 @@ namespace detail {
 class ResponseContext;
 struct RouterResponseContextAccessor;
 using ResponseContextAccessPermission =
-        sfun::access_permission<Client, Timer, AsioDispatcher, RouterResponseContextAccessor>;
+        sfun::access_permission<FastCgiClient, HttpClient, Timer, AsioDispatcher, RouterResponseContextAccessor>;
 } //namespace detail
 
 class Responder {

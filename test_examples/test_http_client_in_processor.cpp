@@ -1,18 +1,15 @@
 #include <asyncgi/asyncgi.h>
+#include <asyncgi/http_client.h>
 
-struct RequestPage{
+struct RequestPage {
     void operator()(const http::Request&, asyncgi::Responder& responder)
     {
-        // making request to FastCgi application listening on /tmp/fcgi.sock and showing the received response
-        auto client = asyncgi::Client{responder};
+        auto client = asyncgi::HttpClient{responder};
         client.makeRequest(
-#ifndef _WIN32
-                "/tmp/fcgi.sock",
-#else
-                "127.0.0.1",
-                9088,
-#endif
-                http::Request{http::RequestMethod::Get, "/"},
+                http::Request{
+                        http::RequestMethod::Get,
+                        "http://localhost:8091",
+                        http::RequestCookies{{"foo", "bar"}, {"foo", "baz"}}},
                 [responder](std::optional<http::Response> reqResponse) mutable
                 {
                     if (reqResponse)
@@ -36,5 +33,4 @@ int main()
     server.listen("127.0.0.1", 9089);
 #endif
     io.run();
-    return 0;
 }
